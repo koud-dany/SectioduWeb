@@ -1,0 +1,309 @@
+{% extends "base.html" %}
+
+{% block title %}Account Settings - SectionduWeb{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4" style="max-width: 800px; margin: 0 auto;">
+    <div class="row">
+        <div class="col-md-3">
+            <!-- Settings Navigation -->
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-primary text-white border-0">
+                    <h6 class="mb-0">
+                        <i class="fas fa-cog me-2"></i>Settings
+                    </h6>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="#general" class="list-group-item list-group-item-action active" data-bs-toggle="pill">
+                        <i class="fas fa-user me-2"></i>General
+                    </a>
+                    <a href="#security" class="list-group-item list-group-item-action" data-bs-toggle="pill">
+                        <i class="fas fa-shield-alt me-2"></i>Security
+                    </a>
+                    <a href="#privacy" class="list-group-item list-group-item-action" data-bs-toggle="pill">
+                        <i class="fas fa-eye me-2"></i>Privacy
+                    </a>
+                    <a href="#data" class="list-group-item list-group-item-action" data-bs-toggle="pill">
+                        <i class="fas fa-download me-2"></i>Data
+                    </a>
+                    <a href="#danger" class="list-group-item list-group-item-action text-danger" data-bs-toggle="pill">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Danger Zone
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-9">
+            <!-- Settings Content -->
+            <div class="tab-content">
+                <!-- General Settings -->
+                <div class="tab-pane fade show active" id="general">
+                    <div class="card shadow-sm border-0 mb-4">
+                        <div class="card-header bg-light border-0">
+                            <h5 class="mb-0">
+                                <i class="fas fa-user text-primary me-2"></i>General Settings
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6>Account Information</h6>
+                                    <p class="text-muted mb-1"><strong>Username:</strong> {{ user[0] }}</p>
+                                    <p class="text-muted mb-1"><strong>Email:</strong> {{ user[1] }}</p>
+                                    <p class="text-muted mb-3"><strong>Member since:</strong> {{ user[8].split()[0] if user[8] else 'Recently' }}</p>
+                                    
+                                    <a href="{{ url_for('edit_profile') }}" class="btn btn-primary">
+                                        <i class="fas fa-edit me-2"></i>Edit Profile
+                                    </a>
+                                </div>
+                                <div class="col-md-6 text-center">
+                                    {% if user[7] %}
+                                    <img src="{{ url_for('static', filename='avatars/' + user[7]) }}" 
+                                         alt="Avatar" 
+                                         class="rounded-circle mb-3"
+                                         style="width: 100px; height: 100px; object-fit: cover;">
+                                    {% else %}
+                                    <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center mb-3 mx-auto" 
+                                         style="width: 100px; height: 100px;">
+                                        <i class="fas fa-user text-white" style="font-size: 2rem;"></i>
+                                    </div>
+                                    {% endif %}
+                                    <p class="text-muted">Profile Picture</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Security Settings -->
+                <div class="tab-pane fade" id="security">
+                    <div class="card shadow-sm border-0 mb-4">
+                        <div class="card-header bg-light border-0">
+                            <h5 class="mb-0">
+                                <i class="fas fa-shield-alt text-warning me-2"></i>Security Settings
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <h6>Change Password</h6>
+                            <form method="POST" class="mb-4">
+                                <input type="hidden" name="action" value="change_password">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="current_password" class="form-label">Current Password</label>
+                                            <input type="password" class="form-control" id="current_password" name="current_password" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="new_password" class="form-label">New Password</label>
+                                            <input type="password" class="form-control" id="new_password" name="new_password" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="confirm_password" class="form-label">Confirm New Password</label>
+                                            <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+                                        </div>
+                                        <button type="submit" class="btn btn-warning">
+                                            <i class="fas fa-key me-2"></i>Change Password
+                                        </button>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="alert alert-info">
+                                            <h6><i class="fas fa-info-circle me-2"></i>Password Requirements</h6>
+                                            <ul class="mb-0 small">
+                                                <li>At least 6 characters long</li>
+                                                <li>Use a mix of letters and numbers</li>
+                                                <li>Avoid common passwords</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Privacy Settings -->
+                <div class="tab-pane fade" id="privacy">
+                    <div class="card shadow-sm border-0 mb-4">
+                        <div class="card-header bg-light border-0">
+                            <h5 class="mb-0">
+                                <i class="fas fa-eye text-info me-2"></i>Privacy Settings
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <h6>Profile Visibility</h6>
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" id="public_profile" checked>
+                                <label class="form-check-label" for="public_profile">
+                                    Make my profile visible to everyone
+                                </label>
+                            </div>
+                            
+                            <h6>Activity Visibility</h6>
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" id="show_activity" checked>
+                                <label class="form-check-label" for="show_activity">
+                                    Show my recent activity
+                                </label>
+                            </div>
+                            
+                            <div class="form-check mb-4">
+                                <input class="form-check-input" type="checkbox" id="show_videos" checked>
+                                <label class="form-check-label" for="show_videos">
+                                    Show my videos on profile
+                                </label>
+                            </div>
+                            
+                            <button type="button" class="btn btn-info" onclick="savePrivacySettings()">
+                                <i class="fas fa-save me-2"></i>Save Privacy Settings
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Data Settings -->
+                <div class="tab-pane fade" id="data">
+                    <div class="card shadow-sm border-0 mb-4">
+                        <div class="card-header bg-light border-0">
+                            <h5 class="mb-0">
+                                <i class="fas fa-download text-success me-2"></i>Data Management
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <h6>Download Your Data</h6>
+                            <p class="text-muted mb-3">Download a copy of all your data including videos, comments, and profile information.</p>
+                            <button type="button" class="btn btn-success mb-4" onclick="downloadData()">
+                                <i class="fas fa-download me-2"></i>Request Data Download
+                            </button>
+                            
+                            <h6>Data Usage</h6>
+                            <div class="row text-center">
+                                <div class="col-md-4">
+                                    <div class="border rounded p-3">
+                                        <h5 class="text-primary">Storage Used</h5>
+                                        <p class="text-muted">~25 MB</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="border rounded p-3">
+                                        <h5 class="text-success">Videos</h5>
+                                        <p class="text-muted">{{ user_videos_count|default(0) }} files</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="border rounded p-3">
+                                        <h5 class="text-info">Comments</h5>
+                                        <p class="text-muted">{{ user_comments_count|default(0) }} posts</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Danger Zone -->
+                <div class="tab-pane fade" id="danger">
+                    <div class="card shadow-sm border-danger mb-4">
+                        <div class="card-header border-danger">
+                            <h5 class="mb-0 text-danger">
+                                <i class="fas fa-exclamation-triangle me-2"></i>Danger Zone
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <h6>Deactivate Account</h6>
+                                    <p class="text-muted">Temporarily disable your account. You can reactivate it later by contacting support.</p>
+                                </div>
+                                <div class="col-md-4 text-end">
+                                    <button type="button" class="btn btn-warning" onclick="confirmDeactivateAccount()">
+                                        <i class="fas fa-pause me-2"></i>Deactivate
+                                    </button>
+                                </div>
+                            </div>
+                            <hr>
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <h6 class="text-danger">Delete Account</h6>
+                                    <p class="text-muted">Permanently delete your account and all associated data. This action cannot be undone.</p>
+                                </div>
+                                <div class="col-md-4 text-end">
+                                    <button type="button" class="btn btn-danger" onclick="confirmDeleteAccount()">
+                                        <i class="fas fa-trash me-2"></i>Delete Account
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function savePrivacySettings() {
+    // This would save privacy settings via AJAX
+    alert('Privacy settings saved successfully!');
+}
+
+function downloadData() {
+    alert('Your data download request has been submitted. You will receive an email with a download link within 24 hours.');
+}
+
+function confirmDeactivateAccount() {
+    if (confirm('Are you sure you want to temporarily deactivate your account?\n\nYou can reactivate it later by contacting support.')) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '{{ url_for("account_settings") }}';
+        
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'action';
+        input.value = 'deactivate_account';
+        form.appendChild(input);
+        
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+function confirmDeleteAccount() {
+    const confirmation = prompt('This will PERMANENTLY delete your account and all your data.\n\nType "DELETE MY ACCOUNT" to confirm:');
+    if (confirmation === 'DELETE MY ACCOUNT') {
+        alert('Account deletion functionality would be implemented here. Please contact support for now.');
+    } else if (confirmation !== null) {
+        alert('Account deletion cancelled. Please type exactly "DELETE MY ACCOUNT" to confirm.');
+    }
+}
+
+// Handle tab switching
+document.addEventListener('DOMContentLoaded', function() {
+    const navLinks = document.querySelectorAll('[data-bs-toggle="pill"]');
+    const tabPanes = document.querySelectorAll('.tab-pane');
+    
+    navLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // Remove active class from all nav links and tab panes
+            navLinks.forEach(nl => nl.classList.remove('active'));
+            tabPanes.forEach(tp => {
+                tp.classList.remove('show', 'active');
+            });
+            
+            // Add active class to clicked nav link
+            this.classList.add('active');
+            
+            // Show corresponding tab pane
+            const targetId = this.getAttribute('href').substring(1);
+            const targetPane = document.getElementById(targetId);
+            if (targetPane) {
+                targetPane.classList.add('show', 'active');
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

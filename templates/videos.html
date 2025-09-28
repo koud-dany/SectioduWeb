@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+
+{% block title %}All Videos - SectionduWeb{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-12">
+            <h2><i class="fas fa-video"></i> All Videos</h2>
+            <p class="text-muted">Browse and vote on videos from all participants</p>
+            
+            <!-- Sorting Filter Buttons -->
+            <div class="mb-4">
+                <div class="btn-group" role="group" aria-label="Video sorting options">
+                    <a href="{{ url_for('videos', sort='recent') }}" 
+                       class="btn {{ 'btn-primary' if current_sort == 'recent' else 'btn-outline-primary' }}">
+                        <i class="fas fa-clock"></i> Recent
+                    </a>
+                    <a href="{{ url_for('videos', sort='top_rated') }}" 
+                       class="btn {{ 'btn-warning' if current_sort == 'top_rated' else 'btn-outline-warning' }}">
+                        <i class="fas fa-trophy"></i> Top Rated
+                    </a>
+                    <a href="{{ url_for('videos', sort='most_voted') }}" 
+                       class="btn {{ 'btn-success' if current_sort == 'most_voted' else 'btn-outline-success' }}">
+                        <i class="fas fa-thumbs-up"></i> Most Voted
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    {% if videos %}
+    <div class="row g-4">
+        {% for video in videos %}
+        <div class="col-lg-4 col-md-6">
+            <div class="card video-card position-relative">
+                <!-- Ranking Badge for Top Rated View -->
+                {% if current_sort == 'top_rated' and loop.index <= 3 %}
+                <div class="position-absolute top-0 start-0 m-2" style="z-index: 10;">
+                    {% if loop.index == 1 %}
+                    <span class="badge bg-warning text-dark fs-6 px-3 py-2">
+                        <i class="fas fa-crown"></i> #1
+                    </span>
+                    {% elif loop.index == 2 %}
+                    <span class="badge bg-secondary fs-6 px-3 py-2">
+                        <i class="fas fa-medal"></i> #2
+                    </span>
+                    {% elif loop.index == 3 %}
+                    <span class="badge text-dark fs-6 px-3 py-2" style="background-color: #cd7f32;">
+                        <i class="fas fa-medal"></i> #3
+                    </span>
+                    {% endif %}
+                </div>
+                {% elif current_sort == 'top_rated' %}
+                <div class="position-absolute top-0 start-0 m-2" style="z-index: 10;">
+                    <span class="badge bg-primary fs-6 px-2 py-1">
+                        #{{ loop.index }}
+                    </span>
+                </div>
+                {% endif %}
+                
+                <div style="height: 200px; overflow: hidden; border-radius: 15px 15px 0 0;">
+                    <video class="w-100 h-100" style="object-fit: cover;" controls poster="">
+                        <source src="{{ url_for('static', filename='uploads/' + video[2]) }}" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title">{{ video[1] }}</h5>
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <div class="d-flex align-items-center">
+                            {% if video[7] %}
+                            <img src="{{ url_for('static', filename='avatars/' + video[7]) }}" 
+                                 alt="{{ video[5] }}'s Avatar" 
+                                 class="rounded-circle me-2" 
+                                 style="width: 24px; height: 24px; object-fit: cover; border: 1px solid #dee2e6;">
+                            {% else %}
+                            <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center me-2" 
+                                 style="width: 24px; height: 24px; font-size: 0.7rem;">
+                                <i class="fas fa-user text-white"></i>
+                            </div>
+                            {% endif %}
+                            <a href="{{ url_for('profile', username=video[5]) }}" class="text-decoration-none text-muted">
+                                {{ video[5] }}
+                            </a>
+                        </div>
+                        <small class="text-muted">{{ video[6] }}</small>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="rating-stars">
+                            {% for i in range(5) %}
+                            {% if i < video[4]|round %}
+                            <i class="fas fa-star text-warning"></i>
+                            {% else %}
+                            <i class="far fa-star text-muted"></i>
+                            {% endif %}
+                            {% endfor %}
+                            <span class="ms-2 fw-bold">{{ "%.1f"|format(video[4] if video[4] is not none else 0.0) }}</span>
+                        </div>
+                        <small class="text-muted">
+                            <i class="fas fa-thumbs-up"></i> {{ video[3] }} votes
+                        </small>
+                    </div>
+                    
+                    <!-- Quality Badge -->
+                    <div class="mb-3">
+                        {% if video[4] >= 4.5 %}
+                        <span class="badge bg-danger">
+                            <i class="fas fa-fire"></i> Hot!
+                        </span>
+                        {% elif video[4] >= 4.0 %}
+                        <span class="badge bg-success">
+                            <i class="fas fa-star"></i> Excellent
+                        </span>
+                        {% elif video[4] >= 3.5 %}
+                        <span class="badge bg-info">
+                            <i class="fas fa-thumbs-up"></i> Good
+                        </span>
+                        {% elif video[3] > 0 %}
+                        <span class="badge bg-secondary">
+                            <i class="fas fa-chart-line"></i> Rated
+                        </span>
+                        {% endif %}
+                        
+                        {% if current_sort == 'most_voted' and video[3] >= 5 %}
+                        <span class="badge bg-primary">
+                            <i class="fas fa-users"></i> Popular
+                        </span>
+                        {% endif %}
+                    </div>
+                    <div class="d-flex gap-2">
+                        <a href="{{ url_for('video_detail', video_id=video[0]) }}" class="btn btn-primary btn-sm flex-grow-1">
+                            <i class="fas fa-play"></i> Watch & Vote
+                        </a>
+                        
+                        <!-- Admin Quick Actions -->
+                        {% if session.is_admin %}
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-outline-warning dropdown-toggle" type="button" data-bs-toggle="dropdown" title="Admin actions">
+                                <i class="fas fa-shield-alt"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-3">
+                                <li><button class="dropdown-item text-warning" onclick="toggleVideoFeature('{{ video[0] }}')">
+                                    <i class="fas fa-star me-2"></i>Feature Video
+                                </button></li>
+                                <li><button class="dropdown-item text-info" onclick="toggleVideoPin('{{ video[0] }}')">
+                                    <i class="fas fa-thumbtack me-2"></i>Pin Video
+                                </button></li>
+                                <li><button class="dropdown-item text-secondary" onclick="toggleVideoVisibility('{{ video[0] }}')">
+                                    <i class="fas fa-eye-slash me-2"></i>Hide Video
+                                </button></li>
+                                {% if session.admin_level == 'super' %}
+                                <li><hr class="dropdown-divider"></li>
+                                <li><button class="dropdown-item text-danger" onclick="deleteVideoQuick('{{ video[0] }}')">
+                                    <i class="fas fa-trash me-2"></i>Delete Video
+                                </button></li>
+                                {% endif %}
+                            </ul>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+        <i class="fas fa-video fa-5x text-muted mb-4"></i>
+        <h3 class="text-muted">No videos uploaded yet</h3>
+        <p class="text-muted">Be the first participant to upload a video!</p>
+        {% if session.user_id %}
+        <a href="{{ url_for('upload_video') }}" class="btn btn-primary btn-lg">
+            <i class="fas fa-plus"></i> Upload First Video
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

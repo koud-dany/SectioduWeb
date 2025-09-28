@@ -1,0 +1,1119 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="hero-section" style="background: linear-gradient(135deg, #0066cc 0%, #004499 50%, #003366 100%); color: white; padding: 50px 0; position: relative; overflow: hidden;">
+    <!-- Background Pattern -->
+    <div class="hero-background-pattern"></div>
+    
+    <div class="container position-relative">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <div class="hero-content">
+                    <h1 class="display-5 fw-bold mb-3 hero-title" style="text-shadow: 0 4px 8px rgba(0,0,0,0.3); opacity: 0; transform: translateY(50px);">
+                        Welcome to 
+                        <div class="hero-brand mt-2" style="font-size: 0.9em; letter-spacing: -1px;">
+                            <span class="brand-section" style="color: #ffffff; font-weight: 800; background: linear-gradient(135deg, #87CEEB, #ffffff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));">Section</span><span class="brand-du" style="color: #ffffff; font-weight: 600; text-shadow: 0 2px 4px rgba(0,0,0,0.4);">du</span><span class="brand-web" style="color: #ffffff; font-weight: 800; background: linear-gradient(135deg, #FFB6C1, #ffffff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));">Web</span>
+                        </div>
+                    </h1>
+                    <p class="lead mb-3 hero-subtitle" style="font-size: 1.1rem; opacity: 0; text-shadow: 0 2px 4px rgba(0,0,0,0.3); transform: translateY(30px);">
+                        Join the ultimate video competition! Upload your best content, vote on others, and compete for the top spot in our premium platform.
+                    </p>
+                    {% if not session.user_id %}
+                    <div class="d-flex flex-column flex-md-row gap-2 hero-buttons" style="opacity: 0; transform: translateY(20px);">
+                        <a href="{{ url_for('register') }}" class="btn btn-light px-4 py-2 shadow-lg" style="border-radius: 25px; font-weight: 600; transition: all 0.3s ease; border: 2px solid transparent;">
+                            <i class="fas fa-trophy me-2 text-warning"></i>Sign Up - $25
+                        </a>
+                        <a href="{{ url_for('login') }}" class="btn btn-outline-light px-4 py-2 shadow" style="border-radius: 25px; font-weight: 600; transition: all 0.3s ease; border: 2px solid white;">
+                            <i class="fas fa-sign-in-alt me-2"></i>Login
+                        </a>
+                    </div>
+                    {% else %}
+                    <div class="d-flex flex-column flex-md-row gap-2 hero-buttons" style="opacity: 0; transform: translateY(20px);">
+                        <a href="{{ url_for('upload_video') }}" class="btn btn-light px-4 py-2 shadow-lg" style="border-radius: 25px; font-weight: 600; transition: all 0.3s ease;">
+                            <i class="fas fa-upload me-2 text-primary"></i>Upload Video
+                        </a>
+                        <a href="{{ url_for('videos') }}" class="btn btn-outline-light px-4 py-2 shadow" style="border-radius: 25px; font-weight: 600; transition: all 0.3s ease; border: 2px solid white;">
+                            <i class="fas fa-play me-2"></i>Watch Videos
+                        </a>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Feature Highlights -->
+                    <div class="row mt-4 hero-features" style="opacity: 0; transform: translateY(30px);">
+                        <div class="col-md-4 mb-2">
+                            <div class="d-flex align-items-center feature-item" style="transition: all 0.3s ease;">
+                                <div class="feature-icon me-2">
+                                    <i class="fas fa-shield-alt fa-lg text-warning"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1 fw-bold" style="font-size: 0.9rem;">Secure Platform</h6>
+                                    <small class="opacity-75" style="font-size: 0.8rem;">Professional & Safe</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <div class="d-flex align-items-center feature-item" style="transition: all 0.3s ease;">
+                                <div class="feature-icon me-2">
+                                    <i class="fas fa-users fa-lg" style="color: #dc3545;"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1 fw-bold" style="font-size: 0.9rem;">Global Community</h6>
+                                    <small class="opacity-75" style="font-size: 0.8rem;">Worldwide Creators</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <div class="d-flex align-items-center feature-item" style="transition: all 0.3s ease;">
+                                <div class="feature-icon me-2">
+                                    <i class="fas fa-star fa-lg text-warning"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1 fw-bold" style="font-size: 0.9rem;">Premium Quality</h6>
+                                    <small class="opacity-75" style="font-size: 0.8rem;">Top-tier Content</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="row g-3 hero-stats" style="opacity: 0; transform: translateX(50px);">
+                    <div class="col-md-6">
+                        <div class="stats-card" style="transition: all 0.5s ease; transform: scale(0.9); padding: 1rem;">
+                            <i class="fas fa-users fa-2x text-primary mb-2"></i>
+                            <h4 class="fw-bold text-white counter" data-target="{{ total_participants }}">0</h4>
+                            <p class="text-white opacity-75 mb-0 small">Active Participants</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="stats-card" style="transition: all 0.5s ease; transform: scale(0.9); padding: 1rem;">
+                            <i class="fas fa-video fa-2x text-success mb-2"></i>
+                            <h4 class="fw-bold text-white counter" data-target="{{ total_videos }}">0</h4>
+                            <p class="text-white opacity-75 mb-0 small">Videos Uploaded</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="stats-card" style="transition: all 0.5s ease; transform: scale(0.9); padding: 1rem;">
+                            <i class="fas fa-star fa-2x text-warning mb-2"></i>
+                            <h4 class="fw-bold text-white">Live</h4>
+                            <p class="text-white opacity-75 mb-0 small">Voting System</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="stats-card" style="padding: 1rem;">
+                            <i class="fas fa-medal fa-2x text-info mb-2"></i>
+                            <h4 class="fw-bold text-white">$25</h4>
+                            <p class="text-white opacity-75 mb-0 small">Entry Fee</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Extend hero background to eliminate white space -->
+    <div style="background: linear-gradient(135deg, #0066cc 0%, #004499 50%, #003366 100%); height: 30px; margin-bottom: 0;"></div>
+</section>
+
+<section class="py-4 bg-light" style="margin-top: 0; padding-top: 2rem !important;">
+    <div class="container">
+        <div class="text-center mb-4">
+            <h2 class="fw-bold" style="font-size: 1.8rem;">How It Works</h2>
+            <p class="text-muted" style="font-size: 1rem;">Simple steps to join the competition</p>
+        </div>
+        <div class="row g-3" id="how-it-works-steps">
+            <div class="col-md-3">
+                <div class="text-center how-it-works-step" data-step="1" data-delay="0">
+                    <div class="step-icon bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width: 50px; height: 50px;">
+                        <i class="fas fa-user-plus"></i>
+                    </div>
+                    <h6 class="step-title" style="font-size: 1rem;">1. Register</h6>
+                    <p class="text-muted step-description small">Create your account and pay the $25 entry fee</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="text-center how-it-works-step" data-step="2" data-delay="300">
+                    <div class="step-icon bg-success text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width: 50px; height: 50px;">
+                        <i class="fas fa-upload"></i>
+                    </div>
+                    <h6 class="step-title" style="font-size: 1rem;">2. Upload</h6>
+                    <p class="text-muted step-description small">Upload your best video content to compete</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="text-center how-it-works-step" data-step="3" data-delay="600">
+                    <div class="step-icon bg-warning text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width: 50px; height: 50px;">
+                        <i class="fas fa-vote-yea"></i>
+                    </div>
+                    <h6 class="step-title" style="font-size: 1rem;">3. Vote</h6>
+                    <p class="text-muted step-description small">Rate and comment on other participants' videos</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="text-center how-it-works-step" data-step="4" data-delay="900">
+                    <div class="step-icon bg-info text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width: 50px; height: 50px;">
+                        <i class="fas fa-trophy"></i>
+                    </div>
+                    <h6 class="step-title" style="font-size: 1rem;">4. Win</h6>
+                    <p class="text-muted step-description small">Climb the leaderboard and claim victory!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Extend light background to eliminate white space -->
+    <div style="background: #f8f9fa; height: 30px; margin-bottom: 0;"></div>
+</section>
+
+<section class="py-4 mb-0" style="margin-bottom: 0 !important; padding-bottom: 0 !important; margin-top: 0; padding-top: 2rem !important;">
+    <div class="container">
+        <div class="text-center mb-4 carousel-header" style="opacity: 0; transform: translateY(-30px);">
+            <h2 class="fw-bold text-dark" style="font-size: 1.8rem;">
+                <span class="brand-section">Top</span>
+                <span class="brand-du text-dark">Rated</span>
+                <span class="brand-web">Videos</span>
+            </h2>
+            <p class="text-muted" style="font-size: 1rem;">See what's trending in the competition</p>
+        </div>
+        {% if top_videos %}
+        <!-- Animated Video Carousel -->
+        <div id="topVideosCarousel" class="carousel slide carousel-fade" data-bs-ride="carousel" data-bs-interval="5000">
+            <!-- Clean Carousel Indicators -->
+            <div class="carousel-indicators">
+                {% for video in top_videos %}
+                <button type="button" data-bs-target="#topVideosCarousel" data-bs-slide-to="{{ loop.index0 }}" 
+                        {% if loop.first %}class="active" aria-current="true"{% endif %} 
+                        aria-label="Video {{ loop.index }}"></button>
+                {% endfor %}
+            </div>
+            
+            <!-- Carousel Items -->
+            <div class="carousel-inner">
+                {% for video in top_videos %}
+                <div class="carousel-item {% if loop.first %}active{% endif %}">
+                    <div class="row justify-content-center">
+                        <div class="col-lg-10 col-xl-9">
+                            <div class="card video-carousel-card shadow border-0" style="border-radius: 15px;">
+                                <div class="row g-0">
+                                    <!-- Video Player Section -->
+                                    <div class="col-md-7">
+                                        <div class="video-container position-relative" style="aspect-ratio: 16/9; overflow: hidden; border-radius: 15px 0 0 15px;">
+                                            <video class="w-100 h-100 shadow-sm" style="object-fit: cover; border-radius: 15px 0 0 15px; border: 1px solid rgba(0,102,204,0.2);" controls preload="metadata" muted>
+                                                <source src="{{ url_for('static', filename='uploads/' + video[2]) }}" type="video/mp4">
+                                                Your browser does not support the video tag.
+                                            </video>
+                                            
+                                            <!-- Hover Play Overlay -->
+                                            <div class="hover-play-overlay position-absolute top-50 start-50 translate-middle" 
+                                                 style="opacity: 0; transition: all 0.3s ease; pointer-events: none; z-index: 2;">
+                                                <div class="bg-primary bg-opacity-90 rounded-circle d-flex align-items-center justify-content-center shadow" 
+                                                     style="width: 50px; height: 50px; border: 2px solid rgba(255,255,255,0.8);">
+                                                    <i class="fas fa-play text-white" style="font-size: 1rem; margin-left: 2px;"></i>
+                                                </div>
+                                                <div class="text-center mt-2">
+                                                    <small class="text-white bg-primary bg-opacity-90 px-2 py-1 rounded-pill shadow-sm" style="border: 1px solid rgba(255,255,255,0.3); font-size: 0.7rem;">Hover to preview</small>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Rank Badge -->
+                                            <div class="position-absolute top-0 start-0 m-3">
+                                                {% if loop.index == 1 %}
+                                                <div class="badge rounded-pill fs-6 px-3 py-2" 
+                                                     style="background: linear-gradient(45deg, #ffd700, #ffed4a); color: #000; font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
+                                                    <i class="fas fa-crown me-1"></i>#{{ loop.index }}
+                                                </div>
+                                                {% elif loop.index == 2 %}
+                                                <div class="badge rounded-pill fs-6 px-3 py-2" 
+                                                     style="background: linear-gradient(45deg, #c0c0c0, #e5e5e5); color: #000; font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
+                                                    <i class="fas fa-medal me-1"></i>#{{ loop.index }}
+                                                </div>
+                                                {% elif loop.index == 3 %}
+                                                <div class="badge rounded-pill fs-6 px-3 py-2" 
+                                                     style="background: linear-gradient(45deg, #cd7f32, #d4a574); color: #fff; font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
+                                                    <i class="fas fa-award me-1"></i>#{{ loop.index }}
+                                                </div>
+                                                {% else %}
+                                                <div class="badge rounded-pill fs-6 px-3 py-2" 
+                                                     style="background: linear-gradient(45deg, #6c757d, #8a8a8a); color: #fff; font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
+                                                    <i class="fas fa-trophy me-1"></i>#{{ loop.index }}
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                            
+                                            <!-- Rating Badge -->
+                                            <div class="position-absolute top-0 end-0 m-3">
+                                                <div class="badge bg-primary bg-opacity-90 text-white rounded-pill fs-6 px-3 py-2 shadow-sm" style="border: 1px solid rgba(255,255,255,0.3);">
+                                                    <i class="fas fa-star text-warning me-1"></i>
+                                                    {{ "%.1f"|format(video[4] if video[4] is not none else 0.0) }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Video Info Section -->
+                                    <div class="col-md-5">
+                                        <div class="card-body h-100 d-flex flex-column justify-content-between p-3" style="border-radius: 0 15px 15px 0;">
+                                            <div>
+                                                <h4 class="card-title fw-bold mb-2 text-primary" style="color: #0066cc !important; font-size: 1.1rem;">{{ video[1] }}</h4>
+                                                
+                                                <!-- Creator Info -->
+                                                <div class="d-flex align-items-center mb-2">
+                                                    <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center me-2 shadow-sm" 
+                                                         style="width: 35px; height: 35px; border: 1px solid rgba(255,255,255,0.8);">
+                                                        <i class="fas fa-user text-white" style="font-size: 0.8rem;"></i>
+                                                    </div>
+                                                    <div>
+                                                        <h6 class="mb-0 fw-bold text-dark" style="font-size: 0.9rem;">{{ video[5] }}</h6>
+                                                        <small class="text-primary opacity-75" style="font-size: 0.75rem;">Content Creator</small>
+                                                    </div>
+                                                </div>
+                                                
+                                                <!-- Rating Display -->
+                                                <div class="mb-2">
+                                                    <div class="d-flex align-items-center mb-1">
+                                                        <div class="rating-stars me-2">
+                                                            {% for i in range(5) %}
+                                                            {% if i < video[4]|round %}
+                                                            <i class="fas fa-star text-warning" style="font-size: 0.8rem;"></i>
+                                                            {% else %}
+                                                            <i class="far fa-star text-muted" style="font-size: 0.8rem;"></i>
+                                                            {% endif %}
+                                                            {% endfor %}
+                                                        </div>
+                                                        <span class="fw-bold text-warning" style="font-size: 1rem;">{{ "%.1f"|format(video[4] if video[4] is not none else 0.0) }}</span>
+                                                    </div>
+                                                    <small class="text-muted" style="font-size: 0.75rem;">
+                                                        <i class="fas fa-thumbs-up me-1"></i>{{ video[3] }} votes
+                                                    </small>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Action Button -->
+                                            {% if session.user_id %}
+                                            <div class="d-grid">
+                                                <a href="{{ url_for('video_detail', video_id=video[0]) }}" 
+                                                   class="btn btn-primary shadow-sm" style="background: linear-gradient(135deg, #0066cc, #004499); border: none; border-radius: 10px; padding: 0.5rem 1rem;">
+                                                    <i class="fas fa-play me-2"></i>Watch & Vote
+                                                </a>
+                                            </div>
+                                            {% else %}
+                                            <div class="d-grid">
+                                                <a href="{{ url_for('login') }}" class="btn btn-outline-primary btn-lg shadow-sm" style="border: 2px solid #0066cc; color: #0066cc; border-radius: 15px; transition: all 0.3s ease;">
+                                                    <i class="fas fa-sign-in-alt me-2"></i>Login to Vote
+                                                </a>
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <!-- Carousel Controls -->
+            <button class="carousel-control-prev" type="button" data-bs-target="#topVideosCarousel" data-bs-slide="prev">
+                <div class="carousel-control-icon">
+                    <i class="fas fa-chevron-left fs-3"></i>
+                </div>
+                <span class="visually-hidden">Previous</span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#topVideosCarousel" data-bs-slide="next">
+                <div class="carousel-control-icon">
+                    <i class="fas fa-chevron-right fs-3"></i>
+                </div>
+                <span class="visually-hidden">Next</span>
+            </button>
+        </div>
+        
+        <!-- View All Videos Button -->
+        {% if session.user_id %}
+        <div class="text-center mt-5">
+            <a href="{{ url_for('videos') }}" class="btn btn-outline-primary btn-lg px-5">
+                <i class="fas fa-video me-2"></i>View All Videos
+            </a>
+        </div>
+        {% endif %}
+        
+        {% else %}
+        <!-- No Videos State -->
+        <div class="text-center py-5">
+            <div class="mb-4">
+                <i class="fas fa-video fa-5x text-muted mb-4"></i>
+            </div>
+            <h3 class="text-muted mb-3">No videos uploaded yet</h3>
+            <p class="text-muted mb-4">Be the first participant to upload a video and start the competition!</p>
+            {% if session.user_id %}
+            <a href="{{ url_for('upload_video') }}" class="btn btn-primary btn-lg px-5">
+                <i class="fas fa-plus me-2"></i>Upload First Video
+            </a>
+            {% else %}
+            <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg px-5">
+                <i class="fas fa-user-plus me-2"></i>Join SectionduWeb
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Extend blue background to eliminate white space -->
+    <div style="background: linear-gradient(135deg, #0066cc15 0%, #004499 15%, #003366 100%); height: 200px; margin-top: 0; margin-bottom: 0;"></div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Enhanced Animations for Hero Section and Carousel
+    function animateOnLoad() {
+        // Hero Section Animations
+        const heroTitle = document.querySelector('.hero-title');
+        const heroSubtitle = document.querySelector('.hero-subtitle');
+        const heroButtons = document.querySelector('.hero-buttons');
+        const heroFeatures = document.querySelector('.hero-features');
+        const heroStats = document.querySelector('.hero-stats');
+        const carouselHeader = document.querySelector('.carousel-header');
+        
+        // Animate hero title
+        if (heroTitle) {
+            setTimeout(() => {
+                heroTitle.style.transition = 'all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                heroTitle.style.opacity = '1';
+                heroTitle.style.transform = 'translateY(0)';
+            }, 200);
+        }
+        
+        // Animate hero subtitle
+        if (heroSubtitle) {
+            setTimeout(() => {
+                heroSubtitle.style.transition = 'all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                heroSubtitle.style.opacity = '1';
+                heroSubtitle.style.transform = 'translateY(0)';
+            }, 400);
+        }
+        
+        // Animate hero buttons
+        if (heroButtons) {
+            setTimeout(() => {
+                heroButtons.style.transition = 'all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                heroButtons.style.opacity = '1';
+                heroButtons.style.transform = 'translateY(0)';
+            }, 600);
+        }
+        
+        // Animate hero features
+        if (heroFeatures) {
+            setTimeout(() => {
+                heroFeatures.style.transition = 'all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                heroFeatures.style.opacity = '1';
+                heroFeatures.style.transform = 'translateY(0)';
+            }, 800);
+        }
+        
+        // Animate hero stats with scaling effect
+        if (heroStats) {
+            setTimeout(() => {
+                heroStats.style.transition = 'all 1s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                heroStats.style.opacity = '1';
+                heroStats.style.transform = 'translateX(0)';
+                
+                // Scale up stats cards individually
+                const statsCards = heroStats.querySelectorAll('.stats-card');
+                statsCards.forEach((card, index) => {
+                    setTimeout(() => {
+                        card.style.transform = 'scale(1)';
+                    }, index * 150);
+                });
+                
+                // Start counter animation for stats
+                setTimeout(() => {
+                    animateCounters();
+                }, 500);
+            }, 1000);
+        }
+        
+        // Animate carousel header when it comes into view
+        if (carouselHeader) {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.transition = 'all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.3 });
+            
+            observer.observe(carouselHeader);
+        }
+        
+        // Add feature hover animations
+        const featureItems = document.querySelectorAll('.feature-item');
+        featureItems.forEach(item => {
+            item.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateX(10px)';
+                const icon = this.querySelector('.feature-icon i');
+                if (icon) {
+                    icon.style.transform = 'scale(1.2) rotate(5deg)';
+                    icon.style.transition = 'all 0.3s ease';
+                }
+            });
+            
+            item.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateX(0)';
+                const icon = this.querySelector('.feature-icon i');
+                if (icon) {
+                    icon.style.transform = 'scale(1) rotate(0deg)';
+                }
+            });
+        });
+    }
+    
+    // Counter animation function
+    function animateCounters() {
+        const counters = document.querySelectorAll('.counter');
+        
+        counters.forEach(counter => {
+            const target = parseInt(counter.dataset.target);
+            if (isNaN(target)) return;
+            
+            let current = 0;
+            const increment = target / 60; // Animation duration roughly 1 second at 60fps
+            
+            const updateCounter = () => {
+                if (current < target) {
+                    current += increment;
+                    counter.textContent = Math.floor(current);
+                    requestAnimationFrame(updateCounter);
+                } else {
+                    counter.textContent = target;
+                }
+            };
+            
+            updateCounter();
+        });
+    }
+    
+    // Add floating animation to brand elements
+    function addFloatingAnimation() {
+        const brandElements = document.querySelectorAll('.brand-section, .brand-web');
+        
+        brandElements.forEach((element, index) => {
+            element.style.animation = `float 3s ease-in-out infinite ${index * 0.5}s`;
+        });
+    }
+    
+    // CSS Animation keyframes (added programmatically)
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-5px); }
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .stats-card:hover {
+            transform: scale(1.05) !important;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3) !important;
+        }
+        
+        .hero-buttons .btn:hover {
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+        }
+        
+        .carousel-header h2 {
+            animation: pulse 4s ease-in-out infinite;
+        }
+    `;
+    document.head.appendChild(style);
+    
+    // Initialize animations
+    animateOnLoad();
+    setTimeout(addFloatingAnimation, 1200);
+    
+    // Enhanced carousel functionality
+    const carousel = document.getElementById('topVideosCarousel');
+    if (carousel) {
+        const carouselInstance = new bootstrap.Carousel(carousel, {
+            interval: 5000, // 5 seconds
+            wrap: true,
+            pause: 'hover',
+            keyboard: true,
+            touch: true
+        });
+        
+        // Pause video when sliding away
+        carousel.addEventListener('slide.bs.carousel', function (e) {
+            const activeVideos = e.from !== undefined ? 
+                carousel.querySelectorAll('.carousel-item')[e.from].querySelectorAll('video') : 
+                carousel.querySelectorAll('.carousel-item.active video');
+            
+            activeVideos.forEach(video => {
+                if (!video.paused) {
+                    video.pause();
+                }
+            });
+        });
+        
+        // Auto-pause carousel when video is playing
+        const videos = carousel.querySelectorAll('video');
+        videos.forEach(video => {
+            video.addEventListener('play', function() {
+                carouselInstance.pause();
+            });
+            
+            video.addEventListener('pause', function() {
+                carouselInstance.cycle();
+            });
+            
+            video.addEventListener('ended', function() {
+                carouselInstance.cycle();
+            });
+            
+            // Hover to play functionality
+            const videoContainer = video.closest('.video-container');
+            let hoverTimeout;
+            
+            // Add playing state management
+            video.addEventListener('play', function() {
+                videoContainer.classList.add('playing');
+            });
+            
+            video.addEventListener('pause', function() {
+                videoContainer.classList.remove('playing');
+            });
+            
+            video.addEventListener('ended', function() {
+                videoContainer.classList.remove('playing');
+            });
+            
+            videoContainer.addEventListener('mouseenter', function() {
+                // Pause the carousel while hovering
+                carouselInstance.pause();
+                
+                // Add a small delay before auto-playing to avoid accidental triggers
+                hoverTimeout = setTimeout(() => {
+                    if (!video.paused) return; // Don't restart if already playing
+                    
+                    // Pause all other videos in the carousel first
+                    videos.forEach(otherVideo => {
+                        if (otherVideo !== video && !otherVideo.paused) {
+                            otherVideo.pause();
+                            otherVideo.closest('.video-container').classList.remove('playing');
+                        }
+                    });
+                    
+                    // Play the hovered video
+                    video.play().catch(error => {
+                        console.log('Auto-play prevented by browser:', error);
+                        // Show a subtle play indicator when auto-play is blocked
+                        showPlayIndicator(videoContainer);
+                    });
+                }, 300); // Reduced to 300ms for better responsiveness
+            });
+            
+            videoContainer.addEventListener('mouseleave', function() {
+                // Clear the hover timeout if mouse leaves before delay
+                if (hoverTimeout) {
+                    clearTimeout(hoverTimeout);
+                }
+                
+                // Pause the video when mouse leaves
+                if (!video.paused) {
+                    video.pause();
+                    video.currentTime = 0; // Reset to beginning for next hover
+                }
+                
+                // Resume carousel auto-sliding
+                carouselInstance.cycle();
+            });
+            
+            // Add click to play/pause functionality as fallback
+            video.addEventListener('click', function() {
+                if (video.paused) {
+                    video.play().catch(error => {
+                        console.log('Play prevented:', error);
+                    });
+                } else {
+                    video.pause();
+                }
+            });
+        });
+        
+        // Function to show play indicator when auto-play is blocked
+        function showPlayIndicator(container) {
+            const existing = container.querySelector('.play-indicator');
+            if (existing) return; // Don't show multiple indicators
+            
+            const indicator = document.createElement('div');
+            indicator.className = 'play-indicator position-absolute top-50 start-50 translate-middle';
+            indicator.style.cssText = `
+                background: rgba(0,0,0,0.7);
+                color: white;
+                padding: 8px 12px;
+                border-radius: 20px;
+                font-size: 0.9rem;
+                pointer-events: none;
+                z-index: 10;
+                animation: fadeInOut 2s ease-in-out;
+            `;
+            indicator.innerHTML = '<i class="fas fa-play me-1"></i>Click to play';
+            
+            container.appendChild(indicator);
+            
+            // Remove indicator after animation
+            setTimeout(() => {
+                if (indicator.parentNode) {
+                    indicator.remove();
+                }
+            }, 2000);
+        }
+        
+        // Add smooth scroll to view when carousel navigation is used
+        const indicators = carousel.querySelectorAll('.carousel-indicators button');
+        const controls = carousel.querySelectorAll('.carousel-control-prev, .carousel-control-next');
+        
+        [...indicators, ...controls].forEach(control => {
+            control.addEventListener('click', function() {
+                setTimeout(() => {
+                    carousel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 100);
+            });
+        });
+        
+        // Add keyboard navigation enhancement
+        document.addEventListener('keydown', function(e) {
+            if (carousel.matches(':hover') || document.activeElement.closest('#topVideosCarousel')) {
+                if (e.key === 'ArrowLeft') {
+                    e.preventDefault();
+                    carouselInstance.prev();
+                } else if (e.key === 'ArrowRight') {
+                    e.preventDefault();
+                    carouselInstance.next();
+                } else if (e.key === ' ') {
+                    e.preventDefault();
+                    const activeVideo = carousel.querySelector('.carousel-item.active video');
+                    if (activeVideo) {
+                        if (activeVideo.paused) {
+                            activeVideo.play();
+                        } else {
+                            activeVideo.pause();
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Simple visual feedback for auto-advance timing
+        function addVisualFeedback() {
+            const indicators = carousel.querySelectorAll('.carousel-indicators button');
+            let currentIndex = 0;
+            
+            function updateIndicators() {
+                indicators.forEach((indicator, index) => {
+                    if (index === currentIndex) {
+                        indicator.style.transform = 'scale(1.3)';
+                        indicator.style.boxShadow = '0 2px 8px rgba(0, 102, 204, 0.4)';
+                    } else {
+                        indicator.style.transform = 'scale(1)';
+                        indicator.style.boxShadow = 'none';
+                    }
+                });
+            }
+            
+            carousel.addEventListener('slide.bs.carousel', function(e) {
+                currentIndex = e.to;
+                setTimeout(updateIndicators, 100);
+            });
+            
+            updateIndicators();
+        }
+        
+        // Initialize visual feedback
+        if (carousel.querySelectorAll('.carousel-indicators button').length > 0) {
+            addVisualFeedback();
+        }
+        
+        // Add touch/swipe support enhancement for mobile
+        let touchStartX = 0;
+        let touchEndX = 0;
+        
+        carousel.addEventListener('touchstart', function(e) {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+        
+        carousel.addEventListener('touchend', function(e) {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        });
+        
+        function handleSwipe() {
+            const swipeThreshold = 50;
+            const diff = touchStartX - touchEndX;
+            
+            if (Math.abs(diff) > swipeThreshold) {
+                if (diff > 0) {
+                    carouselInstance.next();
+                } else {
+                    carouselInstance.prev();
+                }
+            }
+        }
+        
+        // Add intersection observer for performance
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    carouselInstance.cycle();
+                } else {
+                    carouselInstance.pause();
+                }
+            });
+        }, { threshold: 0.5 });
+        
+        observer.observe(carousel);
+    }
+    
+    // Animate stats cards on scroll
+    const statsCards = document.querySelectorAll('.stats-card');
+    if (statsCards.length > 0) {
+        const statsObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.animation = 'fadeInUp 0.6s ease-out';
+                }
+            });
+        }, { threshold: 0.3 });
+        
+        statsCards.forEach(card => statsObserver.observe(card));
+    }
+    
+    // Enhanced "How It Works" Animation System
+    function initHowItWorksAnimation() {
+        const howItWorksSection = document.getElementById('how-it-works-steps');
+        const steps = document.querySelectorAll('.how-it-works-step');
+        
+        if (!howItWorksSection || steps.length === 0) return;
+        
+        // Set initial state - hide all steps
+        steps.forEach(step => {
+            step.style.opacity = '0';
+            step.style.transform = 'translateY(50px) scale(0.8)';
+            step.style.transition = 'all 0.8s cubic-bezier(0.16, 1, 0.3, 1)';
+        });
+        
+        // Create intersection observer for the section
+        const howItWorksObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    // Trigger sequential animations
+                    animateStepsSequentially();
+                    
+
+                    
+                    // Add periodic pulse animation
+                    setTimeout(() => {
+                        addPeriodicPulseAnimation();
+                    }, 2000);
+                    
+                    // Disconnect observer after animation starts
+                    howItWorksObserver.unobserve(entry.target);
+                }
+            });
+        }, {
+            threshold: 0.3,
+            rootMargin: '0px 0px -50px 0px'
+        });
+        
+        howItWorksObserver.observe(howItWorksSection);
+        
+        // Sequential animation function
+        function animateStepsSequentially() {
+            steps.forEach((step, index) => {
+                const delay = parseInt(step.dataset.delay) || (index * 200);
+                
+                setTimeout(() => {
+                    // Main entrance animation
+                    step.style.opacity = '1';
+                    step.style.transform = 'translateY(0) scale(1)';
+                    
+                    // Add bounce effect to icon
+                    const icon = step.querySelector('.step-icon');
+                    if (icon) {
+                        setTimeout(() => {
+                            icon.style.animation = 'iconBounce 0.6s ease-out';
+                        }, 200);
+                    }
+                    
+                    // Animate text elements
+                    const title = step.querySelector('.step-title');
+                    const description = step.querySelector('.step-description');
+                    
+                    if (title) {
+                        setTimeout(() => {
+                            title.style.animation = 'slideInLeft 0.5s ease-out';
+                        }, 300);
+                    }
+                    
+                    if (description) {
+                        setTimeout(() => {
+                            description.style.animation = 'fadeInUp 0.5s ease-out';
+                        }, 400);
+                    }
+                    
+                }, delay);
+            });
+        }
+        
+
+        
+        // Periodic pulse animation for enhanced engagement
+        function addPeriodicPulseAnimation() {
+            steps.forEach((step, index) => {
+                const icon = step.querySelector('.step-icon');
+                if (icon) {
+                    // Add periodic pulse every 4 seconds with offset
+                    setInterval(() => {
+                        icon.style.animation = 'none';
+                        setTimeout(() => {
+                            icon.style.animation = 'pulseGlow 1.5s ease-in-out';
+                        }, 50);
+                    }, 4000 + (index * 1000));
+                }
+            });
+        }
+        
+        // Add hover interactions
+        steps.forEach(step => {
+            const icon = step.querySelector('.step-icon');
+            const stepNumber = step.dataset.step;
+            
+            step.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-10px) scale(1.05)';
+                if (icon) {
+                    icon.style.animation = 'hoverBounce 0.4s ease-out';
+                    icon.style.boxShadow = '0 8px 25px rgba(0,0,0,0.3)';
+                }
+                
+                // Highlight connected steps
+                highlightConnectedSteps(parseInt(stepNumber));
+            });
+            
+            step.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0) scale(1)';
+                if (icon) {
+                    icon.style.boxShadow = 'none';
+                }
+                
+                // Remove highlights
+                removeStepHighlights();
+            });
+        });
+        
+        // Step highlighting system
+        function highlightConnectedSteps(currentStep) {
+            steps.forEach((step, index) => {
+                const stepIndex = index + 1;
+                if (stepIndex <= currentStep) {
+                    step.classList.add('step-highlighted');
+                } else {
+                    step.classList.add('step-dimmed');
+                }
+            });
+        }
+        
+        function removeStepHighlights() {
+            steps.forEach(step => {
+                step.classList.remove('step-highlighted', 'step-dimmed');
+            });
+        }
+        
+        // Mobile touch interactions
+        if ('ontouchstart' in window) {
+            steps.forEach(step => {
+                step.addEventListener('touchstart', function() {
+                    this.classList.add('step-touched');
+                });
+                
+                step.addEventListener('touchend', function() {
+                    setTimeout(() => {
+                        this.classList.remove('step-touched');
+                    }, 300);
+                });
+            });
+        }
+    }
+    
+    // Initialize the animation system
+    initHowItWorksAnimation();
+});
+
+// Add CSS animations for stats cards and How It Works section
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    @keyframes slideInLeft {
+        from {
+            opacity: 0;
+            transform: translateX(-30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+    
+    @keyframes iconBounce {
+        0%, 20%, 50%, 80%, 100% {
+            transform: translateY(0) scale(1);
+        }
+        40% {
+            transform: translateY(-15px) scale(1.1);
+        }
+        60% {
+            transform: translateY(-7px) scale(1.05);
+        }
+    }
+    
+    @keyframes hoverBounce {
+        0%, 100% {
+            transform: scale(1);
+        }
+        50% {
+            transform: scale(1.1);
+        }
+    }
+    
+    @keyframes pulseGlow {
+        0%, 100% {
+            transform: scale(1);
+            box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4);
+        }
+        50% {
+            transform: scale(1.05);
+            box-shadow: 0 0 0 10px rgba(255, 255, 255, 0);
+        }
+    }
+    
+
+    
+    .stats-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .stats-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    }
+    
+    /* How It Works Enhanced Styles */
+    .how-it-works-step {
+        position: relative;
+        cursor: pointer;
+        transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    
+    .how-it-works-step:hover {
+        z-index: 10;
+    }
+    
+    .step-icon {
+        transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        position: relative;
+        overflow: hidden;
+    }
+    
+
+    
+
+    
+    .step-highlighted {
+        transform: translateY(-5px) scale(1.02);
+        filter: brightness(1.1);
+    }
+    
+    .step-highlighted .step-icon {
+        box-shadow: 0 8px 25px rgba(0, 123, 255, 0.4);
+    }
+    
+    .step-dimmed {
+        opacity: 0.6;
+        transform: scale(0.98);
+    }
+    
+    .step-touched {
+        transform: scale(0.95);
+    }
+    
+    .step-title {
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+        transition: color 0.3s ease;
+    }
+    
+    .how-it-works-step:hover .step-title {
+        color: #007bff;
+    }
+    
+    .step-description {
+        transition: all 0.3s ease;
+        line-height: 1.6;
+    }
+    
+    .how-it-works-step:hover .step-description {
+        color: #495057;
+        font-weight: 500;
+    }
+    
+    /* Mobile Responsive Enhancements */
+    @media (max-width: 768px) {
+        .how-it-works-step {
+            margin-bottom: 2rem;
+        }
+        
+
+        
+        .how-it-works-step:hover {
+            transform: translateY(-5px) scale(1.02);
+        }
+    }
+    
+    /* Accessibility improvements */
+    @media (prefers-reduced-motion: reduce) {
+        .how-it-works-step,
+        .step-icon,
+        .step-title,
+        .step-description {
+            transition: none !important;
+            animation: none !important;
+        }
+    }
+    
+    /* Focus states for keyboard navigation */
+    .how-it-works-step:focus-within {
+        outline: 2px solid #007bff;
+        outline-offset: 4px;
+        border-radius: 8px;
+    }
+`;
+document.head.appendChild(style);
+</script>
+{% endblock %}

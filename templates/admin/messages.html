@@ -1,0 +1,282 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Send Messages{% endblock %}
+{% block page_title %}Send Messages to Users{% endblock %}
+
+{% block content %}
+<!-- Message Composer -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">
+            <i class="fas fa-envelope me-2"></i>Compose Message
+        </h5>
+    </div>
+    <div class="card-body">
+        <form method="POST">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">Recipient Type</label>
+                        <select class="form-select" name="recipient_type" id="recipientType" required>
+                            <option value="">Select recipient type...</option>
+                            <option value="single">Single User</option>
+                            <option value="regular_users">All Regular Users</option>
+                            <option value="all_users">All Users</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3" id="singleUserDiv" style="display: none;">
+                        <label class="form-label">Select User</label>
+                        <select class="form-select" name="recipient_id" id="recipientId">
+                            <option value="">Select user...</option>
+                            {% for user in users %}
+                                <option value="{{ user[0] }}">{{ user[1] }} ({{ user[2] }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label">Subject</label>
+                <input type="text" class="form-control" name="subject" required placeholder="Enter message subject">
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label">Message</label>
+                <textarea class="form-control" name="message" rows="8" required placeholder="Enter your message..."></textarea>
+                <div class="form-text">You can use basic HTML formatting in your message.</div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" name="send_email" id="sendEmail">
+                        <label class="form-check-label" for="sendEmail">
+                            Also send via email
+                        </label>
+                        <div class="form-text">
+                            Messages will be saved in the platform. Check this to also send via email.
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 text-end">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-paper-plane me-2"></i>Send Message
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Message Templates -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">
+            <i class="fas fa-file-alt me-2"></i>Message Templates
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h6 class="card-title">Welcome Message</h6>
+                        <p class="card-text small">Welcome new users to the platform</p>
+                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="useTemplate('welcome')">Use Template</button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h6 class="card-title">Contest Announcement</h6>
+                        <p class="card-text small">Announce new contests or competitions</p>
+                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="useTemplate('contest')">Use Template</button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h6 class="card-title">Platform Update</h6>
+                        <p class="card-text small">Notify users about platform updates</p>
+                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="useTemplate('update')">Use Template</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Messages -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">
+            <i class="fas fa-history me-2"></i>Recent Messages
+        </h5>
+    </div>
+    <div class="card-body">
+        {% if recent_messages %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Subject</th>
+                            <th>Recipient</th>
+                            <th>Sent Date</th>
+                            <th>Email Sent</th>
+                            <th>Preview</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for message in recent_messages %}
+                        <tr>
+                            <td>
+                                <div class="fw-bold">{{ message[0] }}</div>
+                            </td>
+                            <td>{{ message[3] }}</td>
+                            <td>{{ message[2].split('.')[0].replace('T', ' ') if '.' in message[2] else message[2] }}</td>
+                            <td>
+                                {% if message[4] %}
+                                    <span class="badge bg-success">Yes</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">No</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <button type="button" class="btn btn-sm btn-outline-info" 
+                                        data-bs-toggle="modal" data-bs-target="#messageModal{{ loop.index }}">
+                                    <i class="fas fa-eye"></i> View
+                                </button>
+                                
+                                <!-- Message Preview Modal -->
+                                <div class="modal fade" id="messageModal{{ loop.index }}" tabindex="-1">
+                                    <div class="modal-dialog modal-lg">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">{{ message[0] }}</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <div class="mb-3">
+                                                    <strong>To:</strong> {{ message[3] }}<br>
+                                                    <strong>Sent:</strong> {{ message[2].split('.')[0].replace('T', ' ') if '.' in message[2] else message[2] }}<br>
+                                                    <strong>Email Sent:</strong> {{ 'Yes' if message[4] else 'No' }}
+                                                </div>
+                                                <hr>
+                                                <div class="message-content">{{ message[1]|safe }}</div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center text-muted py-4">
+                <i class="fas fa-inbox fa-3x mb-3"></i>
+                <p>No messages sent yet</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Show/hide single user selector based on recipient type
+document.getElementById('recipientType').addEventListener('change', function() {
+    const singleUserDiv = document.getElementById('singleUserDiv');
+    const recipientId = document.getElementById('recipientId');
+    
+    if (this.value === 'single') {
+        singleUserDiv.style.display = 'block';
+        recipientId.required = true;
+    } else {
+        singleUserDiv.style.display = 'none';
+        recipientId.required = false;
+        recipientId.value = '';
+    }
+});
+
+// Message templates
+const templates = {
+    welcome: {
+        subject: 'Welcome to SectionDuWeb!',
+        message: `<p>Dear User,</p>
+
+<p>Welcome to SectionDuWeb! We're excited to have you join our community of content creators and viewers.</p>
+
+<p>Here's what you can do on our platform:</p>
+<ul>
+<li>Upload and share your creative videos</li>
+<li>Vote on videos from other creators</li>
+<li>Participate in our video competitions</li>
+<li>Connect with like-minded creators</li>
+</ul>
+
+<p>If you have any questions, feel free to reach out to our support team.</p>
+
+<p>Happy creating!<br>
+The SectionDuWeb Team</p>`
+    },
+    contest: {
+        subject: 'New Contest Alert! 🏆',
+        message: `<p>Attention Creators!</p>
+
+<p>We're excited to announce a new video competition starting soon!</p>
+
+<p><strong>Contest Details:</strong></p>
+<ul>
+<li>Theme: [Contest Theme]</li>
+<li>Submission Deadline: [Date]</li>
+<li>Prizes: [Prize Details]</li>
+<li>Rules: [Contest Rules]</li>
+</ul>
+
+<p>This is your chance to showcase your creativity and win amazing prizes!</p>
+
+<p>Start creating and good luck!</p>
+
+<p>Best regards,<br>
+The SectionDuWeb Team</p>`
+    },
+    update: {
+        subject: 'Platform Update - New Features Available',
+        message: `<p>Hello SectionDuWeb Community,</p>
+
+<p>We've just released some exciting new features and improvements to enhance your experience:</p>
+
+<p><strong>What's New:</strong></p>
+<ul>
+<li>[Feature 1] - [Description]</li>
+<li>[Feature 2] - [Description]</li>
+<li>[Bug fixes and performance improvements]</li>
+</ul>
+
+<p>We're constantly working to improve your experience on SectionDuWeb. If you have any feedback or suggestions, please don't hesitate to contact us.</p>
+
+<p>Thank you for being part of our community!</p>
+
+<p>The SectionDuWeb Team</p>`
+    }
+};
+
+function useTemplate(templateName) {
+    const template = templates[templateName];
+    if (template) {
+        document.querySelector('input[name="subject"]').value = template.subject;
+        document.querySelector('textarea[name="message"]').value = template.message;
+    }
+}
+</script>
+{% endblock %}

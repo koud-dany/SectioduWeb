@@ -1,0 +1,317 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Profile - SectionduWeb{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width: 800px;">
+    <!-- Header -->
+    <div class="row justify-content-center mb-4">
+        <div class="col-12 text-center">
+            <div class="d-inline-flex align-items-center bg-primary bg-opacity-10 rounded-pill px-4 py-2 mb-3">
+                <i class="fas fa-user-edit text-primary me-2 fs-4"></i>
+                <h2 class="mb-0 text-primary">Edit Profile</h2>
+            </div>
+            <p class="text-muted">Customize your profile to make it uniquely yours</p>
+        </div>
+    </div>
+
+    <form method="POST" enctype="multipart/form-data" id="editProfileForm">
+        <div class="row g-4">
+            <!-- Avatar Section -->
+            <div class="col-12">
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-gradient bg-primary text-white py-3">
+                        <h5 class="mb-0">
+                            <i class="fas fa-image me-2"></i>Profile Picture
+                        </h5>
+                    </div>
+                    <div class="card-body p-4 text-center">
+                        <div class="mb-4">
+                            <!-- Current Avatar Preview -->
+                            <div class="position-relative d-inline-block">
+                                {% if user and user[7] %}
+                                <img id="avatarPreview" src="{{ url_for('static', filename='avatars/' + user[7]) }}" 
+                                     alt="Current Avatar" 
+                                     class="rounded-circle shadow-lg border border-primary border-3"
+                                     style="width: 150px; height: 150px; object-fit: cover;">
+                                {% else %}
+                                <div id="avatarPreview" class="bg-primary bg-opacity-20 rounded-circle d-flex align-items-center justify-content-center border border-primary border-3 shadow-lg"
+                                     style="width: 150px; height: 150px;">
+                                    <i class="fas fa-user text-primary" style="font-size: 4rem;"></i>
+                                </div>
+                                {% endif %}
+                                
+                                <!-- Camera icon overlay -->
+                                <div class="position-absolute bottom-0 end-0 bg-primary rounded-circle d-flex align-items-center justify-content-center border border-white border-2 shadow"
+                                     style="width: 40px; height: 40px; cursor: pointer;"
+                                     onclick="document.getElementById('avatar').click()">
+                                    <i class="fas fa-camera text-white"></i>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <input type="file" class="form-control d-none" id="avatar" name="avatar" accept="image/*" onchange="previewAvatar(this)">
+                        <label for="avatar" class="btn btn-outline-primary rounded-pill px-4">
+                            <i class="fas fa-upload me-2"></i>Choose New Picture
+                        </label>
+                        <br>
+                        <small class="text-muted mt-2 d-block">Recommended: Square image, at least 200x200px</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Personal Information -->
+            <div class="col-12">
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-gradient bg-success text-white py-3">
+                        <h5 class="mb-0">
+                            <i class="fas fa-user me-2"></i>Personal Information
+                        </h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="first_name" class="form-label fw-semibold">
+                                    <i class="fas fa-user text-success me-1"></i>First Name
+                                </label>
+                                <input type="text" class="form-control form-control-lg rounded-pill" 
+                                       id="first_name" name="first_name" 
+                                       value="{{ user[2] if user and user[2] else '' }}"
+                                       placeholder="Enter your first name">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="last_name" class="form-label fw-semibold">
+                                    <i class="fas fa-user text-success me-1"></i>Last Name
+                                </label>
+                                <input type="text" class="form-control form-control-lg rounded-pill" 
+                                       id="last_name" name="last_name" 
+                                       value="{{ user[3] if user and user[3] else '' }}"
+                                       placeholder="Enter your last name">
+                            </div>
+                        </div>
+                        
+                        <div class="row g-3 mt-1">
+                            <div class="col-12">
+                                <label for="bio" class="form-label fw-semibold">
+                                    <i class="fas fa-quote-left text-info me-1"></i>Bio
+                                </label>
+                                <textarea class="form-control form-control-lg" 
+                                          id="bio" name="bio" rows="4" 
+                                          placeholder="Tell the world about yourself... What makes you unique?"
+                                          maxlength="500">{{ user[4] if user and user[4] else '' }}</textarea>
+                                <div class="d-flex justify-content-between mt-1">
+                                    <small class="text-muted">Share your story, interests, or what your channel is about</small>
+                                    <small class="text-muted"><span id="bioCount">{{ user[4]|length if user and user[4] else 0 }}</span>/500</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contact & Social -->
+            <div class="col-12">
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-gradient bg-warning text-dark py-3">
+                        <h5 class="mb-0">
+                            <i class="fas fa-globe me-2"></i>Contact & Social
+                        </h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="location" class="form-label fw-semibold">
+                                    <i class="fas fa-map-marker-alt text-danger me-1"></i>Location
+                                </label>
+                                <input type="text" class="form-control form-control-lg rounded-pill" 
+                                       id="location" name="location" 
+                                       value="{{ user[5] if user and user[5] else '' }}"
+                                       placeholder="Your city, country">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="website" class="form-label fw-semibold">
+                                    <i class="fas fa-link text-primary me-1"></i>Website
+                                </label>
+                                <input type="url" class="form-control form-control-lg rounded-pill" 
+                                       id="website" name="website" 
+                                       value="{{ user[6] if user and user[6] else '' }}"
+                                       placeholder="https://your-website.com">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Account Info (Read-only) -->
+            <div class="col-12">
+                <div class="card shadow-sm border-0 bg-light">
+                    <div class="card-header bg-secondary text-white py-3">
+                        <h5 class="mb-0">
+                            <i class="fas fa-info-circle me-2"></i>Account Information
+                        </h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold text-muted">Username</label>
+                                <input type="text" class="form-control form-control-lg rounded-pill" 
+                                       value="{{ user[0] if user else session.username }}" readonly>
+                                <small class="text-muted">Username cannot be changed</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold text-muted">Email</label>
+                                <input type="email" class="form-control form-control-lg rounded-pill" 
+                                       value="{{ user[1] if user else '' }}" readonly>
+                                <small class="text-muted">Contact support to change email</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="col-12">
+                <div class="d-flex justify-content-center gap-3 mt-4">
+                    <a href="{{ url_for('profile') }}" class="btn btn-outline-secondary btn-lg rounded-pill px-5">
+                        <i class="fas fa-times me-2"></i>Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary btn-lg rounded-pill px-5" id="saveBtn">
+                        <i class="fas fa-save me-2"></i>Save Changes
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Avatar preview functionality
+function previewAvatar(input) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        
+        reader.onload = function(e) {
+            const preview = document.getElementById('avatarPreview');
+            
+            // If it's currently a div (placeholder), replace with img
+            if (preview.tagName === 'DIV') {
+                const img = document.createElement('img');
+                img.id = 'avatarPreview';
+                img.src = e.target.result;
+                img.alt = 'Avatar Preview';
+                img.className = 'rounded-circle shadow-lg border border-primary border-3';
+                img.style.cssText = 'width: 150px; height: 150px; object-fit: cover;';
+                preview.parentNode.replaceChild(img, preview);
+            } else {
+                // If it's already an img, just update the src
+                preview.src = e.target.result;
+            }
+        };
+        
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+// Bio character counter
+document.getElementById('bio').addEventListener('input', function() {
+    const count = this.value.length;
+    document.getElementById('bioCount').textContent = count;
+    
+    // Change color based on character count
+    const counter = document.getElementById('bioCount');
+    if (count > 450) {
+        counter.className = 'text-danger fw-bold';
+    } else if (count > 400) {
+        counter.className = 'text-warning fw-bold';
+    } else {
+        counter.className = 'text-muted';
+    }
+});
+
+// Form validation and submission
+document.getElementById('editProfileForm').addEventListener('submit', function(e) {
+    const saveBtn = document.getElementById('saveBtn');
+    
+    // Show loading state
+    saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Saving...';
+    saveBtn.disabled = true;
+    
+    // Form will submit normally, but we show loading state
+});
+
+// Smooth animations on load
+document.addEventListener('DOMContentLoaded', function() {
+    // Animate cards on load
+    const cards = document.querySelectorAll('.card');
+    cards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(30px)';
+        
+        setTimeout(() => {
+            card.style.transition = 'all 0.5s ease';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, index * 100);
+    });
+    
+    // Add hover effects to form controls
+    const formControls = document.querySelectorAll('.form-control');
+    formControls.forEach(control => {
+        control.addEventListener('focus', function() {
+            this.style.transform = 'scale(1.02)';
+            this.style.boxShadow = '0 0 20px rgba(13, 110, 253, 0.25)';
+        });
+        
+        control.addEventListener('blur', function() {
+            this.style.transform = 'scale(1)';
+            this.style.boxShadow = '';
+        });
+    });
+});
+
+// Website URL validation
+document.getElementById('website').addEventListener('blur', function() {
+    const url = this.value.trim();
+    if (url && !url.startsWith('http://') && !url.startsWith('https://')) {
+        this.value = 'https://' + url;
+    }
+});
+</script>
+
+<style>
+/* Custom styles for the edit profile page */
+.form-control:focus {
+    border-color: #0d6efd;
+    transition: all 0.3s ease;
+}
+
+.card {
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+}
+
+.btn {
+    transition: all 0.3s ease;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+}
+
+/* Loading animation */
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+.loading {
+    animation: pulse 1.5s ease-in-out infinite;
+}
+</style>
+{% endblock %}

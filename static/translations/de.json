@@ -1,0 +1,25 @@
+{
+  "nav": {
+    "home": "Startseite",
+    "dashboard": "Dashboard",
+    "videos": "Videos",
+    "leaderboard": "Bestenliste",
+    "profile": "Mein Profil",
+    "editProfile": "Profil bearbeiten",
+    "logout": "Abmelden",
+    "login": "Anmelden",
+    "admin": "Admin",
+    "adminPanel": "Admin-Panel"
+  },
+  "footer": {
+    "copyright": "© 2025 SectionduWeb. Alle Rechte vorbehalten."
+  },
+  "common": {
+    "submit": "Senden",
+    "cancel": "Abbrechen",
+    "save": "Speichern",
+    "edit": "Bearbeiten",
+    "delete": "Löschen",
+    "view": "Ansehen"
+  }
+}

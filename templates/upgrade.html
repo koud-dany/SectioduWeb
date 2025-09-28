@@ -1,0 +1,239 @@
+{% extends "base.html" %}
+
+{% block title %}Upgrade to Premium - SectionduWeb{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-5" style="max-width: 1000px; margin: 0 auto;">
+    <!-- Header -->
+    <div class="text-center mb-5">
+        <h1 class="display-4 fw-bold text-primary mb-3">
+            <i class="fas fa-crown text-warning me-3"></i>
+            Upgrade to Premium
+        </h1>
+        <p class="lead text-muted">Unlock exclusive features and take your video experience to the next level</p>
+    </div>
+    
+    <!-- Pricing Plans -->
+    <div class="row g-4 mb-5">
+        <!-- Free Plan -->
+        <div class="col-lg-4">
+            <div class="card h-100 border-0 shadow">
+                <div class="card-header bg-light text-center py-4">
+                    <h4 class="fw-bold">Free</h4>
+                    <h2 class="text-primary">$0<span class="fs-6 text-muted">/month</span></h2>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Upload up to 5 videos</li>
+                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Basic video quality</li>
+                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Community features</li>
+                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Standard support</li>
+                        <li class="mb-2"><i class="fas fa-times text-muted me-2"></i>HD video uploads</li>
+                        <li class="mb-2"><i class="fas fa-times text-muted me-2"></i>Advanced analytics</li>
+                        <li class="mb-2"><i class="fas fa-times text-muted me-2"></i>Priority support</li>
+                    </ul>
+                </div>
+                <div class="card-footer bg-light text-center">
+                    <button class="btn btn-outline-secondary rounded-pill px-4" disabled>
+                        Current Plan
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Pro Plan -->
+        <div class="col-lg-4">
+            <div class="card h-100 border-primary shadow-lg position-relative">
+                <div class="position-absolute top-0 start-50 translate-middle">
+                    <span class="badge bg-primary px-3 py-2 rounded-pill">Most Popular</span>
+                </div>
+                <div class="card-header bg-primary text-white text-center py-4">
+                    <h4 class="fw-bold">Pro</h4>
+                    <h2>$9.99<span class="fs-6 opacity-75">/month</span></h2>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Upload up to 50 videos</li>
+                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>HD video quality</li>
+                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Advanced analytics</li>
+                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Custom thumbnails</li>
+                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Priority support</li>
+                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>No ads</li>
+                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Channel customization</li>
+                    </ul>
+                </div>
+                <div class="card-footer bg-primary text-center">
+                    <button class="btn btn-warning rounded-pill px-4 fw-bold" onclick="upgradeToPro()">
+                        <i class="fas fa-rocket me-2"></i>Upgrade to Pro
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Enterprise Plan -->
+        <div class="col-lg-4">
+            <div class="card h-100 border-0 shadow">
+                <div class="card-header bg-dark text-white text-center py-4">
+                    <h4 class="fw-bold">Enterprise</h4>
+                    <h2>$29.99<span class="fs-6 opacity-75">/month</span></h2>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Unlimited video uploads</li>
+                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>4K video quality</li>
+                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Advanced analytics & insights</li>
+                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>White-label branding</li>
+                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>24/7 premium support</li>
+                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>API access</li>
+                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Team collaboration</li>
+                    </ul>
+                </div>
+                <div class="card-footer bg-dark text-center">
+                    <button class="btn btn-outline-light rounded-pill px-4" onclick="upgradeToEnterprise()">
+                        <i class="fas fa-building me-2"></i>Contact Sales
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Features Comparison -->
+    <div class="card shadow-sm border-0 mb-5">
+        <div class="card-header bg-light">
+            <h4 class="mb-0">
+                <i class="fas fa-comparison text-primary me-2"></i>
+                Feature Comparison
+            </h4>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="border-0">Features</th>
+                            <th class="border-0 text-center">Free</th>
+                            <th class="border-0 text-center text-primary">Pro</th>
+                            <th class="border-0 text-center">Enterprise</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><i class="fas fa-video text-primary me-2"></i>Video Uploads</td>
+                            <td class="text-center">5 videos</td>
+                            <td class="text-center text-primary fw-bold">50 videos</td>
+                            <td class="text-center">Unlimited</td>
+                        </tr>
+                        <tr>
+                            <td><i class="fas fa-hd-video text-primary me-2"></i>Video Quality</td>
+                            <td class="text-center">Standard</td>
+                            <td class="text-center text-primary fw-bold">HD (1080p)</td>
+                            <td class="text-center">4K Ultra HD</td>
+                        </tr>
+                        <tr>
+                            <td><i class="fas fa-chart-bar text-primary me-2"></i>Analytics</td>
+                            <td class="text-center">Basic</td>
+                            <td class="text-center text-primary fw-bold">Advanced</td>
+                            <td class="text-center">Professional</td>
+                        </tr>
+                        <tr>
+                            <td><i class="fas fa-palette text-primary me-2"></i>Customization</td>
+                            <td class="text-center"><i class="fas fa-times text-muted"></i></td>
+                            <td class="text-center text-primary"><i class="fas fa-check"></i></td>
+                            <td class="text-center"><i class="fas fa-check text-success"></i></td>
+                        </tr>
+                        <tr>
+                            <td><i class="fas fa-headset text-primary me-2"></i>Support</td>
+                            <td class="text-center">Standard</td>
+                            <td class="text-center text-primary fw-bold">Priority</td>
+                            <td class="text-center">24/7 Premium</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- FAQ -->
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-light">
+            <h4 class="mb-0">
+                <i class="fas fa-question-circle text-info me-2"></i>
+                Frequently Asked Questions
+            </h4>
+        </div>
+        <div class="card-body">
+            <div class="accordion" id="faqAccordion">
+                <div class="accordion-item border-0 mb-3">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button bg-light" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                            Can I cancel my subscription anytime?
+                        </button>
+                    </h2>
+                    <div id="faq1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            Yes, you can cancel your subscription at any time. You'll continue to have access to premium features until the end of your billing period.
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="accordion-item border-0 mb-3">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed bg-light" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                            What happens to my videos if I downgrade?
+                        </button>
+                    </h2>
+                    <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            Your existing videos will remain on the platform, but you won't be able to upload new videos beyond the free plan limits until you upgrade again.
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="accordion-item border-0">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed bg-light" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                            Do you offer discounts for annual subscriptions?
+                        </button>
+                    </h2>
+                    <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            Yes! Annual subscriptions come with a 20% discount. Contact our sales team for more information about annual pricing.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function upgradeToPro() {
+    // This would integrate with Stripe or another payment processor
+    alert('Pro upgrade functionality would redirect to payment processing. This is a demo version.');
+    // window.location.href = '/payment/pro';
+}
+
+function upgradeToEnterprise() {
+    // This would open a contact form or redirect to sales
+    alert('Enterprise upgrade would redirect to a contact form or sales page.');
+    // window.location.href = '/contact-sales';
+}
+
+// Animate pricing cards on load
+document.addEventListener('DOMContentLoaded', function() {
+    const cards = document.querySelectorAll('.card');
+    cards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        
+        setTimeout(() => {
+            card.style.transition = 'all 0.6s ease';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, index * 150);
+    });
+});
+</script>
+{% endblock %}

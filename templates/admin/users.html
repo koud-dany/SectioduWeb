@@ -1,0 +1,1139 @@
+{% extends "admin/base.html" %}
+
+{% block title %}User Management{% endblock %}
+{% block page_title %}User Management{% endblock %}
+
+{% block content %}
+<!-- Admin Notice -->
+{% if session.admin_level == 'super' %}
+<div class="alert alert-primary alert-dismissible fade show border-start border-primary border-4" role="alert" style="background: linear-gradient(135deg, #e3f2fd 0%, #f8f9ff 100%);">
+    <div class="d-flex align-items-center">
+        <i class="fas fa-shield-alt text-primary me-3" style="font-size: 1.2em;"></i>
+        <div>
+            <h6 class="alert-heading mb-1">Super Administrator Access</h6>
+            <p class="mb-0 small">You have elevated privileges including permanent account deletion. Please exercise caution when using administrative functions.</p>
+        </div>
+    </div>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+{% endif %}
+
+<!-- Search and Filter Bar -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label">Search Users</label>
+                <input type="text" class="form-control" name="search" value="{{ search }}" placeholder="Username, email, name...">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Filter</label>
+                <select class="form-select" name="filter">
+                    <option value="all" {% if filter_type == 'all' %}selected{% endif %}>All Users</option>
+                    <option value="participants" {% if filter_type == 'participants' %}selected{% endif %}>Participants</option>
+                    <option value="regular" {% if filter_type == 'regular' %}selected{% endif %}>Regular Users</option>
+                    <option value="blocked" {% if filter_type == 'blocked' %}selected{% endif %}>Blocked Users</option>
+                    <option value="admin" {% if filter_type == 'admin' %}selected{% endif %}>Admin Users</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">&nbsp;</label>
+                <button type="submit" class="btn btn-primary d-block">
+                    <i class="fas fa-search"></i> Search
+                </button>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">&nbsp;</label>
+                <a href="{{ url_for('admin_users') }}" class="btn btn-outline-secondary d-block">
+                    <i class="fas fa-times"></i> Clear
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Users Table -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+            <i class="fas fa-users me-2"></i>Users ({{ total_users }} total)
+        </h5>
+        <div>
+            <span class="badge bg-secondary">Page {{ page }} of {{ total_pages }}</span>
+        </div>
+    </div>
+    <div class="card-body">
+        {% if users %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Email</th>
+                            <th>Status</th>
+                            <th>Registered</th>
+                            <th>Last Login</th>
+                            <th>Logins</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                        <tr data-user-id="{{ user[0] }}">
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    {% if user[12] %}
+                                    <img src="{{ url_for('static', filename='avatars/' + user[12]) }}" 
+                                         alt="{{ user[1] }}'s Avatar" 
+                                         class="rounded-circle me-3 border border-2 border-light shadow-sm"
+                                         style="width: 40px; height: 40px; object-fit: cover;">
+                                    {% else %}
+                                    <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center me-3" 
+                                         style="width: 40px; height: 40px;">
+                                        <i class="fas fa-user text-white"></i>
+                                    </div>
+                                    {% endif %}
+                                    <div>
+                                        <div class="fw-bold">
+                                            {{ user[1] }}
+                                            {% if user[5] %}
+                                                <span class="badge bg-warning text-dark">
+                                                    <i class="fas fa-crown"></i> {{ user[10]|title if user[10] else 'Admin' }}
+                                                </span>
+                                            {% endif %}
+                                            {% if user[11] %}
+                                                <span class="badge bg-success">
+                                                    <i class="fas fa-star"></i> Participant
+                                                </span>
+                                            {% endif %}
+                                        </div>
+                                        {% if user[3] or user[4] %}
+                                            <small class="text-muted">{{ user[3] }} {{ user[4] }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </td>
+                            <td>{{ user[2] }}</td>
+                            <td>
+                                {% if user[6] %}
+                                    <span class="badge bg-danger">Blocked</span>
+                                {% else %}
+                                    <span class="badge bg-success">Active</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ user[7].split('T')[0] if user[7] else 'Unknown' }}</td>
+                            <td>
+                                {% if user[8] %}
+                                    {{ user[8].split('T')[0] if 'T' in (user[8]|string) else user[8] }}
+                                {% else %}
+                                    <span class="text-muted">Never</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ user[9] or 0 }}</td>
+                            <td class="table-actions">
+                                <div class="d-flex gap-1 align-items-center flex-wrap">
+                                    <!-- View Profile Button -->
+                                    <a href="{{ url_for('profile', username=user[1]) }}" class="btn btn-sm btn-outline-primary" title="View Profile">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    
+                                    {% if session.admin_level == 'super' %}
+                                    <!-- Admin Privileges Button -->
+                                    {% if user[5] %}
+                                        <button type="button" class="btn btn-sm btn-outline-warning" 
+                                                onclick="toggleUserPrivilege('{{ user[0] }}', 'revoke', 'admin')" title="Revoke Admin">
+                                            <i class="fas fa-user-minus"></i>
+                                        </button>
+                                    {% else %}
+                                        <button type="button" class="btn btn-sm btn-outline-info" 
+                                                onclick="toggleUserPrivilege('{{ user[0] }}', 'grant', 'admin')" title="Grant Admin">
+                                            <i class="fas fa-user-shield"></i>
+                                        </button>
+                                    {% endif %}
+                                    
+                                    <!-- Participant Status Button -->
+                                    {% if user[11] %}
+                                        <button type="button" class="btn btn-sm btn-outline-secondary" 
+                                                onclick="toggleUserPrivilege('{{ user[0] }}', 'downgrade', 'participant')" title="Downgrade to User">
+                                            <i class="fas fa-star-half-alt"></i>
+                                        </button>
+                                    {% else %}
+                                        <button type="button" class="btn btn-sm btn-outline-success" 
+                                                onclick="toggleUserPrivilege('{{ user[0] }}', 'upgrade', 'participant')" title="Upgrade to Participant">
+                                            <i class="fas fa-star"></i>
+                                        </button>
+                                    {% endif %}
+                                    {% endif %}
+                                    
+                                    <!-- Block/Unblock User Button -->
+                                    {% if user[6] %}
+                                        <button type="button" class="btn btn-sm btn-success" 
+                                                onclick="toggleUserBlock('{{ user[0] }}', 'unblock')" title="Unblock user">
+                                            <i class="fas fa-unlock"></i>
+                                        </button>
+                                    {% else %}
+                                        <button type="button" class="btn btn-sm btn-danger" 
+                                                data-bs-toggle="modal" data-bs-target="#blockUserModal{{ user[0] }}" title="Block user">
+                                            <i class="fas fa-ban"></i>
+                                        </button>
+                                    {% endif %}
+                                    
+                                    <!-- Delete User Button (Super Admin Only) -->
+                                    {% if session.admin_level == 'super' and user[0] != session.user_id %}
+                                        <button type="button" class="btn btn-sm btn-outline-danger" 
+                                                data-bs-toggle="modal" data-bs-target="#deleteUserModal{{ user[0] }}" title="Delete Account">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    {% endif %}
+                                </div>
+                                
+                                <!-- Block User Modal -->
+                                {% if not user[6] %}
+                                <div class="modal fade" id="blockUserModal{{ user[0] }}" tabindex="-1">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">Block User: {{ user[1] }}</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <form id="blockForm{{ user[0] }}" onsubmit="submitBlockForm(event, '{{ user[0] }}')">
+                                                <div class="modal-body">
+                                                    <input type="hidden" name="action" value="block">
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Reason for blocking:</label>
+                                                        <select class="form-select" name="reason" required>
+                                                            <option value="">Select reason...</option>
+                                                            <option value="Spam">Spam</option>
+                                                            <option value="Inappropriate behavior">Inappropriate behavior</option>
+                                                            <option value="Terms violation">Terms violation</option>
+                                                            <option value="Copyright infringement">Copyright infringement</option>
+                                                            <option value="Harassment">Harassment</option>
+                                                            <option value="Other">Other</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Duration:</label>
+                                                        <select class="form-select" name="duration" required>
+                                                            <option value="1_day">1 Day</option>
+                                                            <option value="1_week">1 Week</option>
+                                                            <option value="1_month">1 Month</option>
+                                                            <option value="permanent">Permanent</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                    <button type="submit" class="btn btn-danger">Block User</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                                
+                                <!-- Grant Admin Modal -->
+                                {% if session.admin_level == 'super' and not user[6] %}
+                                <div class="modal fade" id="grantAdminModal{{ user[0] }}" tabindex="-1">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">Grant Admin Privileges: {{ user[1] }}</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <form method="POST" action="{{ url_for('admin_toggle_admin', user_id=user[0]) }}">
+                                                <div class="modal-body">
+                                                    <input type="hidden" name="action" value="grant">
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Admin Level:</label>
+                                                        <select class="form-select" name="level" required>
+                                                            <option value="basic">Basic Admin</option>
+                                                            <option value="super">Super Admin</option>
+                                                        </select>
+                                                        <div class="form-text">
+                                                            <strong>Basic Admin:</strong> Can manage videos, users, send messages<br>
+                                                            <strong>Super Admin:</strong> Full access including system settings
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                    <button type="submit" class="btn btn-primary">Grant Admin</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                                
+                                <!-- Delete User Modal -->
+                                {% if session.admin_level == 'super' and user[0] != session.user_id %}
+                                <div class="modal fade" id="deleteUserModal{{ user[0] }}" tabindex="-1">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header bg-danger text-white">
+                                                <h5 class="modal-title">
+                                                    <i class="fas fa-exclamation-triangle me-2"></i>Delete User Account
+                                                </h5>
+                                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <form method="POST" action="{{ url_for('admin_delete_user', user_id=user[0]) }}">
+                                                <div class="modal-body">
+                                                    <div class="alert alert-danger border-start border-danger border-4" style="background: linear-gradient(135deg, #fee 0%, #fff5f5 100%);">
+                                                        <div class="d-flex align-items-center">
+                                                            <i class="fas fa-exclamation-triangle text-danger me-2"></i>
+                                                            <strong>Critical Action Warning:</strong> This operation is permanent and cannot be reversed.
+                                                        </div>
+                                                    </div>
+                                                    <p>You are about to permanently delete the user account:</p>
+                                                    <div class="border rounded p-3 bg-light">
+                                                        <strong>Username:</strong> {{ user[1] }}<br>
+                                                        <strong>Email:</strong> {{ user[2] }}<br>
+                                                        <strong>Registration Date:</strong> {{ user[8].split('T')[0] if user[8] else 'Unknown' }}
+                                                    </div>
+                                                    <p class="mt-3">This will also delete:</p>
+                                                    <ul>
+                                                        <li>All user's videos and associated files</li>
+                                                        <li>All comments and votes</li>
+                                                        <li>User profile and avatar</li>
+                                                        <li>All associated data</li>
+                                                    </ul>
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Type "DELETE" to confirm:</label>
+                                                        <input type="text" class="form-control" name="confirm_delete" 
+                                                               required placeholder="Type DELETE here" 
+                                                               onkeyup="this.value === 'DELETE' ? this.parentNode.parentNode.querySelector('.btn-danger').disabled = false : this.parentNode.parentNode.querySelector('.btn-danger').disabled = true">
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                    <button type="submit" class="btn btn-danger" disabled>
+                                                        <i class="fas fa-trash me-1"></i>Delete Account
+                                                    </button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination -->
+            {% if total_pages > 1 %}
+            <nav aria-label="User pagination">
+                <ul class="pagination justify-content-center">
+                    {% if page > 1 %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page - 1 }}&search={{ search }}&filter={{ filter_type }}">Previous</a>
+                        </li>
+                    {% endif %}
+                    
+                    {% for p in range(1, total_pages + 1) %}
+                        {% if p == page %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ p }}</span>
+                            </li>
+                        {% elif p <= 3 or p >= total_pages - 2 or (p >= page - 2 and p <= page + 2) %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ p }}&search={{ search }}&filter={{ filter_type }}">{{ p }}</a>
+                            </li>
+                        {% elif p == 4 or p == total_pages - 3 %}
+                            <li class="page-item disabled">
+                                <span class="page-link">...</span>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if page < total_pages %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page + 1 }}&search={{ search }}&filter={{ filter_type }}">Next</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        {% else %}
+            <div class="text-center text-muted py-5">
+                <i class="fas fa-users fa-3x mb-3"></i>
+                <p>No users found matching your criteria</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<style>
+/* Enhanced notification styles */
+.toast-notification {
+    border-radius: 12px !important;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.12) !important;
+}
+
+.toast-notification.alert-success {
+    background: linear-gradient(135deg, #d1e7dd 0%, #f0f9f0 100%) !important;
+    border-color: #badbcc !important;
+}
+
+.toast-notification.alert-danger {
+    background: linear-gradient(135deg, #f8d7da 0%, #fff5f5 100%) !important;
+    border-color: #f5c6cb !important;
+}
+
+.toast-notification.alert-warning {
+    background: linear-gradient(135deg, #fff3cd 0%, #fffbf0 100%) !important;
+    border-color: #ffecb5 !important;
+}
+
+.toast-notification.alert-info {
+    background: linear-gradient(135deg, #d1ecf1 0%, #f0f8ff 100%) !important;
+    border-color: #bee5eb !important;
+}
+
+/* Loading states */
+.btn:disabled {
+    opacity: 0.7;
+}
+
+/* Smooth transitions for all interactive elements */
+.btn, .page-link {
+    transition: all 0.2s ease;
+}
+
+/* Completely isolate table actions from table hover effects */
+.table-actions {
+    position: relative;
+    isolation: isolate; /* Create new stacking context */
+}
+
+/* Disable table hover effects when hovering over action area */
+.table-hover tbody tr:hover .table-actions {
+    background-color: transparent !important;
+    pointer-events: auto;
+}
+
+/* Button-based action styling */
+.table-actions .btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    min-width: 30px;
+    height: 30px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.table-actions .d-flex {
+    min-width: 200px; /* Ensure consistent width for button groups */
+}
+
+/* Enhanced button hover effects */
+.table-actions .btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Color-coded button variants */
+.btn-outline-primary:hover {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+.btn-outline-info:hover {
+    background-color: #0dcaf0;
+    border-color: #0dcaf0;
+}
+
+.btn-outline-success:hover {
+    background-color: #198754;
+    border-color: #198754;
+}
+
+.btn-outline-warning:hover {
+    background-color: #ffc107;
+    border-color: #ffc107;
+    color: #000;
+}
+
+.btn-outline-secondary:hover {
+    background-color: #6c757d;
+    border-color: #6c757d;
+}
+
+.btn-outline-danger:hover {
+    background-color: #dc3545;
+    border-color: #dc3545;
+}
+
+/* Responsive button layout */
+@media (max-width: 768px) {
+    .table-actions .d-flex {
+        flex-wrap: wrap;
+        gap: 2px !important;
+        min-width: auto;
+    }
+    
+    .table-actions .btn-sm {
+        min-width: 25px;
+        height: 25px;
+        padding: 0.2rem 0.3rem;
+        font-size: 0.7rem;
+    }
+}
+
+/* Clean table hover effects */
+.table-hover tbody tr:hover {
+    background-color: rgba(59, 130, 246, 0.04) !important;
+}
+</style>
+<script>
+// AJAX function for instant user privilege changes
+function toggleUserPrivilege(userId, action, type) {
+    // Ensure userId is a string for consistent handling
+    userId = String(userId);
+    
+    // Create form data
+    const formData = new FormData();
+    formData.append('action', action);
+    
+    let url;
+    if (type === 'admin') {
+        url = `/admin/user/${userId}/admin`;
+        if (action === 'grant') {
+            formData.append('level', 'basic');
+        }
+    } else if (type === 'participant') {
+        url = `/admin/user/${userId}/toggle_participant`;
+    }
+    
+    // Show loading state
+    const button = event.target.closest('button') || event.target;
+    const originalText = button.innerHTML;
+    button.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span>';
+    button.disabled = true;
+    
+    // Add AJAX flag to form data
+    formData.append('ajax', '1');
+    
+    // Make AJAX request
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'Accept': 'application/json'
+        },
+        body: formData
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        // Check if response is JSON
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            throw new Error('Response is not JSON - server may have returned an error page');
+        }
+        
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            updateUserRow(userId, data.user);
+            showToast(data.message, 'success');
+        } else {
+            showToast(data.message || 'Unable to update user privileges. Please try again.', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('Connection failed. Please check your network and try again.', 'error');
+        // Fallback: reload the page
+        setTimeout(() => {
+            location.reload();
+        }, 2000);
+    })
+    .finally(() => {
+        button.innerHTML = originalText;
+        button.disabled = false;
+    });
+}
+
+// Function to update user row dynamically
+function updateUserRow(userId, userData) {
+    const row = document.querySelector(`tr[data-user-id="${userId}"]`);
+    if (!row) return;
+    
+    // Update badges in the user name cell
+    const nameCell = row.querySelector('.fw-bold');
+    const existingBadges = nameCell.querySelectorAll('.badge');
+    existingBadges.forEach(badge => {
+        if (badge.textContent.includes('Admin') || badge.textContent.includes('Participant')) {
+            badge.remove();
+        }
+    });
+    
+    // Add new badges
+    if (userData.is_admin) {
+        const adminBadge = document.createElement('span');
+        adminBadge.className = 'badge bg-warning text-dark ms-2';
+        adminBadge.innerHTML = `<i class="fas fa-crown"></i> ${userData.admin_level || 'Admin'}`;
+        nameCell.appendChild(adminBadge);
+    }
+    
+    if (userData.is_paid) {
+        const participantBadge = document.createElement('span');
+        participantBadge.className = 'badge bg-success ms-2';
+        participantBadge.innerHTML = '<i class="fas fa-star"></i> Participant';
+        nameCell.appendChild(participantBadge);
+    }
+    
+    // Update action buttons container
+    const actionsContainer = row.querySelector('.action-buttons-container');
+    if (actionsContainer) {
+        // Update admin role button
+        const adminBtn = actionsContainer.querySelector('[onclick*="toggleAdminRole"]');
+        if (adminBtn) {
+            if (userData.is_admin) {
+                adminBtn.className = 'btn btn-outline-warning btn-sm action-btn';
+                adminBtn.title = 'Revoke Admin';
+                adminBtn.innerHTML = '<i class="fas fa-user-minus"></i>';
+                adminBtn.setAttribute('onclick', `toggleAdminRole('${userId}', 'revoke')`);
+            } else {
+                adminBtn.className = 'btn btn-outline-success btn-sm action-btn';
+                adminBtn.title = 'Grant Admin';
+                adminBtn.innerHTML = '<i class="fas fa-user-plus"></i>';
+                adminBtn.setAttribute('onclick', `toggleAdminRole('${userId}', 'grant')`);
+            }
+        }
+        
+        // Update participant role button
+        const participantBtn = actionsContainer.querySelector('[onclick*="toggleParticipantRole"]');
+        if (participantBtn) {
+            if (userData.is_paid) {
+                participantBtn.className = 'btn btn-outline-secondary btn-sm action-btn';
+                participantBtn.title = 'Downgrade Participant';
+                participantBtn.innerHTML = '<i class="fas fa-star-half-alt"></i>';
+                participantBtn.setAttribute('onclick', `toggleParticipantRole('${userId}', 'downgrade')`);
+            } else {
+                participantBtn.className = 'btn btn-outline-primary btn-sm action-btn';
+                participantBtn.title = 'Upgrade to Participant';
+                participantBtn.innerHTML = '<i class="fas fa-star"></i>';
+                participantBtn.setAttribute('onclick', `toggleParticipantRole('${userId}', 'upgrade')`);
+            }
+        }
+    }
+}
+
+
+
+// Professional toast notification system
+function showToast(message, type) {
+    // Remove existing toasts
+    const existingToasts = document.querySelectorAll('.toast-notification');
+    existingToasts.forEach(toast => {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 150);
+    });
+    
+    // Define professional color schemes and icons
+    const toastTypes = {
+        'success': {
+            class: 'alert-success',
+            icon: 'fas fa-check-circle',
+            bgColor: '#d1e7dd',
+            borderColor: '#badbcc',
+            textColor: '#0f5132'
+        },
+        'error': {
+            class: 'alert-danger', 
+            icon: 'fas fa-exclamation-triangle',
+            bgColor: '#f8d7da',
+            borderColor: '#f5c6cb',
+            textColor: '#721c24'
+        },
+        'warning': {
+            class: 'alert-warning',
+            icon: 'fas fa-exclamation-circle',
+            bgColor: '#fff3cd',
+            borderColor: '#ffecb5',
+            textColor: '#664d03'
+        },
+        'info': {
+            class: 'alert-info',
+            icon: 'fas fa-info-circle',
+            bgColor: '#d1ecf1',
+            borderColor: '#bee5eb',
+            textColor: '#055160'
+        }
+    };
+    
+    const toastConfig = toastTypes[type] || toastTypes['info'];
+    
+    // Create professional toast
+    const toast = document.createElement('div');
+    toast.className = `toast-notification alert ${toastConfig.class} alert-dismissible fade show position-fixed`;
+    toast.style.cssText = `
+        top: 20px; 
+        right: 20px; 
+        z-index: 9999; 
+        min-width: 320px;
+        max-width: 400px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        border-left: 4px solid ${toastConfig.borderColor};
+        transition: all 0.3s ease;
+        animation: slideInRight 0.3s ease;
+    `;
+    
+    toast.innerHTML = `
+        <div class="d-flex align-items-center">
+            <i class="${toastConfig.icon} me-2"></i>
+            <div class="flex-grow-1">${message}</div>
+            <button type="button" class="btn-close btn-sm ms-2" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    `;
+    
+    // Add custom styles for animation
+    if (!document.getElementById('toast-animations')) {
+        const style = document.createElement('style');
+        style.id = 'toast-animations';
+        style.textContent = `
+            @keyframes slideInRight {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            @keyframes slideOutRight {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(100%); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+    
+    document.body.appendChild(toast);
+    
+    // Professional auto-remove timing based on message type
+    const displayDuration = type === 'error' ? 4000 : type === 'warning' ? 3500 : 2500;
+    
+    setTimeout(() => {
+        if (toast && toast.parentNode) {
+            toast.style.animation = 'slideOutRight 0.3s ease';
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toast.remove();
+                }
+            }, 300);
+        }
+    }, displayDuration);
+}
+
+// Function to confirm user deletion
+function confirmDeleteUser(userId, username) {
+    if (confirm(`Are you sure you want to permanently delete the account for "${username}"? This action cannot be undone.`)) {
+        deleteUser(userId, username);
+    }
+}
+
+// Function to delete user
+function deleteUser(userId, username) {
+    const formData = new FormData();
+    formData.append('ajax', '1');
+    
+    fetch(`/admin/user/${userId}/delete`, {
+        method: 'POST',
+        headers: {
+            'Accept': 'application/json'
+        },
+        body: formData
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            throw new Error('Response is not JSON - server may have returned an error page');
+        }
+        
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            // Remove the user row from the table
+            const row = document.querySelector(`tr[data-user-id="${userId}"]`);
+            if (row) {
+                row.remove();
+            }
+            showToast(data.message || `User "${username}" has been deleted successfully.`, 'success');
+        } else {
+            showToast(data.message || 'Failed to delete user. Please try again.', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('Connection failed. Please check your network and try again.', 'error');
+    });
+}
+
+// Function to toggle admin role
+function toggleAdminRole(userId, action) {
+    toggleUserPrivilege(userId, action, 'admin');
+}
+
+// Function to toggle participant role
+function toggleParticipantRole(userId, action) {
+    toggleUserPrivilege(userId, action, 'participant');
+}
+
+// Instant search functionality
+let searchTimeout;
+document.querySelector('input[name="search"]').addEventListener('input', function() {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        performSearch();
+    }, 300); // Wait 300ms after user stops typing
+});
+
+// Instant filter functionality
+document.querySelector('select[name="filter"]').addEventListener('change', function() {
+    performSearch();
+});
+
+function performSearch() {
+    const search = document.querySelector('input[name="search"]').value;
+    const filter = document.querySelector('select[name="filter"]').value;
+    
+    // Show loading state
+    const tableBody = document.querySelector('tbody');
+    const originalContent = tableBody.innerHTML;
+    tableBody.innerHTML = `
+        <tr>
+            <td colspan="7" class="text-center py-5">
+                <div class="d-flex flex-column align-items-center">
+                    <div class="spinner-border text-primary mb-3" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="text-muted mb-0">Searching user database...</p>
+                </div>
+            </td>
+        </tr>
+    `;
+    
+    // Build URL with parameters
+    const params = new URLSearchParams();
+    if (search) params.append('search', search);
+    if (filter !== 'all') params.append('filter', filter);
+    params.append('ajax', '1'); // Flag for AJAX request
+    
+    fetch(`/admin/users?${params.toString()}`, {
+        headers: {
+            'Accept': 'application/json'
+        }
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                updateUsersTable(data.users, data.pagination);
+            } else {
+                tableBody.innerHTML = originalContent;
+                showToast('Search request failed. Please refine your criteria and try again.', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Search error:', error);
+            tableBody.innerHTML = originalContent;
+            showToast('Search service temporarily unavailable. Please try again momentarily.', 'error');
+        });
+}
+
+function updateUsersTable(users, pagination) {
+    const tableBody = document.querySelector('tbody');
+    
+    if (users.length === 0) {
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="7" class="text-center py-5">
+                    <div class="d-flex flex-column align-items-center text-muted">
+                        <i class="fas fa-search fa-3x mb-3 opacity-50"></i>
+                        <h6 class="mb-2">No Results Found</h6>
+                        <p class="mb-0 small">Try adjusting your search criteria or filters</p>
+                    </div>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    let html = '';
+    users.forEach(user => {
+        html += generateUserRow(user);
+    });
+    
+    tableBody.innerHTML = html;
+    
+    // Update pagination info
+    const pageInfo = document.querySelector('.badge');
+    if (pageInfo && pagination) {
+        pageInfo.textContent = `Page ${pagination.page} of ${pagination.total_pages}`;
+    }
+}
+
+function generateUserRow(user) {
+    const adminBadge = user[5] ? `<span class="badge bg-warning text-dark"><i class="fas fa-crown"></i> ${user[10] || 'Admin'}</span>` : '';
+    const participantBadge = user[11] ? '<span class="badge bg-success"><i class="fas fa-star"></i> Participant</span>' : '';
+    const statusBadge = user[6] ? '<span class="badge bg-danger">Blocked</span>' : '<span class="badge bg-success">Active</span>';
+    
+    // Avatar display logic
+    const avatarHtml = user[12] ? 
+        `<img src="/static/avatars/${user[12]}" alt="${user[1]}'s Avatar" class="rounded-circle me-3 border border-2 border-light shadow-sm" style="width: 40px; height: 40px; object-fit: cover;">` :
+        `<div class="bg-primary rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;"><i class="fas fa-user text-white"></i></div>`;
+    
+    return `
+        <tr data-user-id="${user[0]}">
+            <td>
+                <div class="d-flex align-items-center">
+                    ${avatarHtml}
+                    <div>
+                        <div class="fw-bold">
+                            ${user[1]}
+                            ${adminBadge}
+                            ${participantBadge}
+                        </div>
+                        ${user[3] || user[4] ? `<small class="text-muted">${user[3] || ''} ${user[4] || ''}</small>` : ''}
+                    </div>
+                </div>
+            </td>
+            <td>${user[2]}</td>
+            <td>${statusBadge}</td>
+            <td>${user[7] ? user[7].split('T')[0] : 'Unknown'}</td>
+            <td>${user[8] ? (user[8].includes('T') ? user[8].split('T')[0] : user[8]) : '<span class="text-muted">Never</span>'}</td>
+            <td>${user[9] || 0}</td>
+            <td class="table-actions">
+                <div class="action-buttons-container d-flex flex-wrap gap-1">
+                    <button type="button" class="btn btn-outline-info btn-sm action-btn" onclick="window.open('/profile/${user[0]}', '_blank')" title="View Profile">
+                        <i class="fas fa-user"></i>
+                    </button>
+                    
+                    ${user[5] ? 
+                        `<button type="button" class="btn btn-outline-warning btn-sm action-btn" onclick="toggleAdminRole('${user[0]}', 'revoke')" title="Revoke Admin">
+                            <i class="fas fa-user-minus"></i>
+                        </button>` : 
+                        `<button type="button" class="btn btn-outline-success btn-sm action-btn" onclick="toggleAdminRole('${user[0]}', 'grant')" title="Grant Admin">
+                            <i class="fas fa-user-plus"></i>
+                        </button>`
+                    }
+                    
+                    ${user[11] ? 
+                        `<button type="button" class="btn btn-outline-secondary btn-sm action-btn" onclick="toggleParticipantRole('${user[0]}', 'downgrade')" title="Downgrade Participant">
+                            <i class="fas fa-star-half-alt"></i>
+                        </button>` : 
+                        `<button type="button" class="btn btn-outline-primary btn-sm action-btn" onclick="toggleParticipantRole('${user[0]}', 'upgrade')" title="Upgrade to Participant">
+                            <i class="fas fa-star"></i>
+                        </button>`
+                    }
+                    
+                    ${user[6] ? 
+                        `<button type="button" class="btn btn-outline-success btn-sm action-btn" onclick="toggleUserBlock('${user[0]}', 'unblock')" title="Unblock User">
+                            <i class="fas fa-unlock"></i>
+                        </button>` : 
+                        `<button type="button" class="btn btn-outline-danger btn-sm action-btn" onclick="toggleUserBlock('${user[0]}', 'block')" title="Block User">
+                            <i class="fas fa-ban"></i>
+                        </button>`
+                    }
+                    
+                    <button type="button" class="btn btn-outline-danger btn-sm action-btn" onclick="confirmDeleteUser('${user[0]}', '${user[1]}')" title="Delete Account">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </td>
+        </tr>
+    `;
+}
+
+// Function to handle block form submission
+function submitBlockForm(event, userId) {
+    event.preventDefault();
+    
+    // Ensure userId is a string for consistent handling
+    userId = String(userId);
+    
+    const form = event.target;
+    const formData = new FormData(form);
+    formData.append('ajax', '1');
+    
+    const url = `/admin/user/${userId}/block`;
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    
+    // Show professional loading state
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>Processing...';
+    submitBtn.disabled = true;
+    
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'Accept': 'application/json'
+        },
+        body: formData
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            throw new Error('Response is not JSON');
+        }
+        
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            updateUserRowAfterBlock(userId, data.user);
+            showToast(data.message, 'success');
+            
+            // Close the modal with success feedback
+            const modal = document.getElementById('blockUserModal' + userId);
+            const modalInstance = bootstrap.Modal.getInstance(modal);
+            if (modalInstance) {
+                modalInstance.hide();
+            }
+            
+            // Show additional success context if needed
+            if (data.message && !data.message.includes('blocked')) {
+                setTimeout(() => {
+                    showToast('User account restrictions have been applied successfully.', 'success');
+                }, 500);
+            }
+        } else {
+            showToast(data.message || 'Unable to block user account. Please verify permissions and try again.', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('Network connection failed. Please check your connection and try again.', 'error');
+    })
+    .finally(() => {
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    });
+}
+
+// Function to handle user blocking/unblocking
+function toggleUserBlock(userId, action) {
+    // Ensure userId is a string for consistent handling
+    userId = String(userId);
+    
+    const formData = new FormData();
+    formData.append('action', action);
+    formData.append('ajax', '1');
+    
+    // For blocking, we need to set default values since we're bypassing the modal
+    if (action === 'block') {
+        formData.append('reason', 'Admin action');
+        formData.append('duration', 'permanent');
+    }
+    
+    const url = `/admin/user/${userId}/block`;
+    
+    // Show loading state
+    const button = event.target.closest('button') || event.target;
+    const originalText = button.innerHTML;
+    button.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span>';
+    button.disabled = true;
+    
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'Accept': 'application/json'
+        },
+        body: formData
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            throw new Error('Response is not JSON - server may have returned an error page');
+        }
+        
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            updateUserRowAfterBlock(userId, data.user);
+            showToast(data.message, 'success');
+        } else {
+            showToast(data.message || 'Unable to modify user account status. Please try again.', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('Connection interrupted. Refreshing page to ensure data integrity.', 'warning');
+        setTimeout(() => {
+            location.reload();
+        }, 2000);
+    })
+    .finally(() => {
+        button.innerHTML = originalText;
+        button.disabled = false;
+    });
+}
+
+// Function to update user row after blocking/unblocking
+function updateUserRowAfterBlock(userId, userData) {
+    const row = document.querySelector(`tr[data-user-id="${userId}"]`);
+    if (!row) return;
+    
+    // Update status badge
+    const statusCell = row.cells[2]; // Status column
+    if (userData.is_blocked) {
+        statusCell.innerHTML = '<span class="badge bg-danger">Blocked</span>';
+    } else {
+        statusCell.innerHTML = '<span class="badge bg-success">Active</span>';
+    }
+    
+    // Update block/unblock button
+    const buttonContainer = row.querySelector('.d-flex');
+    const blockButton = buttonContainer.querySelector('button[title*="lock"]');
+    if (blockButton) {
+        if (userData.is_blocked) {
+            blockButton.className = 'btn btn-sm btn-outline-success';
+            blockButton.title = 'Unblock user';
+            blockButton.setAttribute('onclick', `toggleUserBlock('${userId}', 'unblock')`);
+            blockButton.removeAttribute('data-bs-toggle');
+            blockButton.removeAttribute('data-bs-target');
+            blockButton.innerHTML = '<i class="fas fa-unlock"></i>';
+        } else {
+            blockButton.className = 'btn btn-sm btn-outline-danger';
+            blockButton.title = 'Block user';
+            blockButton.setAttribute('data-bs-toggle', 'modal');
+            blockButton.setAttribute('data-bs-target', `#blockUserModal${userId}`);
+            blockButton.removeAttribute('onclick');
+            blockButton.innerHTML = '<i class="fas fa-ban"></i>';
+        }
+    }
+}
+
+// Initialize page functionality
+document.addEventListener('DOMContentLoaded', function() {
+    // Add data-user-id attributes to existing rows
+    const rows = document.querySelectorAll('tbody tr');
+    rows.forEach(row => {
+        const userId = row.querySelector('form[action*="/user/"]')?.action.match(/\/user\/(\d+)\//)?.[1];
+        if (userId) {
+            row.setAttribute('data-user-id', userId);
+        }
+    });
+});
+</script>
+{% endblock %}

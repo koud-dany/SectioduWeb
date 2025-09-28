@@ -1,0 +1,1102 @@
+<!-- Save this as templates/base.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SectionduWeb{% endblock %}</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* Ensure proper carousel structure */
+        #topVideosCarousel {
+            border: none;
+            outline: none;
+            position: relative;
+        }
+        
+        #topVideosCarousel .carousel-inner {
+            border: none;
+            outline: none;
+            position: relative;
+        }
+        
+        #topVideosCarousel .carousel-item {
+            border: none;
+            outline: none;
+        }      html, body {
+            height: 100%;
+        }
+        
+        body {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        main {
+            flex: 1;
+        }
+        
+        .video-card {
+            transition: transform 0.2s;
+            height: 100%;
+        }
+        
+        .video-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .rating-stars {
+            color: #ffc107;
+        }
+        
+        .navbar-brand {
+            font-weight: bold;
+            font-size: 1.5rem !important;
+            letter-spacing: -0.5px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .navbar-brand:hover {
+            transform: scale(1.05);
+        }
+        
+        .navbar-brand:hover .brand-section {
+            background: linear-gradient(45deg, #0052a3, #003d7a);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .navbar-brand:hover .brand-web {
+            background: linear-gradient(45deg, #c82333, #a71e2a);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .brand-section {
+            background: linear-gradient(45deg, #0066cc, #0052a3);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 800;
+            text-shadow: 0 2px 4px rgba(0,102,204,0.3);
+        }
+        
+        .brand-du {
+            color: #ffffff !important;
+            font-weight: 400;
+            font-style: italic;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+        
+        .brand-web {
+            background: linear-gradient(45deg, #dc3545, #c82333);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 800;
+            text-shadow: 0 2px 4px rgba(220,53,69,0.3);
+        }
+        
+        /* YouTube-style hover effects */
+        .hover-shadow:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+            transform: translateY(-2px);
+        }
+        
+        /* Navbar z-index - highest priority */
+        .navbar {
+            z-index: 1050 !important;
+        }
+        
+        /* Sticky sidebar positioning - below navbar */
+        .sticky-top {
+            position: sticky !important;
+            z-index: 1020 !important;
+        }
+        
+        /* Responsive sticky positioning */
+        @media (max-width: 991.98px) {
+            .sticky-top {
+                position: relative !important;
+                top: auto !important;
+            }
+        }
+        
+        /* YouTube-style sidebar scroll behavior */
+        .sidebar-scroll {
+            max-height: calc(100vh - 100px);
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: #ccc transparent;
+        }
+        
+        .sidebar-scroll::-webkit-scrollbar {
+            width: 4px;
+        }
+        
+        .sidebar-scroll::-webkit-scrollbar-thumb {
+            background-color: #ccc;
+            border-radius: 2px;
+        }
+        
+        .video-thumbnail {
+            position: relative;
+            overflow: hidden;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        
+        .video-thumbnail:hover {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        
+        .vote-stars i {
+            transition: all 0.2s ease;
+        }
+        
+        .vote-stars i:hover {
+            transform: scale(1.1);
+        }
+        
+        /* Enhanced star ratings */
+        .vote-star:hover {
+            transform: scale(1.2);
+            filter: drop-shadow(0 0 8px #ffc107);
+        }
+        
+        /* YouTube-style video player */
+        .video-container {
+            position: relative;
+            width: 100%;
+            max-width: 854px; /* YouTube's max width */
+            margin: 0 auto;
+        }
+        
+        .video-container:hover .video-overlay {
+            opacity: 1;
+        }
+        
+        /* Responsive video sizing */
+        @media (max-width: 768px) {
+            .video-container {
+                max-width: 100%;
+                aspect-ratio: 16/9 !important;
+            }
+        }
+        
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .video-container {
+                max-width: 720px;
+            }
+        }
+        
+        /* Card hover effects */
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
+        }
+        
+        /* Button enhancements */
+        .btn {
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+        
+        .btn:hover {
+            transform: translateY(-1px);
+        }
+        
+        /* Gradient backgrounds */
+        .bg-gradient {
+            background: linear-gradient(45deg, var(--bs-primary), var(--bs-info)) !important;
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(45deg, #5a6fd8, #6a419a);
+        }
+        
+        /* Smooth scrolling */
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        /* Add padding for fixed navbar */
+        body {
+            padding-top: 70px;
+        }
+        
+        /* Add subtle transition to sticky elements */
+        .sticky-top {
+            transition: top 0.3s ease;
+        }
+        
+        /* Loading animation */
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        .loading {
+            animation: pulse 1.5s infinite;
+        }
+        
+        /* YouTube-style comments */
+        .comment-item {
+            padding: 12px 0;
+        }
+        
+        .comment-thread {
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .comment-thread:last-child {
+            border-bottom: none;
+        }
+        
+        .reply-input:focus {
+            border-bottom: 2px solid #065fd4 !important;
+            box-shadow: none !important;
+        }
+        
+        #main-comment-input:focus {
+            border-bottom: 2px solid #065fd4 !important;
+            box-shadow: none !important;
+        }
+        
+        .like-btn, .dislike-btn {
+            border: none !important;
+            background: none !important;
+            color: #606060;
+            font-size: 0.85rem;
+            padding: 4px 8px;
+            border-radius: 18px;
+            transition: all 0.2s ease;
+        }
+        
+        .like-btn:hover, .dislike-btn:hover {
+            background-color: #f2f2f2 !important;
+            color: #030303;
+        }
+        
+        .like-btn.text-primary {
+            color: #065fd4 !important;
+        }
+        
+        .reply-btn {
+            border: none !important;
+            background: none !important;
+            color: #606060 !important;
+            font-size: 0.85rem;
+            padding: 4px 8px;
+            text-decoration: none !important;
+        }
+        
+        .reply-btn:hover {
+            background-color: #f2f2f2 !important;
+            color: #030303 !important;
+        }
+        
+        .hero-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 80px 0;
+            min-height: 500px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .stats-card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border: none;
+        }
+        
+        .btn-primary:hover {
+            background: linear-gradient(45deg, #5a6fd8, #6a419a);
+        }
+        
+        .navbar {
+            box-shadow: 0 2px 4px rgba(0,0,0,.1);
+        }
+        
+        .dropdown-menu {
+            border: none;
+            box-shadow: 0 5px 15px rgba(0,0,0,.1);
+        }
+        
+        .card {
+            border: none;
+            box-shadow: 0 5px 15px rgba(0,0,0,.08);
+            border-radius: 15px;
+        }
+        
+        .card-header {
+            border-radius: 15px 15px 0 0 !important;
+            border: none;
+        }
+        
+        footer {
+            margin-top: auto;
+            background: #343a40 !important;
+        }
+        
+        /* Professional footer styling */
+        .hover-text-primary:hover {
+            color: #0066cc !important;
+            text-decoration: none !important;
+        }
+        
+        .transition-all {
+            transition: all 0.3s ease;
+        }
+        
+        footer a:hover i {
+            transform: translateX(2px);
+        }
+        
+        footer .fab:hover {
+            transform: scale(1.2);
+            color: #0066cc !important;
+        }
+        
+
+        
+        .btn-primary {
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(13, 110, 253, 0.3);
+        }
+        
+        /* Animated Video Carousel Styles */
+        .video-carousel-card {
+            border-radius: 20px;
+            overflow: hidden;
+            transition: all 0.4s ease;
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        /* Ensure carousel container has proper spacing */
+        #topVideosCarousel {
+            margin: 2rem 0;
+            padding: 0 100px;
+        }
+        
+        .video-carousel-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+        
+        /* Video hover-to-play animations */
+        .video-container {
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .video-container:hover {
+            transform: scale(1.02);
+        }
+        
+        .video-container video {
+            transition: all 0.3s ease;
+        }
+        
+        .video-container:hover video {
+            filter: brightness(1.1);
+        }
+        
+        /* Play indicator animation */
+        @keyframes fadeInOut {
+            0% {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.8);
+            }
+            20% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+            }
+            80% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.8);
+            }
+        }
+        
+        .play-indicator {
+            animation: fadeInOut 2s ease-in-out;
+        }
+        
+        /* Hover state overlay for video containers */
+        .video-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, transparent 0%, rgba(0,102,204,0.1) 50%, transparent 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        .video-container:hover::before {
+            opacity: 1;
+        }
+        
+        /* Enhanced video controls visibility on hover */
+        .video-container video::-webkit-media-controls {
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .video-container:hover video::-webkit-media-controls {
+            opacity: 1;
+        }
+        
+        /* Hover play overlay */
+        .hover-play-overlay {
+            opacity: 0 !important;
+            transition: all 0.3s ease;
+        }
+        
+        .video-container:hover .hover-play-overlay {
+            opacity: 1 !important;
+        }
+        
+        /* Hide overlay when video is playing */
+        .video-container.playing .hover-play-overlay {
+            opacity: 0 !important;
+        }
+        
+        .carousel-fade .carousel-item {
+            opacity: 0;
+            transition-duration: 0.8s;
+            transition-property: opacity;
+            transform: none;
+        }
+        
+        .carousel-fade .carousel-item.active,
+        .carousel-fade .carousel-item-next.carousel-item-start,
+        .carousel-fade .carousel-item-prev.carousel-item-end {
+            opacity: 1;
+        }
+        
+        .carousel-fade .carousel-item-next,
+        .carousel-fade .carousel-item-prev {
+            transform: none;
+        }
+        
+        .carousel-fade .carousel-item-next.carousel-item-start,
+        .carousel-fade .carousel-item-prev.carousel-item-end {
+            transform: none;
+        }
+        
+        /* Clean carousel indicators */
+        #topVideosCarousel .carousel-indicators {
+            bottom: -60px;
+            margin-bottom: 0;
+            position: static;
+            width: auto;
+            margin-left: 0;
+            margin-right: 0;
+            justify-content: center;
+            gap: 8px;
+            padding: 0;
+            list-style: none;
+            display: flex;
+            align-items: center;
+        }
+        
+        #topVideosCarousel .carousel-indicators button {
+            width: 12px !important;
+            height: 12px !important;
+            border-radius: 50% !important;
+            border: 2px solid rgba(255, 255, 255, 0.5) !important;
+            background-color: rgba(0, 102, 204, 0.4) !important;
+            opacity: 1 !important;
+            transition: all 0.3s ease !important;
+            text-indent: 0 !important;
+            margin: 0 4px !important;
+            padding: 0 !important;
+            background-image: none !important;
+            background-clip: unset !important;
+            box-shadow: none !important;
+        }
+        
+        #topVideosCarousel .carousel-indicators button.active {
+            background-color: #0066cc;
+            border-color: #ffffff;
+            transform: scale(1.2);
+            box-shadow: 0 3px 10px rgba(0, 102, 204, 0.5);
+        }
+        
+        #topVideosCarousel .carousel-indicators button:hover {
+            background-color: rgba(0, 102, 204, 0.7);
+            border-color: rgba(255, 255, 255, 0.8);
+            transform: scale(1.1);
+        }
+        
+        /* Remove any default carousel borders or outlines */
+        #topVideosCarousel .carousel-indicators button:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.3);
+        }
+        
+        /* Ensure no unwanted lines or artifacts appear */
+        #topVideosCarousel {
+            border: none;
+            outline: none;
+        }
+        
+        #topVideosCarousel .carousel-inner {
+            border: none;
+            outline: none;
+        }
+        
+        #topVideosCarousel .carousel-item {
+            border: none;
+            outline: none;
+        }
+        
+        /* Clean up specific visual artifacts */
+        .carousel-indicators button::before,
+        .carousel-indicators button::after {
+            content: none !important;
+            display: none !important;
+        }
+        
+        /* Ensure no stray elements or pseudo-elements */
+        #topVideosCarousel * {
+            box-sizing: border-box;
+        }
+        
+        #topVideosCarousel .carousel-indicators li,
+        #topVideosCarousel .carousel-indicators ol {
+            display: none !important;
+        }
+        
+        /* Remove any blue artifacts from Bootstrap defaults */
+        #topVideosCarousel .carousel-indicators [data-bs-target]::before,
+        #topVideosCarousel .carousel-indicators [data-bs-target]::after {
+            content: none !important;
+            display: none !important;
+        }
+        
+        /* Force clean carousel indicator appearance */
+        #topVideosCarousel .carousel-indicators {
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+        }
+        
+        /* Override any Bootstrap default carousel indicator styles */
+        .carousel-indicators [data-bs-target] {
+            background-color: rgba(0, 102, 204, 0.4) !important;
+            background-image: none !important;
+            background-clip: unset !important;
+            background-size: unset !important;
+            background-repeat: unset !important;
+            background-position: unset !important;
+        }
+        
+        /* Ensure no stray Bootstrap elements */
+        #topVideosCarousel .carousel-indicators .active {
+            background-color: #0066cc !important;
+        }
+        
+        .carousel-control-prev,
+        .carousel-control-next {
+            width: 60px;
+            height: 60px;
+            top: 50%;
+            transform: translateY(-50%);
+            opacity: 0.9;
+            transition: all 0.3s ease;
+            z-index: 1050;
+            border: none;
+            background: none;
+            position: absolute;
+        }
+        
+        .carousel-control-prev {
+            left: -80px;
+        }
+        
+        .carousel-control-next {
+            right: -80px;
+        }
+        
+        .carousel-control-prev:hover,
+        .carousel-control-next:hover {
+            opacity: 1;
+            transform: translateY(-50%) scale(1.1);
+        }
+        
+        .carousel-control-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #0066cc, #004499);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            box-shadow: 0 4px 15px rgba(0, 102, 204, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .carousel-control-icon:hover {
+            background: linear-gradient(135deg, #0052a3, #003d7a);
+            box-shadow: 0 6px 20px rgba(0, 102, 204, 0.4);
+        }
+        
+        /* Responsive adjustments for carousel controls */
+        @media (max-width: 1200px) {
+            #topVideosCarousel {
+                padding: 0 60px;
+            }
+            
+            .carousel-control-prev {
+                left: -30px;
+            }
+            
+            .carousel-control-next {
+                right: -30px;
+            }
+            
+            .carousel-control-prev,
+            .carousel-control-next {
+                width: 45px;
+                height: 45px;
+            }
+            
+            .carousel-control-icon {
+                width: 45px;
+                height: 45px;
+            }
+            
+            .carousel-control-icon i {
+                font-size: 1.2rem;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            #topVideosCarousel {
+                padding: 0 20px;
+            }
+            
+            .carousel-control-prev,
+            .carousel-control-next {
+                top: auto;
+                bottom: -60px;
+                transform: none;
+                width: 40px;
+                height: 40px;
+            }
+            
+            .carousel-control-prev {
+                left: calc(50% - 60px);
+            }
+            
+            .carousel-control-next {
+                right: calc(50% - 60px);
+            }
+            
+            .carousel-control-icon {
+                width: 40px;
+                height: 40px;
+            }
+            
+            .carousel-control-icon i {
+                font-size: 1rem;
+            }
+            
+            .carousel-indicators {
+                bottom: -120px;
+            }
+        }
+        
+        /* Video container animations */
+        .video-container {
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .video-carousel-card:hover .video-container {
+            transform: scale(1.02);
+        }
+        
+        .video-container video {
+            transition: transform 0.4s ease;
+        }
+        
+        .video-carousel-card:hover .video-container video {
+            transform: scale(1.05);
+        }
+        
+        /* Enhanced rating badge animations */
+        .carousel-item .badge {
+            animation: fadeInUp 0.6s ease-out;
+            animation-fill-mode: both;
+        }
+        
+        .carousel-item:not(.active) .badge {
+            animation: none;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* Staggered animation for carousel content */
+        .carousel-item .card-title {
+            animation: slideInRight 0.8s ease-out 0.2s;
+            animation-fill-mode: both;
+        }
+        
+        .carousel-item .rating-stars {
+            animation: slideInRight 0.8s ease-out 0.4s;
+            animation-fill-mode: both;
+        }
+        
+        .carousel-item .btn {
+            animation: slideInRight 0.8s ease-out 0.6s;
+            animation-fill-mode: both;
+        }
+        
+        .carousel-item:not(.active) .card-title,
+        .carousel-item:not(.active) .rating-stars,
+        .carousel-item:not(.active) .btn {
+            animation: none;
+        }
+        
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        /* Hero Section Enhancements */
+        .hero-section {
+            position: relative;
+        }
+        
+        .hero-background-pattern {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: radial-gradient(circle at 20% 20%, rgba(255,255,255,0.1) 2px, transparent 2px),
+                              radial-gradient(circle at 80% 40%, rgba(255,255,255,0.08) 1.5px, transparent 1.5px),
+                              radial-gradient(circle at 40% 80%, rgba(255,255,255,0.06) 1px, transparent 1px);
+            background-size: 100px 100px, 120px 120px, 80px 80px;
+            animation: float 20s infinite linear;
+            opacity: 0.6;
+        }
+        
+        .hero-content {
+            animation: fadeInUp 1s ease-out;
+        }
+        
+        .hero-brand {
+            font-size: 1.1em;
+            letter-spacing: -2px;
+        }
+        
+        .hero-section .btn:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
+        }
+        
+        .hero-section .btn-light:hover {
+            background: #ffffff;
+            border-color: #0066cc;
+            color: #0066cc;
+        }
+        
+        .hero-section .btn-outline-light:hover {
+            background: rgba(255,255,255,0.1);
+            border-color: #ffffff;
+            transform: translateY(-3px) scale(1.02);
+        }
+        
+        .feature-icon {
+            transition: transform 0.3s ease;
+        }
+        
+        .feature-icon:hover {
+            transform: scale(1.1) rotate(5deg);
+        }
+        
+        @keyframes float {
+            0% { transform: translateX(0px) translateY(0px); }
+            33% { transform: translateX(-10px) translateY(-5px); }
+            66% { transform: translateX(5px) translateY(-10px); }
+            100% { transform: translateX(0px) translateY(0px); }
+        }
+        
+        /* Stats cards enhanced styling */
+        .stats-card {
+            background: rgba(255,255,255,0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2rem;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: all 0.4s ease;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+        
+        .stats-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            background: rgba(255,255,255,0.25);
+        }
+        
+        .stats-card i {
+            transition: all 0.3s ease;
+        }
+        
+        .stats-card:hover i {
+            transform: scale(1.1) rotate(5deg);
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top shadow-sm" style="background: linear-gradient(45deg, #212529, #495057); z-index: 1050;">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="{{ url_for('index') }}">
+                <i class="fas fa-play-circle me-2" style="font-size: 1.8rem; color: #0066cc;"></i>
+                <span class="brand-section">Section</span><span class="brand-du">du</span><span class="brand-web">Web</span>
+            </a>
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link px-3 rounded-pill me-1" href="{{ url_for('index') }}">
+                            <i class="fas fa-home me-1"></i>Home
+                        </a>
+                    </li>
+                    {% if session.user_id %}
+                    <li class="nav-item">
+                        <a class="nav-link px-3 rounded-pill me-1" href="{{ url_for('dashboard') }}">
+                            <i class="fas fa-tachometer-alt me-1"></i>Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link px-3 rounded-pill me-1" href="{{ url_for('videos') }}">
+                            <i class="fas fa-video me-1"></i>Videos
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link px-3 rounded-pill me-1" href="{{ url_for('leaderboard') }}">
+                            <i class="fas fa-medal me-1"></i>Leaderboard
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+                <ul class="navbar-nav align-items-center">
+                    {% if session.user_id %}
+                    <li class="nav-item me-3">
+                        <a class="btn btn-success rounded-pill px-4" href="{{ url_for('upload_video') }}">
+                            <i class="fas fa-cloud-upload-alt me-2"></i>Upload Video
+                        </a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle bg-primary bg-opacity-10 rounded-pill px-3 py-2 d-flex align-items-center" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            {% if current_user_avatar %}
+                            <img src="{{ url_for('static', filename='avatars/' + current_user_avatar) }}" 
+                                 alt="Profile" 
+                                 class="rounded-circle me-2" 
+                                 style="width: 32px; height: 32px; object-fit: cover;">
+                            {% else %}
+                            <i class="fas fa-user-circle text-primary me-2"></i>
+                            {% endif %}
+                            <span class="text-primary fw-semibold">{{ session.username }}</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-3">
+                            <li><a class="dropdown-item py-2" href="{{ url_for('profile') }}">
+                                <i class="fas fa-user text-primary me-2"></i>My Profile
+                            </a></li>
+                            <li><a class="dropdown-item py-2" href="{{ url_for('edit_profile') }}">
+                                <i class="fas fa-edit text-success me-2"></i>Edit Profile
+                            </a></li>
+                            <li><a class="dropdown-item py-2" href="{{ url_for('dashboard') }}">
+                                <i class="fas fa-tachometer-alt text-warning me-2"></i>Dashboard
+                            </a></li>
+                            <li><a class="dropdown-item py-2" href="{{ url_for('videos') }}">
+                                <i class="fas fa-video text-info me-2"></i>My Videos
+                            </a></li>
+                            {% if session.is_admin %}
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item py-2" href="{{ url_for('admin_dashboard') }}">
+                                <i class="fas fa-crown text-warning me-2"></i>Admin Panel
+                            </a></li>
+                            {% endif %}
+                            
+                            <!-- Profile-specific actions when viewing another user's profile -->
+                            {% if profile_user and not is_own_profile %}
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item py-2" href="#" onclick="shareProfile()">
+                                <i class="fas fa-share text-primary me-2"></i>Share Profile
+                            </a></li>
+                            <li><a class="dropdown-item py-2" href="#" onclick="reportUser()">
+                                <i class="fas fa-flag text-warning me-2"></i>Report User
+                            </a></li>
+                            <li><a class="dropdown-item py-2 text-danger" href="#" onclick="blockUser()">
+                                <i class="fas fa-ban me-2"></i>Block User
+                            </a></li>
+                            {% endif %}
+                            
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item py-2 text-danger" href="{{ url_for('logout') }}">
+                                <i class="fas fa-sign-out-alt me-2"></i>Logout
+                            </a></li>
+                        </ul>
+                    </li>
+                    {% else %}
+                    <li class="nav-item me-2">
+                        <a class="btn btn-outline-light rounded-pill px-4" href="{{ url_for('login') }}">
+                            <i class="fas fa-sign-in-alt me-2"></i>Login
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="btn btn-warning rounded-pill px-4" href="{{ url_for('register') }}">
+                            <i class="fas fa-user-plus me-2"></i>Join Now
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main>
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        <div class="container mt-4">
+            {% for message in messages %}
+            <div class="alert alert-primary border-0 rounded-3 shadow-sm alert-dismissible fade show" role="alert">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-info-circle text-primary me-3 fs-5"></i>
+                    <div class="flex-grow-1">{{ message }}</div>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+        
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="text-white py-5" style="background: linear-gradient(45deg, #212529, #495057); margin-top: 0;">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <div class="d-flex align-items-center mb-4">
+                        <i class="fas fa-play-circle fs-3 me-3" style="color: #0066cc;"></i>
+                        <div>
+                            <h4 class="mb-0">
+                                <span style="color: #0066cc; font-weight: 800; text-shadow: 0 2px 4px rgba(0,102,204,0.3);">Section</span><span style="color: #ffffff; font-weight: 400; font-style: italic; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">du</span><span style="color: #dc3545; font-weight: 800; text-shadow: 0 2px 4px rgba(220,53,69,0.3);">Web</span>
+                            </h4>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-4">
+                        <a href="#" class="text-white-50 transition-all" style="font-size: 1.5rem;">
+                            <i class="fab fa-facebook"></i>
+                        </a>
+                        <a href="#" class="text-white-50 transition-all" style="font-size: 1.5rem;">
+                            <i class="fab fa-twitter"></i>
+                        </a>
+                        <a href="#" class="text-white-50 transition-all" style="font-size: 1.5rem;">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                        <a href="#" class="text-white-50 transition-all" style="font-size: 1.5rem;">
+                            <i class="fab fa-youtube"></i>
+                        </a>
+                    </div>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <div class="mb-4">
+                        <div class="d-flex flex-column flex-md-row justify-content-md-end gap-4 mb-3">
+                            <a href="{{ url_for('index') }}" class="text-white-50 text-decoration-none hover-text-primary transition-all">
+                                <i class="fas fa-home me-2"></i>Home
+                            </a>
+                            <a href="{{ url_for('videos') }}" class="text-white-50 text-decoration-none hover-text-primary transition-all">
+                                <i class="fas fa-video me-2"></i>Videos
+                            </a>
+                            <a href="{{ url_for('leaderboard') }}" class="text-white-50 text-decoration-none hover-text-primary transition-all">
+                                <i class="fas fa-trophy me-2"></i>Leaderboard
+                            </a>
+                        </div>
+                        <div class="text-md-end">
+                            <p class="mb-0 text-white">&copy; 2025 <strong>SectionduWeb</strong> • All rights reserved.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

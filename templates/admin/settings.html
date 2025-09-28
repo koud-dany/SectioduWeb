@@ -1,0 +1,332 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Platform Settings{% endblock %}
+{% block page_title %}Platform Settings{% endblock %}
+
+{% block content %}
+<div class="alert alert-info">
+    <i class="fas fa-info-circle me-2"></i>
+    <strong>Super Admin Access Required:</strong> Only super administrators can modify platform settings.
+</div>
+
+<div class="row">
+    <!-- General Settings -->
+    <div class="col-lg-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-cog me-2"></i>General Settings
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label class="form-label">Platform Name</label>
+                        <input type="text" class="form-control" name="platform_name" value="SectionDuWeb" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Contact Email</label>
+                        <input type="email" class="form-control" name="contact_email" value="admin@sectionduweb.com" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Participant Fee (in cents)</label>
+                        <input type="number" class="form-control" name="participant_fee" value="2500" required>
+                        <div class="form-text">Current: $25.00</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="require_approval" id="requireApproval" checked>
+                            <label class="form-check-label" for="requireApproval">
+                                Require admin approval for video uploads
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="allow_comments" id="allowComments" checked>
+                            <label class="form-check-label" for="allowComments">
+                                Allow user comments on videos
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">Save General Settings</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Upload Settings -->
+    <div class="col-lg-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-upload me-2"></i>Upload Settings
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label class="form-label">Maximum File Size (MB)</label>
+                        <input type="number" class="form-control" name="max_file_size" value="100" required>
+                        <div class="form-text">Current: 100 MB maximum per video</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Allowed File Types</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="allowed_types" value="mp4" id="mp4" checked>
+                            <label class="form-check-label" for="mp4">MP4</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="allowed_types" value="avi" id="avi" checked>
+                            <label class="form-check-label" for="avi">AVI</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="allowed_types" value="mov" id="mov" checked>
+                            <label class="form-check-label" for="mov">MOV</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="allowed_types" value="wmv" id="wmv" checked>
+                            <label class="form-check-label" for="wmv">WMV</label>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Video Categories</label>
+                        <textarea class="form-control" name="categories" rows="4" placeholder="One category per line">Entertainment
+Education
+Technology
+Sports
+Travel
+Lifestyle
+News
+Art</textarea>
+                        <div class="form-text">Enter one category per line</div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">Save Upload Settings</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Email Settings -->
+    <div class="col-lg-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-envelope me-2"></i>Email Settings
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label class="form-label">SMTP Server</label>
+                        <input type="text" class="form-control" name="smtp_server" placeholder="smtp.gmail.com">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">SMTP Port</label>
+                        <input type="number" class="form-control" name="smtp_port" value="587">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Email Username</label>
+                        <input type="email" class="form-control" name="email_username" placeholder="your-email@example.com">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Email Password</label>
+                        <input type="password" class="form-control" name="email_password" placeholder="Enter password">
+                        <div class="form-text">Use app-specific password for Gmail</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="email_enabled" id="emailEnabled">
+                            <label class="form-check-label" for="emailEnabled">
+                                Enable email notifications
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">Save Email Settings</button>
+                    <button type="button" class="btn btn-outline-secondary ms-2" onclick="testEmail()">Test Email</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Security Settings -->
+    <div class="col-lg-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-shield-alt me-2"></i>Security Settings
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label class="form-label">Maximum Login Attempts</label>
+                        <input type="number" class="form-control" name="max_login_attempts" value="5" min="3" max="10">
+                        <div class="form-text">Block user after this many failed login attempts</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Account Lockout Duration (minutes)</label>
+                        <input type="number" class="form-control" name="lockout_duration" value="30" min="5" max="1440">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Session Timeout (hours)</label>
+                        <input type="number" class="form-control" name="session_timeout" value="24" min="1" max="168">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="require_email_verification" id="emailVerification">
+                            <label class="form-check-label" for="emailVerification">
+                                Require email verification for new accounts
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="enable_two_factor" id="twoFactor">
+                            <label class="form-check-label" for="twoFactor">
+                                Enable two-factor authentication (Future feature)
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">Save Security Settings</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- System Information -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>System Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="border rounded p-3 text-center">
+                            <div class="h6 text-primary">Platform Version</div>
+                            <div class="h5">v1.0.0</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="border rounded p-3 text-center">
+                            <div class="h6 text-success">Database Status</div>
+                            <div class="h5">
+                                <i class="fas fa-check-circle text-success"></i> Online
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="border rounded p-3 text-center">
+                            <div class="h6 text-info">Storage Used</div>
+                            <div class="h5">--</div>
+                            <div class="small text-muted">Calculate storage usage</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="border rounded p-3 text-center">
+                            <div class="h6 text-warning">Backup Status</div>
+                            <div class="h5">
+                                <i class="fas fa-exclamation-triangle text-warning"></i> Manual
+                            </div>
+                            <div class="small text-muted">Setup automated backups</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Maintenance Actions -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Maintenance Actions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning">
+                    <strong>Warning:</strong> These actions can affect platform functionality. Use with caution.
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="d-grid">
+                            <button type="button" class="btn btn-outline-warning" onclick="clearCache()">
+                                <i class="fas fa-broom me-2"></i>Clear Cache
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="d-grid">
+                            <button type="button" class="btn btn-outline-info" onclick="backupDatabase()">
+                                <i class="fas fa-download me-2"></i>Backup Database
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="d-grid">
+                            <button type="button" class="btn btn-outline-danger" onclick="maintenanceMode()">
+                                <i class="fas fa-tools me-2"></i>Maintenance Mode
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function testEmail() {
+    alert('Email test functionality would be implemented here');
+}
+
+function clearCache() {
+    if (confirm('Are you sure you want to clear the cache? This may temporarily slow down the platform.')) {
+        alert('Cache clearing functionality would be implemented here');
+    }
+}
+
+function backupDatabase() {
+    if (confirm('Are you sure you want to create a database backup?')) {
+        alert('Database backup functionality would be implemented here');
+    }
+}
+
+function maintenanceMode() {
+    if (confirm('Are you sure you want to enable maintenance mode? This will make the platform unavailable to users.')) {
+        alert('Maintenance mode functionality would be implemented here');
+    }
+}
+</script>
+{% endblock %}

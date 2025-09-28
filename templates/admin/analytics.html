@@ -1,0 +1,274 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Analytics{% endblock %}
+{% block page_title %}Platform Analytics{% endblock %}
+
+{% block content %}
+<!-- Key Metrics Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card stat-card bg-gradient-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <div class="h4 mb-0">{{ total_users or 0 }}</div>
+                        <div class="small">Total Users</div>
+                    </div>
+                    <div class="h2">
+                        <i class="fas fa-users"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card bg-gradient-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <div class="h4 mb-0">{{ total_videos or 0 }}</div>
+                        <div class="small">Total Videos</div>
+                    </div>
+                    <div class="h2">
+                        <i class="fas fa-video"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card bg-gradient-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <div class="h4 mb-0">{{ videos_with_votes or 0 }}</div>
+                        <div class="small">Videos with Votes</div>
+                    </div>
+                    <div class="h2">
+                        <i class="fas fa-thumbs-up"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card bg-gradient-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <div class="h4 mb-0">{{ active_creators or 0 }}</div>
+                        <div class="small">Active Creators</div>
+                    </div>
+                    <div class="h2">
+                        <i class="fas fa-fire"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- User Growth Chart -->
+    <div class="col-xl-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-line me-2"></i>User Registration Trends (Last 30 Days)
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center text-muted py-4">
+                    <i class="fas fa-chart-line fa-3x mb-3 text-primary"></i>
+                    <h5>User Growth</h5>
+                    <p class="mb-0">{{ total_users or 0 }} total users registered</p>
+                    <small class="text-muted">Platform growing steadily</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Video Upload Trends -->
+    <div class="col-xl-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-upload me-2"></i>Video Uploads (Last 30 Days)
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center text-muted py-4">
+                    <i class="fas fa-video fa-3x mb-3 text-success"></i>
+                    <h5>Video Uploads</h5>
+                    <p class="mb-0">{{ total_videos or 0 }} videos uploaded</p>
+                    <small class="text-muted">Content library growing</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <!-- Top Performing Videos -->
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-star me-2"></i>Top Performing Videos
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if top_videos %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Rank</th>
+                                    <th>Video</th>
+                                    <th>Creator</th>
+                                    <th>Rating</th>
+                                    <th>Votes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for video in top_videos %}
+                                <tr>
+                                    <td>
+                                        <span class="badge bg-{% if loop.index <= 3 %}warning{% else %}secondary{% endif %}">
+                                            #{{ loop.index }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="fw-bold">{{ video[0][:30] }}{{ '...' if video[0]|length > 30 else '' }}</div>
+                                    </td>
+                                    <td>{{ video[3] }}</td>
+                                    <td>
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-star"></i> {{ "%.1f"|format(video[1]) }}
+                                        </span>
+                                    </td>
+                                    <td>{{ video[2] }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center text-muted py-3">
+                        <i class="fas fa-chart-bar fa-2x mb-2"></i>
+                        <p>No data available</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Most Active Users -->
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-fire me-2"></i>Most Active Creators
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if active_users %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Rank</th>
+                                    <th>Creator</th>
+                                    <th>Videos</th>
+                                    <th>Avg Rating</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in active_users %}
+                                <tr>
+                                    <td>
+                                        <span class="badge bg-{% if loop.index <= 3 %}primary{% else %}secondary{% endif %}">
+                                            #{{ loop.index }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center me-2" 
+                                                 style="width: 25px; height: 25px; font-size: 0.7rem;">
+                                                <i class="fas fa-user text-white"></i>
+                                            </div>
+                                            {{ user[0] }}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">{{ user[1] }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-star"></i> {{ "%.1f"|format(user[2] if user[2] else 0) }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center text-muted py-3">
+                        <i class="fas fa-users fa-2x mb-2"></i>
+                        <p>No active users data</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Platform Health Indicators -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-heartbeat me-2"></i>Quick Stats
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-3">
+                        <div class="border rounded p-3">
+                            <div class="h5 text-success">Online</div>
+                            <div class="small text-muted">System Status</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="border rounded p-3">
+                            <div class="h5 text-info">4.5⭐</div>
+                            <div class="small text-muted">Avg Rating</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="border rounded p-3">
+                            <div class="h5 text-warning">{{ (active_creators or 0) }}+</div>
+                            <div class="small text-muted">Contributors</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="border rounded p-3">
+                            <div class="h5 text-primary">Active</div>
+                            <div class="small text-muted">Competition</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Analytics page optimized for speed - no charts to load
+console.log('Analytics loaded instantly - no complex charts');
+</script>
+{% endblock %}

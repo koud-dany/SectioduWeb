@@ -1,0 +1,237 @@
+{% extends "admin/base.html" %}
+
+{% block title %}User Reports{% endblock %}
+{% block page_title %}User Reports{% endblock %}
+
+{% block content %}
+<!-- Filter Bar -->
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="row align-items-end">
+            <div class="col-md-3">
+                <label class="form-label">Filter by Status</label>
+                <select class="form-select" onchange="window.location.href='?status=' + this.value">
+                    <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending Reports</option>
+                    <option value="resolved" {% if status_filter == 'resolved' %}selected{% endif %}>Resolved</option>
+                    <option value="dismissed" {% if status_filter == 'dismissed' %}selected{% endif %}>Dismissed</option>
+                    <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All Reports</option>
+                </select>
+            </div>
+            <div class="col-md-9 text-end">
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-outline-primary active" data-filter="all">
+                        All ({{ total_count or 0 }})
+                    </button>
+                    <button type="button" class="btn btn-outline-warning" data-filter="pending">
+                        Pending ({{ pending_count or 0 }})
+                    </button>
+                    <button type="button" class="btn btn-outline-success" data-filter="resolved">
+                        Resolved ({{ resolved_count or 0 }})
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" data-filter="dismissed">
+                        Dismissed ({{ dismissed_count or 0 }})
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reports List -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">
+            <i class="fas fa-flag me-2"></i>Reports
+        </h5>
+    </div>
+    <div class="card-body">
+        {% if reports %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Report Details</th>
+                            <th>Reported Item</th>
+                            <th>Reporter</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>Handler</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for report in reports %}
+                        <tr>
+                            <td>
+                                <div class="fw-bold text-danger">{{ report[3] }}</div>
+                                {% if report[4] %}
+                                    <small class="text-muted">{{ report[4][:100] }}{{ '...' if report[4]|length > 100 else '' }}</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge bg-info">{{ report[1]|title }}</span>
+                                <div class="small">ID: {{ report[2] }}</div>
+                            </td>
+                            <td>{{ report[7] }}</td>
+                            <td>{{ report[5].split('T')[0] if 'T' in report[5] else report[5] }}</td>
+                            <td>
+                                {% if report[6] == 'pending' %}
+                                    <span class="badge bg-warning">Pending</span>
+                                {% elif report[6] == 'resolved' %}
+                                    <span class="badge bg-success">Resolved</span>
+                                {% elif report[6] == 'dismissed' %}
+                                    <span class="badge bg-secondary">Dismissed</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ report[8] or '-' }}</td>
+                            <td class="table-actions">
+                                {% if report[6] == 'pending' %}
+                                    <div class="btn-group" role="group">
+                                        <button type="button" class="btn btn-sm btn-success" 
+                                                onclick="handleReport('{{ report[0] }}', 'resolved')" title="Mark as resolved">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-secondary" 
+                                                onclick="handleReport('{{ report[0] }}', 'dismissed')" title="Dismiss report">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                {% endif %}
+                                
+                                <button type="button" class="btn btn-sm btn-outline-info ms-2" 
+                                        data-bs-toggle="modal" data-bs-target="#reportModal{{ report[0] }}" title="View details">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Report Details Modals -->
+            {% for report in reports %}
+            <div class="modal fade" id="reportModal{{ report[0] }}" tabindex="-1">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Report Details</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <strong>Report ID:</strong> {{ report[0] }}<br>
+                                    <strong>Reporter:</strong> {{ report[7] }}<br>
+                                    <strong>Date:</strong> {{ report[5] }}<br>
+                                    <strong>Status:</strong> 
+                                    <span class="badge bg-{% if report[6] == 'pending' %}warning{% elif report[6] == 'resolved' %}success{% else %}secondary{% endif %}">
+                                        {{ report[6]|title }}
+                                    </span>
+                                </div>
+                                <div class="col-md-6">
+                                    <strong>Reported Item:</strong> {{ report[1]|title }} (ID: {{ report[2] }})<br>
+                                    <strong>Category:</strong> {{ report[3] }}<br>
+                                    {% if report[8] %}
+                                        <strong>Handled by:</strong> {{ report[8] }}
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            {% if report[4] %}
+                            <hr>
+                            <div>
+                                <strong>Description:</strong>
+                                <div class="mt-2 p-3 bg-light rounded">{{ report[4] }}</div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="modal-footer">
+                            {% if report[6] == 'pending' %}
+                                <button type="button" class="btn btn-success" onclick="handleReport('{{ report[0] }}', 'resolved')">
+                                    Mark as Resolved
+                                </button>
+                                <button type="button" class="btn btn-secondary" onclick="handleReport('{{ report[0] }}', 'dismissed')">
+                                    Dismiss Report
+                                </button>
+                            {% endif %}
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="text-center text-muted py-5">
+                <i class="fas fa-flag fa-3x mb-3"></i>
+                <p>No reports found</p>
+                {% if status_filter == 'pending' %}
+                    <p class="small">Great! No pending reports to handle.</p>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Report Statistics -->
+<div class="row mt-4">
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <div class="h4 text-warning">{{ pending_count or 0 }}</div>
+                <div class="small text-muted">Pending Reports</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <div class="h4 text-success">{{ resolved_count or 0 }}</div>
+                <div class="small text-muted">Resolved</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <div class="h4 text-secondary">{{ dismissed_count or 0 }}</div>
+                <div class="small text-muted">Dismissed</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <div class="h4 text-info">{{ total_count or 0 }}</div>
+                <div class="small text-muted">Total Reports</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function handleReport(reportId, status) {
+    if (confirm('Are you sure you want to mark this report as ' + status + '?')) {
+        fetch('/admin/report/' + reportId + '/handle', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: 'status=' + status
+        })
+        .then(response => {
+            if (response.ok) {
+                location.reload();
+            } else {
+                alert('Error handling report');
+            }
+        })
+        .catch(error => {
+            alert('Error handling report');
+        });
+    }
+}
+</script>
+{% endblock %}

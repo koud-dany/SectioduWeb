@@ -1,0 +1,39 @@
+{
+  "nav": {
+    "home": "Home",
+    "dashboard": "Dashboard",
+    "videos": "Videos",
+    "leaderboard": "Leaderboard",
+    "profile": "My Profile",
+    "editProfile": "Edit Profile",
+    "logout": "Logout",
+    "login": "Login",
+    "admin": "Admin",
+    "adminPanel": "Admin Panel"
+  },
+  "footer": {
+    "copyright": "© 2025 SectionduWeb. All rights reserved."
+  },
+  "admin": {
+    "dashboard": "Admin Dashboard",
+    "users": "User Management", 
+    "videos": "Video Management",
+    "analytics": "Analytics",
+    "settings": "System Settings"
+  },
+  "languages": {
+    "english": "English",
+    "spanish": "Español", 
+    "french": "Français",
+    "german": "Deutsch",
+    "italian": "Italiano"
+  },
+  "common": {
+    "submit": "Submit",
+    "cancel": "Cancel",
+    "save": "Save",
+    "edit": "Edit",
+    "delete": "Delete",
+    "view": "View"
+  }
+}

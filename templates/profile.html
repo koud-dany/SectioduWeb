@@ -1,0 +1,580 @@
+{% extends "base.html" %}
+
+{% block title %}{{ profile_user[1] }}'s Profile - SectionduWeb{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4" style="max-width: 1200px; margin: 0 auto;">
+    <!-- YouTube-Style Channel Header -->
+    <div class="card shadow-sm border-0 mb-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 16px;">
+        <div class="card-body p-4 text-white position-relative">
+            <!-- Background Pattern -->
+            <div class="position-absolute top-0 start-0 w-100 h-100" style="background: radial-gradient(circle at 25% 25%, rgba(255,255,255,0.1) 1px, transparent 1px), radial-gradient(circle at 75% 25%, rgba(255,255,255,0.1) 1px, transparent 1px), radial-gradient(circle at 50% 50%, rgba(255,255,255,0.1) 1px, transparent 1px), radial-gradient(circle at 25% 75%, rgba(255,255,255,0.1) 1px, transparent 1px), radial-gradient(circle at 75% 75%, rgba(255,255,255,0.1) 1px, transparent 1px); background-size: 50px 50px; border-radius: 16px;"></div>
+            
+            <div class="row align-items-center position-relative">
+                <div class="col-md-3 text-center mb-3 mb-md-0">
+                    <!-- Profile Avatar -->
+                    <div class="position-relative d-inline-block">
+                        {% if profile_user[8] %}
+                        <img src="{{ url_for('static', filename='avatars/' + profile_user[8]) }}" 
+                             alt="{{ profile_user[1] }}'s Avatar" 
+                             class="rounded-circle shadow-lg border border-white border-3"
+                             style="width: 120px; height: 120px; object-fit: cover; transition: transform 0.3s ease;">
+                        {% else %}
+                        <div class="bg-white bg-opacity-20 rounded-circle d-flex align-items-center justify-content-center shadow-lg border border-white border-3"
+                             style="width: 120px; height: 120px; backdrop-filter: blur(10px); transition: transform 0.3s ease;">
+                            <i class="fas fa-user text-white" style="font-size: 3rem;"></i>
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Online Status Indicator with Pulse Animation -->
+                        <span class="position-absolute bottom-0 end-0 bg-success border border-white rounded-circle shadow-sm"
+                              style="width: 20px; height: 20px; border-width: 2px !important;">
+                            <span class="position-absolute top-0 start-0 bg-success rounded-circle animate-ping"
+                                  style="width: 100%; height: 100%; opacity: 0.4;"></span>
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <h1 class="mb-2 fw-bold">
+                        {% if profile_user[3] and profile_user[4] %}
+                        {{ profile_user[3] }} {{ profile_user[4] }}
+                        {% else %}
+                        {{ profile_user[1] }}
+                        {% endif %}
+                    </h1>
+                    <h5 class="mb-3 opacity-75">
+                        @{{ profile_user[1] }}
+                        {% if profile_user[10]|default(0) >= 1000 %}
+                        <i class="fas fa-check-circle text-success ms-1" title="Verified Creator"></i>
+                        {% endif %}
+                    </h5>
+                    
+                    {% if profile_user[5] %}
+                    <p class="mb-3 opacity-90" style="font-size: 1.1rem;">{{ profile_user[5] }}</p>
+                    {% endif %}
+                    
+                    <div class="d-flex flex-wrap gap-3 align-items-center">
+                        {% if profile_user[6] %}
+                        <span class="badge bg-white bg-opacity-30 px-3 py-2 rounded-pill text-dark shadow-sm">
+                            <i class="fas fa-map-marker-alt me-1"></i>{{ profile_user[6] }}
+                        </span>
+                        {% endif %}
+                        {% if profile_user[7] %}
+                        <a href="{{ profile_user[7] }}" target="_blank" class="badge bg-white bg-opacity-30 px-3 py-2 rounded-pill text-dark text-decoration-none shadow-sm">
+                            <i class="fas fa-link me-1"></i>Website
+                        </a>
+                        {% endif %}
+                        <span class="badge bg-white bg-opacity-30 px-3 py-2 rounded-pill text-dark shadow-sm">
+                            <i class="fas fa-calendar-alt me-1"></i>Joined {{ profile_user[9].split()[0] if profile_user[9] else 'Recently' }}
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="col-md-3 text-center">
+                    {% if is_own_profile %}
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('edit_profile') }}" class="btn btn-light btn-lg rounded-pill px-4">
+                            <i class="fas fa-edit me-2"></i>Edit Profile
+                        </a>
+                        <a href="{{ url_for('upload_video') }}" class="btn btn-success rounded-pill px-4">
+                            <i class="fas fa-plus me-2"></i>Upload Video
+                        </a>
+                        <a href="{{ url_for('account_settings') }}" class="btn btn-outline-light rounded-pill px-4">
+                            <i class="fas fa-cog me-2"></i>Account Settings
+                        </a>
+                    </div>
+                    {% else %}
+                    <div class="d-grid gap-2">
+                        <!-- Subscriber count removed -->
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Stats Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary bg-opacity-10 border-primary border-opacity-25 text-center">
+                <div class="card-body py-4">
+                    <i class="fas fa-video text-primary display-6 mb-2"></i>
+                    <h3 class="text-primary mb-1">{{ total_videos }}</h3>
+                    <small class="text-muted">Videos Uploaded</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning bg-opacity-10 border-warning border-opacity-25 text-center">
+                <div class="card-body py-4">
+                    <i class="fas fa-star text-warning display-6 mb-2"></i>
+                    <h3 class="text-warning mb-1">{{ "%.1f"|format(avg_rating) }}</h3>
+                    <small class="text-muted">Average Rating</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success bg-opacity-10 border-success border-opacity-25 text-center">
+                <div class="card-body py-4">
+                    <i class="fas fa-thumbs-up text-success display-6 mb-2"></i>
+                    <h3 class="text-success mb-1">{{ total_votes }}</h3>
+                    <small class="text-muted">Total Votes</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info bg-opacity-10 border-info border-opacity-25 text-center">
+                <div class="card-body py-4">
+                    <i class="fas fa-eye text-info display-6 mb-2"></i>
+                    <h3 class="text-info mb-1">{{ profile_user[11]|default(0) }}</h3>
+                    <small class="text-muted">Total Views</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row g-4">
+        <!-- Videos Section -->
+        <div class="col-lg-8">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3 class="mb-0">
+                    <i class="fas fa-video text-primary me-2"></i>
+                    {% if is_own_profile %}My Videos{% else %}{{ profile_user[1] }}'s Videos{% endif %}
+                </h3>
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        Sort by
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="#"><i class="fas fa-clock me-2"></i>Recent</a></li>
+                        <li><a class="dropdown-item" href="#"><i class="fas fa-star me-2"></i>Top Rated</a></li>
+                        <li><a class="dropdown-item" href="#"><i class="fas fa-thumbs-up me-2"></i>Most Votes</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            {% if user_videos %}
+            <div class="row g-3">
+                {% for video in user_videos %}
+                <div class="col-sm-6 col-lg-4">
+                    <div class="card video-card h-100 border-0 shadow-sm">
+                        <div class="position-relative video-thumbnail" style="aspect-ratio: 16/9; overflow: hidden;">
+                            <video class="w-100 h-100" style="object-fit: cover;" muted preload="metadata" 
+                                   onmouseover="this.play()" onmouseout="this.pause(); this.currentTime = 0;">
+                                <source src="{{ url_for('static', filename='uploads/' + video[3]) }}" type="video/mp4">
+                            </video>
+                            
+                            <!-- Video Overlay -->
+                            <div class="position-absolute top-0 start-0 w-100 h-100 bg-dark bg-opacity-25 d-flex align-items-center justify-content-center opacity-0 hover-overlay" style="transition: opacity 0.3s;">
+                                <i class="fas fa-play-circle text-white" style="font-size: 3rem;"></i>
+                            </div>
+                            
+                            <!-- Video Stats -->
+                            <div class="position-absolute bottom-0 start-0 w-100 p-2" style="background: linear-gradient(transparent, rgba(0,0,0,0.7));">
+                                <div class="d-flex justify-content-between text-white small">
+                                    <span><i class="fas fa-star text-warning me-1"></i>{{ "%.1f"|format(video[6] if video[6] else 0.0) }}</span>
+                                    <span><i class="fas fa-comment me-1"></i>{{ video[7] }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card-body">
+                            <h6 class="card-title mb-2">
+                                <a href="{{ url_for('video_detail', video_id=video[0]) }}" class="text-decoration-none text-dark">
+                                    {{ video[1] }}
+                                </a>
+                            </h6>
+                            {% if video[2] %}
+                            <p class="card-text text-muted small mb-2" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-clamp: 2;">
+                                {{ video[2] }}
+                            </p>
+                            {% endif %}
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="d-flex align-items-center">
+                                    {% if profile_user[8] %}
+                                    <img src="{{ url_for('static', filename='avatars/' + profile_user[8]) }}" 
+                                         alt="{{ profile_user[1] }}'s Avatar" 
+                                         class="rounded-circle me-2"
+                                         style="width: 20px; height: 20px; object-fit: cover;">
+                                    {% else %}
+                                    <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center me-2" 
+                                         style="width: 20px; height: 20px; font-size: 0.6rem;">
+                                        <i class="fas fa-user text-white"></i>
+                                    </div>
+                                    {% endif %}
+                                    <small class="text-muted">{{ video[4].split()[0] }}</small>
+                                </div>
+                                <div class="d-flex gap-1">
+                                    {% for i in range(5) %}
+                                        {% if i < (video[6]|round if video[6] else 0) %}
+                                        <i class="fas fa-star text-warning" style="font-size: 0.8rem;"></i>
+                                        {% else %}
+                                        <i class="far fa-star text-muted" style="font-size: 0.8rem;"></i>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% if is_own_profile %}
+                            <div class="mt-2 d-flex justify-content-between">
+                                <small class="text-muted">{{ video[5] }} votes • {{ video[7] }} comments</small>
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-outline-primary btn-sm" data-video-id="{{ video[0] }}" onclick="editVideo(this)" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-outline-danger btn-sm" data-video-id="{{ video[0] }}" data-video-title="{{ video[1] }}" onclick="confirmDeleteVideoFromProfile(this)" title="Delete">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-video-slash text-muted display-4 mb-3"></i>
+                <h5 class="text-muted">No videos uploaded yet</h5>
+                {% if is_own_profile %}
+                <p class="text-muted mb-3">Share your creativity with the world!</p>
+                <a href="{{ url_for('upload_video') }}" class="btn btn-primary rounded-pill px-4">
+                    <i class="fas fa-cloud-upload-alt me-2"></i>Upload Your First Video
+                </a>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Channel Analytics (for own profile) -->
+            {% if is_own_profile %}
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-gradient bg-success text-white border-0 py-3">
+                    <h6 class="mb-0">
+                        <i class="fas fa-chart-line me-2"></i>Channel Analytics
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row g-2 text-center">
+                        <div class="col-6">
+                            <div class="bg-primary bg-opacity-10 rounded p-2">
+                                <h6 class="text-primary mb-1">{{ profile_user[11]|default(0) }}</h6>
+                                <small class="text-muted">Total Views</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="bg-success bg-opacity-10 rounded p-2">
+                                <h6 class="text-success mb-1">{{ total_votes }}</h6>
+                                <small class="text-muted">Total Likes</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="bg-warning bg-opacity-10 rounded p-2">
+                                <h6 class="text-warning mb-1">{{ profile_user[10]|default(0) }}</h6>
+                                <small class="text-muted">Subscribers</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="bg-info bg-opacity-10 rounded p-2">
+                                <h6 class="text-info mb-1">{{ recent_comments|length }}</h6>
+                                <small class="text-muted">Comments</small>
+                            </div>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="d-grid">
+                        <button class="btn btn-outline-success rounded-pill" onclick="viewFullAnalytics()">
+                            <i class="fas fa-chart-bar me-2"></i>View Full Analytics
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Achievements -->
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-gradient bg-warning text-dark border-0 py-3">
+                    <h6 class="mb-0">
+                        <i class="fas fa-trophy me-2"></i>Achievements
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex flex-wrap gap-2">
+                        {% if total_videos >= 1 %}
+                        <span class="badge bg-primary p-2 rounded-3" title="First Video Uploaded">
+                            <i class="fas fa-video"></i> Creator
+                        </span>
+                        {% endif %}
+                        {% if total_videos >= 10 %}
+                        <span class="badge bg-success p-2 rounded-3" title="10+ Videos Uploaded">
+                            <i class="fas fa-star"></i> Producer
+                        </span>
+                        {% endif %}
+                        {% if avg_rating >= 4.0 %}
+                        <span class="badge bg-warning p-2 rounded-3" title="High Quality Content">
+                            <i class="fas fa-crown"></i> Quality
+                        </span>
+                        {% endif %}
+                        {% if profile_user[10]|default(0) >= 100 %}
+                        <span class="badge bg-danger p-2 rounded-3" title="100+ Subscribers">
+                            <i class="fas fa-users"></i> Popular
+                        </span>
+                        {% endif %}
+                        {% if not total_videos and not avg_rating and not profile_user[10]|default(0) %}
+                        <small class="text-muted">Upload videos and gain subscribers to unlock achievements!</small>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Recent Activity -->
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-light border-0 py-3">
+                    <h6 class="mb-0">
+                        <i class="fas fa-clock text-primary me-2"></i>Recent Activity
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% if recent_comments %}
+                    {% for comment in recent_comments %}
+                    <div class="d-flex mb-3 pb-3 {% if not loop.last %}border-bottom{% endif %}">
+                        <div class="me-3">
+                            {% if profile_user[8] %}
+                            <img src="{{ url_for('static', filename='avatars/' + profile_user[8]) }}" 
+                                 alt="{{ profile_user[1] }}'s Avatar" 
+                                 class="rounded-circle border border-2 border-light shadow-sm"
+                                 style="width: 32px; height: 32px; object-fit: cover;">
+                            {% else %}
+                            <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center border border-2 border-light shadow-sm" 
+                                 style="width: 32px; height: 32px; font-size: 0.8rem;">
+                                <i class="fas fa-user text-white"></i>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="flex-grow-1 min-w-0">
+                            <small class="text-muted">Commented on</small>
+                            <h6 class="mb-1" style="font-size: 0.9rem;">
+                                <a href="{{ url_for('video_detail', video_id=comment[3]) }}" class="text-decoration-none">
+                                    {{ comment[2] }}
+                                </a>
+                            </h6>
+                            <p class="text-muted small mb-1" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-clamp: 2;">
+                                "{{ comment[0] }}"
+                            </p>
+                            <small class="text-muted">{{ comment[1].split()[0] }}</small>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-clock text-muted display-6 mb-2"></i>
+                        <p class="text-muted">No recent activity</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Channel Info -->
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-light border-0 py-3">
+                    <h6 class="mb-0">
+                        <i class="fas fa-info-circle text-info me-2"></i>Channel Info
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3 text-center">
+                        <div class="col-6">
+                            <div class="border rounded p-2">
+                                <h6 class="text-primary mb-1">{{ total_videos }}</h6>
+                                <small class="text-muted">Videos</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="border rounded p-2">
+                                <h6 class="text-warning mb-1">{{ profile_user[10]|default(0) }}</h6>
+                                <small class="text-muted">Subscribers</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="border rounded p-2">
+                                <h6 class="text-success mb-1">{{ total_votes }}</h6>
+                                <small class="text-muted">Total Votes</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="border rounded p-2">
+                                <h6 class="text-info mb-1">{{ profile_user[11]|default(0) }}</h6>
+                                <small class="text-muted">Views</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="d-grid gap-2">
+                        {% if not is_own_profile %}
+                        <button class="btn btn-outline-primary rounded-pill" onclick="subscribeUser()">
+                            <i class="fas fa-bell me-2"></i>Subscribe
+                        </button>
+                        {% endif %}
+                        <a href="{{ url_for('videos') }}" class="btn btn-outline-secondary rounded-pill">
+                            <i class="fas fa-video me-2"></i>Browse All Videos
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<style>
+/* Profile Avatar Hover Effect */
+.position-relative:hover img,
+.position-relative:hover div {
+    transform: scale(1.05);
+}
+
+/* Online Status Pulse Animation */
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 0.4;
+    }
+    50% {
+        transform: scale(1.2);
+        opacity: 0.1;
+    }
+}
+
+.animate-ping {
+    animation: pulse 2s infinite;
+}
+</style>
+<script>
+// Video hover effects
+document.querySelectorAll('.video-card').forEach(card => {
+    const video = card.querySelector('video');
+    const overlay = card.querySelector('.hover-overlay');
+    
+    card.addEventListener('mouseenter', () => {
+        if (video) {
+            video.play().catch(e => console.log('Video play failed:', e));
+            if (overlay) overlay.style.opacity = '1';
+        }
+    });
+    
+    card.addEventListener('mouseleave', () => {
+        if (video) {
+            video.pause();
+            video.currentTime = 0;
+            if (overlay) overlay.style.opacity = '0';
+        }
+    });
+});
+
+// Subscribe functionality (placeholder)
+function subscribeUser() {
+    // This would typically make an AJAX call to subscribe/unsubscribe
+    const isSubscribed = this.innerHTML.includes('Unsubscribe');
+    if (isSubscribed) {
+        this.innerHTML = '<i class="fas fa-bell me-2"></i>Subscribe';
+        this.classList.remove('btn-secondary');
+        this.classList.add('btn-danger');
+        // AJAX call to unsubscribe
+    } else {
+        this.innerHTML = '<i class="fas fa-bell-slash me-2"></i>Unsubscribe';
+        this.classList.remove('btn-danger');
+        this.classList.add('btn-secondary');
+        // AJAX call to subscribe
+    }
+}
+
+
+
+function shareProfile() {
+    const profileUrl = window.location.href;
+    if (navigator.share) {
+        navigator.share({
+            title: document.title,
+            url: profileUrl
+        });
+    } else {
+        navigator.clipboard.writeText(profileUrl).then(() => {
+            alert('Profile link copied to clipboard!');
+        });
+    }
+}
+
+function reportUser() {
+    const reason = prompt('Please specify the reason for reporting this user:');
+    if (reason) {
+        alert('User reported. Thank you for helping keep our community safe.');
+        // AJAX call to report user
+    }
+}
+
+function blockUser() {
+    if (confirm('Are you sure you want to block this user?\n\nYou will no longer see their content.')) {
+        alert('User blocked successfully.');
+        // AJAX call to block user
+    }
+}
+
+function viewFullAnalytics() {
+    alert('Full analytics page would show detailed statistics, charts, and insights about your channel performance.');
+}
+
+function editVideo(button) {
+    const videoId = button.getAttribute('data-video-id');
+    alert(`Edit video functionality would redirect to an edit page for video ID: ${videoId}`);
+    // window.location.href = `/edit_video/${videoId}`;
+}
+
+function confirmDeleteVideoFromProfile(button) {
+    const videoId = button.getAttribute('data-video-id');
+    const videoTitle = button.getAttribute('data-video-title');
+    
+    if (confirm(`Are you sure you want to delete "${videoTitle}"?\n\nThis action cannot be undone. All votes and comments will also be deleted.`)) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/delete_video/${videoId}`;
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+// Smooth animations on load
+document.addEventListener('DOMContentLoaded', function() {
+    // Animate stats cards
+    const statsCards = document.querySelectorAll('.col-md-3 .card');
+    statsCards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        
+        setTimeout(() => {
+            card.style.transition = 'all 0.5s ease';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, index * 100);
+    });
+    
+    // Animate video cards
+    const videoCards = document.querySelectorAll('.video-card');
+    videoCards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'scale(0.9)';
+        
+        setTimeout(() => {
+            card.style.transition = 'all 0.4s ease';
+            card.style.opacity = '1';
+            card.style.transform = 'scale(1)';
+        }, (index * 50) + 200);
+    });
+});
+</script>
+{% endblock %}

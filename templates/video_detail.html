@@ -1,0 +1,1306 @@
+{% extends "base.html" %}
+
+{% block title %}{{ video[1] }} - SectionduWeb{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4" style="max-width: 1280px; margin: 0 auto;">
+    <div class="row g-4">
+        <!-- Main Video Content (YouTube-style main column) -->
+        <div class="col-lg-8 col-xl-9" style="padding-left: clamp(12px, 3vw, 24px); padding-right: clamp(12px, 3vw, 24px);">
+            <!-- YouTube-Style Video Player -->
+            <div class="mb-3">
+                <div class="position-relative video-container" style="aspect-ratio: 16/9; max-width: 100%; background: #000; border-radius: 12px; overflow: hidden;">
+                    <video class="w-100 h-100 shadow-lg" controls preload="metadata" style="object-fit: contain; border-radius: 12px;">
+                        <source src="{{ url_for('static', filename='uploads/' + video[4]) }}" type="video/mp4">
+                        <source src="{{ url_for('static', filename='uploads/' + video[4]) }}" type="video/webm">
+                        <source src="{{ url_for('static', filename='uploads/' + video[4]) }}" type="video/ogg">
+                        <p class="text-center text-muted mt-3">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Your browser does not support the video tag or the video format.
+                            <br><small>Supported formats: MP4, WebM, OGG</small>
+                        </p>
+                    </video>
+                    <!-- Video overlay for better visual appeal (only shows when paused) -->
+                    <div class="video-overlay position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" style="border-radius: 12px; background: rgba(0,0,0,0.3); opacity: 0; transition: opacity 0.3s; pointer-events: none;">
+                        <i class="fas fa-play-circle text-white" style="font-size: 3rem;"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Enhanced Video Info Card -->
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-body p-4">
+                    <h2 class="card-title mb-3 text-primary">{{ video[1] }}</h2>
+                    <div class="d-flex justify-content-between align-items-start mb-4">
+                        <div class="d-flex align-items-center">
+                            <div class="position-relative me-3">
+                                {% if video[20] %}
+                                <img src="{{ url_for('static', filename='avatars/' + video[20]) }}" 
+                                     alt="{{ video[19] }}'s Avatar" 
+                                     class="rounded-circle shadow border border-2 border-light"
+                                     style="width: 50px; height: 50px; object-fit: cover;">
+                                {% else %}
+                                <div class="bg-gradient bg-primary rounded-circle d-flex align-items-center justify-content-center shadow border border-2 border-light" 
+                                     style="width: 50px; height: 50px;">
+                                    <i class="fas fa-user text-white fs-5"></i>
+                                </div>
+                                {% endif %}
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-success">
+                                    <i class="fas fa-check"></i>
+                                </span>
+                            </div>
+                            <div>
+                                <h5 class="mb-1">
+                                    <a href="{{ url_for('profile', username=video[19]) }}" class="text-decoration-none text-dark">
+                                        {{ video[19] }}
+                                    </a>
+                                </h5>
+                                <small class="text-muted">
+                                    <i class="fas fa-calendar-alt me-1"></i>{{ video[5] }}
+                                </small>
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <div class="card bg-warning bg-opacity-10 border-warning border-opacity-50 p-3 rounded-3">
+                                <div class="d-flex align-items-center justify-content-center mb-2">
+                                    {% for i in range(5) %}
+                                        {% if i < video[7]|round %}
+                                        <i class="fas fa-star text-warning fs-6"></i>
+                                        {% else %}
+                                        <i class="far fa-star text-muted fs-6"></i>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                                <div class="text-center">
+                                    <h4 class="text-warning mb-1">{{ "%.1f"|format(video[7] if video[7] is not none else 0.0) }}</h4>
+                                    <small class="text-muted">{{ video[6] }} votes</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% if video[2] %}
+                    <div class="alert alert-info border-0 rounded-3 bg-info bg-opacity-10">
+                        <h6 class="alert-heading">
+                            <i class="fas fa-info-circle me-2"></i>Description
+                        </h6>
+                        <p class="mb-0">{{ video[2] }}</p>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Admin Controls for Videos -->
+                    {% if session.is_admin %}
+                    <div class="alert alert-warning border-0 rounded-3 bg-warning bg-opacity-10 border-start border-warning border-4 mt-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-shield-alt text-warning me-2"></i>
+                                <h6 class="mb-0 text-warning">Admin Controls</h6>
+                            </div>
+                            <div class="btn-group" role="group">
+                                <!-- Featured/Unfeatured Toggle -->
+                                <button type="button" class="btn btn-sm btn-outline-warning" onclick="toggleVideoFeature('{{ video[0] }}')" title="Toggle Featured Status">
+                                    <i class="fas fa-star me-1"></i>Feature Video
+                                </button>
+                                
+                                <!-- Pin/Unpin Video -->
+                                <button type="button" class="btn btn-sm btn-outline-info" onclick="toggleVideoPin('{{ video[0] }}')" title="Pin to top">
+                                    <i class="fas fa-thumbtack me-1"></i>Pin
+                                </button>
+                                
+                                <!-- Hide/Show Video -->
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="toggleVideoVisibility('{{ video[0] }}')" title="Hide/Show video">
+                                    <i class="fas fa-eye-slash me-1"></i>Hide
+                                </button>
+                                
+                                <!-- Delete Video (Super Admin Only) -->
+                                {% if session.admin_level == 'super' %}
+                                <button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteVideo('{{ video[0] }}')" title="Delete video permanently">
+                                    <i class="fas fa-trash me-1"></i>Delete
+                                </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Enhanced Comments Section -->
+            <div class="card shadow-sm border-0 mt-4">
+                <div class="card-header bg-gradient bg-primary text-white border-0 py-3">
+                    <h5 class="mb-0">
+                        <i class="fas fa-comments me-2"></i>
+                        Comments 
+                        <span class="badge bg-light text-dark ms-2">{{ comments|length }}</span>
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    {% if session.user_id %}
+                    <!-- YouTube-Style Comment Form -->
+                    <form id="main-comment-form" class="mb-4">
+                        <div class="d-flex">
+                            <div class="me-3">
+                                {% if current_user_avatar %}
+                                <img src="{{ url_for('static', filename='avatars/' + current_user_avatar) }}" 
+                                     alt="Your Avatar" 
+                                     class="rounded-circle shadow-sm border border-2 border-light"
+                                     style="width: 40px; height: 40px; object-fit: cover;">
+                                {% else %}
+                                <div class="bg-success rounded-circle d-flex align-items-center justify-content-center shadow-sm border border-2 border-light" 
+                                     style="width: 40px; height: 40px;">
+                                    <i class="fas fa-user text-white"></i>
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="flex-grow-1">
+                                <textarea class="form-control border-0 border-bottom rounded-0" id="main-comment-input" 
+                                          rows="1" placeholder="Add a comment..." required
+                                          style="resize: none; box-shadow: none;"></textarea>
+                                <div class="d-flex justify-content-between align-items-center mt-2" id="comment-actions" style="display: none !important;">
+                                    <small class="text-muted">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Be respectful and constructive
+                                    </small>
+                                    <div class="gap-2 d-flex">
+                                        <button type="button" class="btn btn-sm btn-outline-secondary" id="cancel-comment">Cancel</button>
+                                        <button type="submit" class="btn btn-sm btn-primary" id="submit-comment" data-video-id="{{ video[0] }}">
+                                            <i class="fas fa-paper-plane me-1"></i>Comment
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                    <hr class="my-4">
+                    {% endif %}
+                    
+                    <!-- YouTube-Style Comments -->
+                    <div class="comment-section" id="comments-container">
+                        {% for comment in comments %}
+                        <div class="comment-thread mb-4" data-comment-id="{{ comment[3] }}">
+                            <!-- Main Comment -->
+                            <div class="d-flex comment-item">
+                                <div class="flex-shrink-0 me-3">
+                                    {% if comment[5] %}
+                                    <img src="{{ url_for('static', filename='avatars/' + comment[5]) }}" 
+                                         alt="{{ comment[2] }}'s Avatar" 
+                                         class="rounded-circle shadow-sm border border-2 border-light"
+                                         style="width: 40px; height: 40px; object-fit: cover;">
+                                    {% else %}
+                                    <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center shadow-sm border border-2 border-light" 
+                                         style="width: 40px; height: 40px;">
+                                        <i class="fas fa-user text-white"></i>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="d-flex align-items-center mb-1">
+                                        <h6 class="mb-0 me-2">
+                                            <a href="{{ url_for('profile', username=comment[2]) }}" class="text-decoration-none text-dark">
+                                                {{ comment[2] }}
+                                            </a>
+                                        </h6>
+                                        <small class="text-muted">{{ comment[1] }}</small>
+                                    </div>
+                                    <p class="mb-2">{{ comment[0] }}</p>
+                                    
+                                    <!-- Comment Actions (YouTube-style) -->
+                                    <div class="d-flex align-items-center gap-3">
+                                        <button class="btn btn-sm btn-outline-secondary like-btn" data-comment-id="{{ comment[3] }}" data-liked="false">
+                                            <i class="far fa-thumbs-up"></i>
+                                            <span class="like-count">0</span>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-secondary dislike-btn" data-comment-id="{{ comment[3] }}" data-disliked="false">
+                                            <i class="far fa-thumbs-down"></i>
+                                        </button>
+                                        {% if session.user_id %}
+                                        <button class="btn btn-sm btn-link text-muted reply-btn" data-comment-id="{{ comment[3] }}">
+                                            <i class="fas fa-reply me-1"></i>Reply
+                                        </button>
+                                        {% endif %}
+                                        
+                                        <!-- Admin Comment Controls -->
+                                        {% if session.is_admin %}
+                                        <div class="dropdown">
+                                            <button class="btn btn-sm btn-outline-warning dropdown-toggle" type="button" data-bs-toggle="dropdown" title="Admin actions">
+                                                <i class="fas fa-shield-alt"></i>
+                                            </button>
+                                            <ul class="dropdown-menu shadow-lg border-0 rounded-3">
+                                                <li><button class="dropdown-item text-warning" onclick="pinComment('{{ comment[3] }}')">
+                                                    <i class="fas fa-thumbtack me-2"></i>Pin Comment
+                                                </button></li>
+                                                <li><button class="dropdown-item text-info" onclick="highlightComment('{{ comment[3] }}')">
+                                                    <i class="fas fa-star me-2"></i>Highlight Comment
+                                                </button></li>
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li><button class="dropdown-item text-danger" onclick="deleteComment('{{ comment[3] }}')">
+                                                    <i class="fas fa-trash me-2"></i>Delete Comment
+                                                </button></li>
+                                                {% if session.admin_level == 'super' %}
+                                                <li><button class="dropdown-item text-danger" onclick="banUserFromComment('{{ comment[2] }}')">
+                                                    <i class="fas fa-ban me-2"></i>Ban User
+                                                </button></li>
+                                                {% endif %}
+                                            </ul>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <!-- Show Replies Button (YouTube-style) -->
+                                    {% if comment[4] > 0 %}
+                                    <div class="show-replies-btn mt-2" data-comment-id="{{ comment[3] }}">
+                                        <button class="btn btn-sm btn-link text-primary fw-bold p-0 toggle-replies d-flex align-items-center" data-comment-id="{{ comment[3] }}" data-expanded="false" style="text-decoration: none;">
+                                            <i class="fas fa-chevron-down me-2"></i>
+                                            <span class="reply-count-text">{{ comment[4] }} replies</span>
+                                        </button>
+                                    </div>
+                                    {% endif %}
+                                    
+                                    <!-- Reply Form (Hidden by default) -->
+                                    {% if session.user_id %}
+                                    <div class="reply-form mt-3" style="display: none;" data-comment-id="{{ comment[3] }}">
+                                        <div class="d-flex">
+                                            <div class="me-2">
+                                                <div class="bg-success rounded-circle d-flex align-items-center justify-content-center" 
+                                                     style="width: 32px; height: 32px;">
+                                                    <i class="fas fa-user text-white" style="font-size: 0.8rem;"></i>
+                                                </div>
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <textarea class="form-control border-0 border-bottom rounded-0 reply-input" 
+                                                          rows="2" placeholder="Add a reply..."></textarea>
+                                                <div class="d-flex justify-content-end mt-2 gap-2">
+                                                    <button class="btn btn-sm btn-outline-secondary cancel-reply">Cancel</button>
+                                                    <button class="btn btn-sm btn-primary submit-reply" data-video-id="{{ video[0] }}" data-parent-id="{{ comment[3] }}">Reply</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                    
+                                    <!-- Replies Container (Initially hidden) -->
+                                    <div class="replies-container mt-3" data-comment-id="{{ comment[3] }}" style="display: none;">
+                                        <!-- Replies will be loaded here -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                        
+                        {% if not comments %}
+                        <div class="text-center py-5" id="no-comments">
+                            <i class="fas fa-comment-slash text-muted display-4 mb-3"></i>
+                            <h6 class="text-muted">No comments yet</h6>
+                            <p class="text-muted">Be the first to share your thoughts about this video!</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Enhanced Voting Section -->
+            {% if session.user_id %}
+            <div class="card shadow-sm border-0 bg-warning bg-opacity-10 border-warning border-opacity-25 mb-4">
+                <div class="card-body p-4 text-center">
+                    <h5 class="card-title text-warning mb-3">
+                        <i class="fas fa-trophy me-2"></i>Rate This Video
+                    </h5>
+                    <p class="text-muted mb-3">Help others discover great content by rating this video</p>
+                    <div class="vote-stars d-flex justify-content-center gap-2 mb-3" data-video-id="{{ video[0] }}">
+                        {% for i in range(5) %}
+                        <i class="far fa-star vote-star" data-rating="{{ i + 1 }}" 
+                           style="cursor: pointer; color: #ffc107; font-size: 2rem; transition: all 0.2s;"></i>
+                        {% endfor %}
+                    </div>
+                    <small class="text-muted">
+                        <i class="fas fa-mouse-pointer me-1"></i>Click on stars to rate (1-5 stars)
+                    </small>
+                </div>
+            </div>
+            {% else %}
+            <div class="alert alert-info border-0 rounded-3">
+                <h6 class="alert-heading">
+                    <i class="fas fa-sign-in-alt me-2"></i>Join the Community
+                </h6>
+                <p class="mb-2">Sign in to rate videos and share your thoughts!</p>
+                <a href="{{ url_for('login') }}" class="btn btn-primary btn-sm">
+                    <i class="fas fa-user-plus me-1"></i>Sign In
+                </a>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Enhanced YouTube-Style Sidebar -->
+        <div class="col-lg-4 col-xl-3" style="padding-left: clamp(12px, 2vw, 24px); padding-right: clamp(12px, 2vw, 24px);">
+            <div class="sticky-top sidebar-scroll" style="top: 80px; z-index: 1020;">
+                <!-- Top Rated Videos - Enhanced Card -->
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-header bg-gradient bg-warning text-dark border-0 py-3">
+                        <h6 class="mb-0 fw-bold">
+                            <i class="fas fa-trophy me-2"></i>Top Rated Videos
+                        </h6>
+                    </div>
+                    <div class="card-body p-3">
+                    
+                    {% if top_videos %}
+                    <div class="d-grid gap-2">
+                        {% for top_video in top_videos %}
+                        {% if top_video[0] == video[0] %}
+                        <div class="d-flex bg-primary bg-opacity-10 rounded p-2 border border-primary border-opacity-50" style="transition: all 0.2s;">
+                            <!-- Current Video Badge -->
+                            <div class="position-absolute top-0 end-0 bg-primary text-white px-2 py-1 rounded-bottom-start" style="font-size: 0.7rem; font-weight: bold;">
+                                NOW PLAYING
+                            </div>
+                        {% else %}
+                        <a href="{{ url_for('video_detail', video_id=top_video[0]) }}" class="text-decoration-none">
+                            <div class="d-flex bg-light rounded p-2 hover-shadow" style="transition: all 0.2s;">
+                        {% endif %}
+                                <!-- Video Thumbnail -->
+                                <div class="position-relative me-3" style="min-width: 120px; width: 120px; height: 68px; overflow: hidden; border-radius: 8px; background: #f8f9fa;">
+                                    <video class="w-100 h-100" style="object-fit: cover;" muted preload="metadata">
+                                        <source src="{{ url_for('static', filename='uploads/' + top_video[2]) }}" type="video/mp4">
+                                    </video>
+                                    <!-- Rating Badge -->
+                                    <div class="position-absolute bottom-0 end-0 bg-dark text-white px-1 rounded-start" style="font-size: 0.7rem;">
+                                        <i class="fas fa-star text-warning"></i> {{ "%.1f"|format(top_video[4] if top_video[4] is not none else 0.0) }}
+                                    </div>
+                                    <!-- Rank Badge -->
+                                    {% if loop.index <= 3 %}
+                                    <div class="position-absolute top-0 start-0 px-1 rounded-end" 
+                                         style="background: {% if loop.index == 1 %}#ffd700{% elif loop.index == 2 %}#c0c0c0{% else %}#cd7f32{% endif %}; color: {% if loop.index <= 2 %}#000{% else %}#fff{% endif %}; font-size: 0.7rem; font-weight: bold;">
+                                        #{{ loop.index }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <!-- Video Info -->
+                                <div class="flex-grow-1 min-w-0">
+                                    <h6 class="mb-1 text-dark lh-sm" style="font-size: 0.9rem; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                                        {{ top_video[1] }}
+                                    </h6>
+                                    <div class="d-flex align-items-center mb-1">
+                                        {% if top_video[6] %}
+                                        <img src="{{ url_for('static', filename='avatars/' + top_video[6]) }}" 
+                                             alt="{{ top_video[5] }}'s profile picture" 
+                                             class="rounded-circle me-2" 
+                                             style="width: 20px; height: 20px; object-fit: cover; border: 1px solid #dee2e6;">
+                                        {% else %}
+                                        <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center me-2" 
+                                             style="width: 20px; height: 20px; font-size: 0.7rem;">
+                                            <i class="fas fa-user text-white"></i>
+                                        </div>
+                                        {% endif %}
+                                        <small>
+                                            <a href="{{ url_for('profile', username=top_video[5]) }}" class="text-decoration-none text-muted">
+                                                {{ top_video[5] }}
+                                            </a>
+                                        </small>
+                                    </div>
+                                    <div class="d-flex justify-content-between">
+                                        <small class="text-muted">{{ top_video[3] }} votes</small>
+                                        <small class="text-muted">Uploaded</small>
+                                    </div>
+                                </div>
+                            </div>
+                        {% if top_video[0] == video[0] %}
+                        </div>
+                        {% else %}
+                        </a>
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+                        {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-video-slash text-muted display-6 mb-3"></i>
+                            <p class="text-muted">No rated videos yet</p>
+                            <small class="text-muted">Videos will appear here once they receive ratings!</small>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Enhanced Navigation Card -->
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-light border-0 py-3">
+                        <h6 class="mb-0 text-muted">
+                            <i class="fas fa-compass me-2"></i>Navigation
+                        </h6>
+                    </div>
+                    <div class="card-body p-3">
+                        <div class="d-grid gap-2">
+                            <a href="{{ url_for('videos') }}" class="btn btn-outline-primary rounded-pill">
+                                <i class="fas fa-arrow-left me-2"></i>Back to Videos
+                            </a>
+                            <a href="{{ url_for('videos', sort='top_rated') }}" class="btn btn-outline-warning rounded-pill">
+                                <i class="fas fa-trophy me-2"></i>View All Top Rated
+                            </a>
+                            {% if session.user_id == video[1] %}
+                            <a href="{{ url_for('dashboard') }}" class="btn btn-outline-success rounded-pill">
+                                <i class="fas fa-tachometer-alt me-2"></i>My Dashboard
+                            </a>
+                            {% endif %}
+                            {% if session.user_id %}
+                            <a href="{{ url_for('upload_video') }}" class="btn btn-primary rounded-pill">
+                                <i class="fas fa-cloud-upload-alt me-2"></i>Upload Video
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Star rating functionality
+document.querySelectorAll('.vote-stars i').forEach(function(star, index) {
+    star.addEventListener('mouseover', function() {
+        const stars = this.parentElement.querySelectorAll('i');
+        stars.forEach(function(s, i) {
+            if (i <= index) {
+                s.className = 'fas fa-star';
+            } else {
+                s.className = 'far fa-star';
+            }
+        });
+    });
+    
+    star.addEventListener('click', function() {
+        const rating = this.dataset.rating;
+        const videoId = this.parentElement.dataset.videoId;
+        
+        fetch('/vote', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `video_id=${videoId}&rating=${rating}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Show success notification with link to top rated
+                const notification = document.createElement('div');
+                notification.className = 'alert alert-success alert-dismissible fade show mt-3';
+                notification.innerHTML = `
+                    <strong><i class="fas fa-check-circle"></i> Vote submitted!</strong> 
+                    You rated this video ${data.user_rating} stars. 
+                    <div class="mt-2">
+                        <small><strong>Updated stats:</strong> ${data.average_rating.toFixed(1)} avg rating • ${data.total_votes} total votes</small>
+                    </div>
+                    <div class="mt-2">
+                        <a href="/videos?sort=top_rated" class="btn btn-sm btn-warning">
+                            <i class="fas fa-trophy"></i> View Top Rated Videos
+                        </a>
+                        <button type="button" class="btn-close float-end" data-bs-dismiss="alert"></button>
+                    </div>
+                `;
+                
+                // Insert notification at the top of the page
+                const container = document.querySelector('.container');
+                container.insertBefore(notification, container.firstChild);
+                
+                // Auto-remove notification after 8 seconds
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.remove();
+                    }
+                }, 8000);
+                
+                // Reload to show updated stats
+                setTimeout(() => location.reload(), 2000);
+            } else {
+                alert(data.message);
+            }
+        });
+    });
+});
+
+document.querySelector('.vote-stars').addEventListener('mouseleave', function() {
+    const stars = this.querySelectorAll('i');
+    stars.forEach(function(star) {
+        star.className = 'far fa-star vote-star';
+        star.style.fontSize = '2rem';
+    });
+});
+
+// YouTube-style Comments System
+document.addEventListener('DOMContentLoaded', function() {
+    // Video overlay handling
+    const video = document.querySelector('video');
+    const overlay = document.querySelector('.video-overlay');
+    
+    if (video && overlay) {
+        // Show overlay when video is paused/ended
+        video.addEventListener('pause', function() {
+            overlay.style.opacity = '1';
+        });
+        
+        video.addEventListener('ended', function() {
+            overlay.style.opacity = '1';
+        });
+        
+        // Hide overlay when video is playing
+        video.addEventListener('play', function() {
+            overlay.style.opacity = '0';
+        });
+        
+        // Hide overlay when video is loading/buffering
+        video.addEventListener('loadstart', function() {
+            overlay.style.opacity = '0';
+        });
+        
+        // Click overlay to play video
+        overlay.addEventListener('click', function() {
+            if (video.paused) {
+                video.play().catch(error => {
+                    console.error('Error playing video:', error);
+                    // Show user-friendly error message
+                    const errorMsg = document.createElement('div');
+                    errorMsg.className = 'alert alert-warning mt-2';
+                    errorMsg.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i>Unable to play video. Please check if the video file exists and is in a supported format.';
+                    video.parentElement.appendChild(errorMsg);
+                });
+            }
+        });
+        
+        // Enable pointer events only when overlay is visible
+        video.addEventListener('pause', function() {
+            overlay.style.pointerEvents = 'auto';
+        });
+        
+        video.addEventListener('play', function() {
+            overlay.style.pointerEvents = 'none';
+        });
+        
+        // Video error handling
+        video.addEventListener('error', function(e) {
+            console.error('Video error:', e);
+            const errorMsg = document.createElement('div');
+            errorMsg.className = 'alert alert-danger mt-2';
+            errorMsg.innerHTML = `
+                <h6><i class="fas fa-exclamation-circle me-2"></i>Video Error</h6>
+                <p class="mb-1">Failed to load video: <code>{{ video[4] }}</code></p>
+                <small class="text-muted">Error code: ${video.error ? video.error.code : 'Unknown'}</small>
+                <br><small class="text-muted">Please ensure the video file exists in the uploads directory.</small>
+            `;
+            video.parentElement.appendChild(errorMsg);
+        });
+        
+        // Log video path for debugging
+        console.log('Video source:', video.currentSrc || video.src);
+        console.log('Video ready state:', video.readyState);
+    }
+    
+    // Navbar positioning
+    const navbar = document.querySelector('.navbar');
+    const sidebar = document.querySelector('.sticky-top');
+    
+    if (navbar && sidebar) {
+        function updateStickyPosition() {
+            const navbarHeight = navbar.offsetHeight;
+            sidebar.style.top = (navbarHeight + 10) + 'px';
+        }
+        
+        updateStickyPosition();
+        window.addEventListener('resize', updateStickyPosition);
+        
+        function handleResponsive() {
+            if (window.innerWidth < 992) {
+                sidebar.style.position = 'relative';
+                sidebar.style.top = 'auto';
+            } else {
+                sidebar.style.position = 'sticky';
+                updateStickyPosition();
+            }
+        }
+        
+        handleResponsive();
+        window.addEventListener('resize', handleResponsive);
+    }
+    
+    // Main comment form handling
+    const mainCommentInput = document.getElementById('main-comment-input');
+    const commentActions = document.getElementById('comment-actions');
+    const mainCommentForm = document.getElementById('main-comment-form');
+    const cancelComment = document.getElementById('cancel-comment');
+    
+    if (mainCommentInput) {
+        mainCommentInput.addEventListener('focus', function() {
+            this.rows = 3;
+            commentActions.style.display = 'flex !important';
+            commentActions.classList.remove('d-none');
+            commentActions.classList.add('d-flex');
+        });
+        
+        cancelComment.addEventListener('click', function() {
+            mainCommentInput.rows = 1;
+            mainCommentInput.value = '';
+            commentActions.style.display = 'none !important';
+            commentActions.classList.add('d-none');
+            commentActions.classList.remove('d-flex');
+            mainCommentInput.blur();
+        });
+        
+        // Submit main comment
+        mainCommentForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const commentText = mainCommentInput.value.trim();
+            const videoId = document.getElementById('submit-comment').dataset.videoId;
+            
+            if (!commentText) return;
+            
+            fetch('/add_comment', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `video_id=${videoId}&comment=${encodeURIComponent(commentText)}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    addCommentToDOM(data.comment, false);
+                    mainCommentInput.value = '';
+                    cancelComment.click();
+                    
+                    // Hide "no comments" message
+                    const noComments = document.getElementById('no-comments');
+                    if (noComments) noComments.style.display = 'none';
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error adding comment');
+            });
+        });
+    }
+    
+    // Reply button handlers
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.reply-btn')) {
+            const commentId = e.target.closest('.reply-btn').dataset.commentId;
+            const replyForm = document.querySelector(`.reply-form[data-comment-id="${commentId}"]`);
+            if (replyForm) {
+                replyForm.style.display = replyForm.style.display === 'none' ? 'block' : 'none';
+                if (replyForm.style.display === 'block') {
+                    replyForm.querySelector('.reply-input').focus();
+                }
+            }
+        }
+        
+        // Cancel reply
+        if (e.target.closest('.cancel-reply')) {
+            const replyForm = e.target.closest('.reply-form');
+            replyForm.style.display = 'none';
+            replyForm.querySelector('.reply-input').value = '';
+        }
+        
+        // Submit reply
+        if (e.target.closest('.submit-reply')) {
+            const btn = e.target.closest('.submit-reply');
+            const replyForm = btn.closest('.reply-form');
+            const replyText = replyForm.querySelector('.reply-input').value.trim();
+            const videoId = btn.dataset.videoId;
+            const parentId = btn.dataset.parentId;
+            
+            if (!replyText) return;
+            
+            fetch('/add_comment', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `video_id=${videoId}&comment=${encodeURIComponent(replyText)}&parent_id=${parentId}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    addCommentToDOM(data.comment, true, parentId);
+                    replyForm.querySelector('.reply-input').value = '';
+                    replyForm.style.display = 'none';
+                    
+                    // Update reply count and show replies button
+                    updateReplyCount(parentId, 1);
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error adding reply');
+            });
+        }
+        
+        // Toggle replies dropdown
+        if (e.target.closest('.toggle-replies')) {
+            const btn = e.target.closest('.toggle-replies');
+            const commentId = btn.dataset.commentId;
+            const isExpanded = btn.dataset.expanded === 'true';
+            const repliesContainer = document.querySelector(`.replies-container[data-comment-id="${commentId}"]`);
+            const icon = btn.querySelector('i');
+            const text = btn.querySelector('.reply-count-text');
+            
+            if (isExpanded) {
+                // Collapse replies
+                repliesContainer.style.display = 'none';
+                icon.className = 'fas fa-chevron-down me-2';
+                // Get reply count from text and format properly
+                const replyCount = text.textContent.match(/\d+/)?.[0] || '0';
+                text.textContent = `${replyCount} ${replyCount === '1' ? 'reply' : 'replies'}`;
+                btn.dataset.expanded = 'false';
+            } else {
+                // Expand replies - load them if not already loaded
+                if (repliesContainer.children.length === 0) {
+                    // Load replies from server
+                    fetch(`/get_replies/${commentId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            data.replies.forEach(reply => {
+                                const replyHtml = createReplyHTML(reply);
+                                repliesContainer.insertAdjacentHTML('beforeend', replyHtml);
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error loading replies:', error);
+                    });
+                }
+                
+                repliesContainer.style.display = 'block';
+                icon.className = 'fas fa-chevron-up me-2';
+                text.textContent = 'Hide replies';
+                btn.dataset.expanded = 'true';
+            }
+        }
+        
+        // Like/Dislike handlers
+        if (e.target.closest('.like-btn')) {
+            const btn = e.target.closest('.like-btn');
+            const commentId = btn.dataset.commentId;
+            const isLiked = btn.dataset.liked === 'true';
+            const action = isLiked ? 'unlike' : 'like';
+            
+            fetch('/like_comment', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `comment_id=${commentId}&action=${action}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    btn.dataset.liked = data.user_liked;
+                    btn.querySelector('.like-count').textContent = data.like_count;
+                    const icon = btn.querySelector('i');
+                    if (data.user_liked) {
+                        icon.className = 'fas fa-thumbs-up text-primary';
+                        btn.classList.add('text-primary');
+                    } else {
+                        icon.className = 'far fa-thumbs-up';
+                        btn.classList.remove('text-primary');
+                    }
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+    });
+    
+    // Function to add comment to DOM
+    function addCommentToDOM(comment, isReply, parentId) {
+        const container = isReply ? 
+            document.querySelector(`.replies-container[data-comment-id="${parentId}"]`) :
+            document.getElementById('comments-container');
+        
+        const commentHtml = isReply ? createReplyHTML(comment) : createCommentHTML(comment);
+        
+        if (isReply) {
+            container.insertAdjacentHTML('beforeend', commentHtml);
+            // Show replies container if it was hidden
+            if (container.style.display === 'none') {
+                container.style.display = 'block';
+                // Update toggle button state
+                const toggleBtn = document.querySelector(`.toggle-replies[data-comment-id="${parentId}"]`);
+                if (toggleBtn) {
+                    toggleBtn.dataset.expanded = 'true';
+                    toggleBtn.querySelector('i').className = 'fas fa-chevron-up me-1';
+                    toggleBtn.querySelector('.reply-count-text').textContent = 'Hide replies';
+                }
+            }
+        } else {
+            const noComments = document.getElementById('no-comments');
+            if (noComments) {
+                container.insertAdjacentHTML('afterbegin', commentHtml);
+            } else {
+                container.insertAdjacentHTML('afterbegin', commentHtml);
+            }
+        }
+    }
+    
+    // Function to update reply count
+    function updateReplyCount(commentId, increment) {
+        const showRepliesBtn = document.querySelector(`.show-replies-btn[data-comment-id="${commentId}"]`);
+        let replyCountText = showRepliesBtn?.querySelector('.reply-count-text');
+        
+        if (showRepliesBtn) {
+            if (!replyCountText) {
+                // Create the show replies button if it doesn't exist
+                const newBtn = `
+                    <div class="show-replies-btn mt-2" data-comment-id="${commentId}">
+                        <button class="btn btn-sm btn-link text-primary fw-bold p-0 toggle-replies d-flex align-items-center" data-comment-id="${commentId}" data-expanded="false" style="text-decoration: none;">
+                            <i class="fas fa-chevron-down me-2"></i>
+                            <span class="reply-count-text">1 reply</span>
+                        </button>
+                    </div>
+                `;
+                
+                // Find the reply form and insert before it
+                const commentThread = document.querySelector(`[data-comment-id="${commentId}"]`);
+                const replyForm = commentThread.querySelector('.reply-form');
+                replyForm.insertAdjacentHTML('beforebegin', newBtn);
+                return;
+            }
+            
+            const currentCount = parseInt(replyCountText.textContent.match(/\d+/)?.[0]) || 0;
+            const newCount = currentCount + increment;
+            
+            replyCountText.textContent = `${newCount} ${newCount === 1 ? 'reply' : 'replies'}`;
+            
+            if (newCount > 0) {
+                showRepliesBtn.style.display = 'block';
+            } else {
+                showRepliesBtn.style.display = 'none';
+            }
+        }
+    }
+    
+    function createCommentHTML(comment) {
+        const avatarHtml = comment.avatar 
+            ? `<img src="/static/avatars/${comment.avatar}" alt="${comment.username}'s Avatar" class="rounded-circle shadow-sm border border-2 border-light" style="width: 40px; height: 40px; object-fit: cover;">`
+            : `<div class="bg-primary rounded-circle d-flex align-items-center justify-content-center shadow-sm border border-2 border-light" style="width: 40px; height: 40px;"><i class="fas fa-user text-white"></i></div>`;
+        
+        return `
+            <div class="comment-thread mb-4" data-comment-id="${comment.id}">
+                <div class="d-flex comment-item">
+                    <div class="flex-shrink-0 me-3">
+                        ${avatarHtml}
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="d-flex align-items-center mb-1">
+                            <h6 class="mb-0 me-2">${comment.username}</h6>
+                            <small class="text-muted">${comment.date}</small>
+                        </div>
+                        <p class="mb-2">${comment.text}</p>
+                        
+                        <div class="d-flex align-items-center gap-3">
+                            <button class="btn btn-sm btn-outline-secondary like-btn" data-comment-id="${comment.id}" data-liked="false">
+                                <i class="far fa-thumbs-up"></i>
+                                <span class="like-count">0</span>
+                            </button>
+                            <button class="btn btn-sm btn-outline-secondary dislike-btn" data-comment-id="${comment.id}">
+                                <i class="far fa-thumbs-down"></i>
+                            </button>
+                            <button class="btn btn-sm btn-link text-muted reply-btn" data-comment-id="${comment.id}">
+                                <i class="fas fa-reply me-1"></i>Reply
+                            </button>
+                        </div>
+                        
+                        <div class="show-replies-btn mt-2" data-comment-id="${comment.id}" style="display: none;">
+                            <button class="btn btn-sm btn-link text-primary fw-bold p-0 toggle-replies d-flex align-items-center" data-comment-id="${comment.id}" data-expanded="false" style="text-decoration: none;">
+                                <i class="fas fa-chevron-down me-2"></i>
+                                <span class="reply-count-text">0 replies</span>
+                            </button>
+                        </div>
+                        
+                        <div class="reply-form mt-3" style="display: none;" data-comment-id="${comment.id}">
+                            <div class="d-flex">
+                                <div class="me-2">
+                                    <div class="bg-success rounded-circle d-flex align-items-center justify-content-center" 
+                                         style="width: 32px; height: 32px;">
+                                        <i class="fas fa-user text-white" style="font-size: 0.8rem;"></i>
+                                    </div>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <textarea class="form-control border-0 border-bottom rounded-0 reply-input" 
+                                              rows="2" placeholder="Add a reply..."></textarea>
+                                    <div class="d-flex justify-content-end mt-2 gap-2">
+                                        <button class="btn btn-sm btn-outline-secondary cancel-reply">Cancel</button>
+                                        <button class="btn btn-sm btn-primary submit-reply" data-video-id="${document.getElementById('submit-comment').dataset.videoId}" data-parent-id="${comment.id}">Reply</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="replies-container mt-3" data-comment-id="${comment.id}" style="display: none;"></div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    function createReplyHTML(comment) {
+        const avatarHtml = comment.avatar 
+            ? `<img src="/static/avatars/${comment.avatar}" alt="${comment.username}'s Avatar" class="rounded-circle shadow-sm border border-2 border-light" style="width: 32px; height: 32px; object-fit: cover;">`
+            : `<div class="bg-success rounded-circle d-flex align-items-center justify-content-center shadow-sm border border-2 border-light" style="width: 32px; height: 32px;"><i class="fas fa-user text-white" style="font-size: 0.8rem;"></i></div>`;
+        
+        return `
+            <div class="d-flex comment-item mb-3 ms-4">
+                <div class="flex-shrink-0 me-3">
+                    ${avatarHtml}
+                </div>
+                <div class="flex-grow-1">
+                    <div class="d-flex align-items-center mb-1">
+                        <h6 class="mb-0 me-2" style="font-size: 0.9rem;">${comment.username}</h6>
+                        <small class="text-muted">${comment.date}</small>
+                    </div>
+                    <p class="mb-2" style="font-size: 0.9rem;">${comment.text}</p>
+                    
+                    <div class="d-flex align-items-center gap-3">
+                        <button class="btn btn-sm btn-outline-secondary like-btn" data-comment-id="${comment.id}" data-liked="false">
+                            <i class="far fa-thumbs-up"></i>
+                            <span class="like-count">0</span>
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary dislike-btn" data-comment-id="${comment.id}">
+                            <i class="far fa-thumbs-down"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+});
+
+// Admin Functions for Video Management
+function toggleVideoFeature(videoId) {
+    if (!confirm('Are you sure you want to toggle the featured status of this video?')) return;
+    
+    fetch(`/admin/video/${videoId}/feature`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({ action: 'toggle' })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAdminToast(data.message, 'success');
+            // Update button text based on new status
+            const button = event.target.closest('button');
+            button.innerHTML = data.is_featured ? 
+                '<i class="fas fa-star me-1"></i>Unfeature Video' : 
+                '<i class="fas fa-star me-1"></i>Feature Video';
+        } else {
+            showAdminToast(data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAdminToast('Failed to update video feature status', 'error');
+    });
+}
+
+function toggleVideoPin(videoId) {
+    if (!confirm('Are you sure you want to toggle the pin status of this video?')) return;
+    
+    fetch(`/admin/video/${videoId}/pin`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({ action: 'toggle' })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAdminToast(data.message, 'success');
+            const button = event.target.closest('button');
+            button.innerHTML = data.is_pinned ? 
+                '<i class="fas fa-thumbtack me-1"></i>Unpin' : 
+                '<i class="fas fa-thumbtack me-1"></i>Pin';
+        } else {
+            showAdminToast(data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAdminToast('Failed to update video pin status', 'error');
+    });
+}
+
+function toggleVideoVisibility(videoId) {
+    if (!confirm('Are you sure you want to toggle the visibility of this video?')) return;
+    
+    fetch(`/admin/video/${videoId}/visibility`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({ action: 'toggle' })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAdminToast(data.message, 'success');
+            const button = event.target.closest('button');
+            button.innerHTML = data.is_hidden ? 
+                '<i class="fas fa-eye me-1"></i>Show' : 
+                '<i class="fas fa-eye-slash me-1"></i>Hide';
+        } else {
+            showAdminToast(data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAdminToast('Failed to update video visibility', 'error');
+    });
+}
+
+function deleteVideo(videoId) {
+    const videoTitle = document.querySelector('h2.card-title').textContent;
+    if (!confirm(`Are you sure you want to PERMANENTLY DELETE this video: "${videoTitle}"?\n\nThis action cannot be undone!`)) return;
+    
+    const confirmation = prompt('Type "DELETE" to confirm permanent deletion:');
+    if (confirmation !== 'DELETE') {
+        showAdminToast('Deletion cancelled', 'info');
+        return;
+    }
+    
+    fetch(`/admin/video/${videoId}/delete`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAdminToast('Video deleted successfully. Redirecting...', 'success');
+            setTimeout(() => {
+                window.location.href = '/videos';
+            }, 2000);
+        } else {
+            showAdminToast(data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAdminToast('Failed to delete video', 'error');
+    });
+}
+
+// Admin Functions for Comment Management
+function pinComment(commentId) {
+    fetch(`/admin/comment/${commentId}/pin`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({ action: 'pin' })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAdminToast(data.message, 'success');
+            // Add pin indicator to comment
+            const commentElement = document.querySelector(`[data-comment-id="${commentId}"]`);
+            if (commentElement && !commentElement.querySelector('.pin-indicator')) {
+                const pinBadge = document.createElement('span');
+                pinBadge.className = 'badge bg-warning text-dark ms-2 pin-indicator';
+                pinBadge.innerHTML = '<i class="fas fa-thumbtack"></i> Pinned';
+                commentElement.querySelector('h6').appendChild(pinBadge);
+            }
+        } else {
+            showAdminToast(data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAdminToast('Failed to pin comment', 'error');
+    });
+}
+
+function highlightComment(commentId) {
+    const commentElement = document.querySelector(`[data-comment-id="${commentId}"]`);
+    if (!commentElement) return;
+    
+    fetch(`/admin/comment/${commentId}/highlight`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({ action: 'highlight' })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAdminToast(data.message, 'success');
+            // Add highlight styling
+            commentElement.style.background = 'linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%)';
+            commentElement.style.border = '2px solid #f39c12';
+            commentElement.style.borderRadius = '8px';
+            commentElement.style.padding = '15px';
+            
+            // Add highlight badge
+            if (!commentElement.querySelector('.highlight-indicator')) {
+                const highlightBadge = document.createElement('span');
+                highlightBadge.className = 'badge bg-warning text-dark ms-2 highlight-indicator';
+                highlightBadge.innerHTML = '<i class="fas fa-star"></i> Highlighted';
+                commentElement.querySelector('h6').appendChild(highlightBadge);
+            }
+        } else {
+            showAdminToast(data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAdminToast('Failed to highlight comment', 'error');
+    });
+}
+
+function deleteComment(commentId) {
+    if (!confirm('Are you sure you want to delete this comment? This action cannot be undone.')) return;
+    
+    fetch(`/admin/comment/${commentId}/delete`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAdminToast(data.message, 'success');
+            // Remove comment element
+            const commentElement = document.querySelector(`[data-comment-id="${commentId}"]`);
+            if (commentElement) {
+                commentElement.style.opacity = '0.5';
+                commentElement.innerHTML = '<div class="text-muted text-center py-3"><i class="fas fa-trash me-2"></i>Comment deleted by admin</div>';
+            }
+        } else {
+            showAdminToast(data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAdminToast('Failed to delete comment', 'error');
+    });
+}
+
+function banUserFromComment(username) {
+    if (!confirm(`Are you sure you want to BAN user "${username}"? This will block them from the platform.`)) return;
+    
+    fetch(`/admin/user/${username}/ban`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({ 
+            action: 'ban',
+            reason: 'Banned via comment moderation',
+            duration: 'permanent'
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAdminToast(`User ${username} has been banned`, 'success');
+        } else {
+            showAdminToast(data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAdminToast('Failed to ban user', 'error');
+    });
+}
+
+// Professional Admin Toast System
+function showAdminToast(message, type) {
+    // Remove existing toasts
+    const existingToasts = document.querySelectorAll('.admin-toast');
+    existingToasts.forEach(toast => toast.remove());
+    
+    const toastColors = {
+        'success': { bg: '#d1e7dd', border: '#badbcc', icon: 'fas fa-check-circle', color: '#0f5132' },
+        'error': { bg: '#f8d7da', border: '#f5c6cb', icon: 'fas fa-exclamation-triangle', color: '#721c24' },
+        'warning': { bg: '#fff3cd', border: '#ffecb5', icon: 'fas fa-exclamation-circle', color: '#664d03' },
+        'info': { bg: '#d1ecf1', border: '#bee5eb', icon: 'fas fa-info-circle', color: '#055160' }
+    };
+    
+    const config = toastColors[type] || toastColors['info'];
+    
+    const toast = document.createElement('div');
+    toast.className = 'admin-toast position-fixed';
+    toast.style.cssText = `
+        top: 20px; 
+        right: 20px; 
+        z-index: 9999; 
+        min-width: 350px;
+        max-width: 450px;
+        background: ${config.bg};
+        border: 1px solid ${config.border};
+        border-left: 4px solid ${config.border};
+        border-radius: 8px;
+        padding: 15px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        transition: all 0.3s ease;
+        animation: slideInRight 0.3s ease;
+    `;
+    
+    toast.innerHTML = `
+        <div class="d-flex align-items-center">
+            <i class="${config.icon} me-3" style="color: ${config.color}; font-size: 1.2em;"></i>
+            <div class="flex-grow-1" style="color: ${config.color}; font-weight: 500;">${message}</div>
+            <button type="button" class="btn-close btn-sm" onclick="this.parentElement.parentElement.remove()"></button>
+        </div>
+    `;
+    
+    document.body.appendChild(toast);
+    
+    // Auto remove after delay
+    setTimeout(() => {
+        if (toast.parentNode) {
+            toast.style.animation = 'slideOutRight 0.3s ease';
+            setTimeout(() => toast.remove(), 300);
+        }
+    }, type === 'error' ? 5000 : 3000);
+}
+
+// Add CSS animations for toasts
+if (!document.getElementById('admin-toast-styles')) {
+    const style = document.createElement('style');
+    style.id = 'admin-toast-styles';
+    style.textContent = `
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideOutRight {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+    `;
+    document.head.appendChild(style);
+}
+</script>
+{% endblock %}

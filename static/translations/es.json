@@ -1,0 +1,32 @@
+{
+  "nav": {
+    "home": "Inicio",
+    "dashboard": "Panel",
+    "videos": "Videos",
+    "leaderboard": "Clasificación",
+    "profile": "Mi Perfil",
+    "editProfile": "Editar Perfil",
+    "logout": "Cerrar Sesión",
+    "login": "Iniciar Sesión",
+    "admin": "Administrador",
+    "adminPanel": "Panel de Administración"
+  },
+  "footer": {
+    "copyright": "© 2025 SectionduWeb. Todos los derechos reservados."
+  },
+  "admin": {
+    "dashboard": "Panel de Admin",
+    "users": "Gestión de Usuarios",
+    "videos": "Gestión de Videos", 
+    "analytics": "Analytics",
+    "settings": "Configuración del Sistema"
+  },
+  "common": {
+    "submit": "Enviar",
+    "cancel": "Cancelar", 
+    "save": "Guardar",
+    "edit": "Editar",
+    "delete": "Eliminar",
+    "view": "Ver"
+  }
+}

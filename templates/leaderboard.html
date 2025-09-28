@@ -1,0 +1,409 @@
+{% extends "base.html" %}
+
+{% block title %}Leaderboard - SectionduWeb{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-12">
+            <h2><i class="fas fa-medal"></i> Leaderboard</h2>
+            <p class="text-muted">See who's leading in the competition</p>
+        </div>
+    </div>
+    
+    {% if leaderboard %}
+    <div class="row">
+        <div class="col-12">
+            <div class="leaderboard-table">
+                <table class="table table-hover mb-0">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Rank</th>
+                            <th>Participant</th>
+                            <th>Videos</th>
+                            <th>Average Rating</th>
+                            <th>Total Votes</th>
+                            {% if session.is_admin %}
+                            <th>Admin Actions</th>
+                            {% endif %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for participant in leaderboard %}
+                        <tr>
+                            <td>
+                                <span class="rank-badge">
+                                    {% if loop.index == 1 %}
+                                    <i class="fas fa-trophy text-warning"></i>
+                                    {% elif loop.index == 2 %}
+                                    <i class="fas fa-medal text-secondary"></i>
+                                    {% elif loop.index == 3 %}
+                                    <i class="fas fa-medal text-warning"></i>
+                                    {% else %}
+                                    {{ loop.index }}
+                                    {% endif %}
+                                </span>
+                            </td>
+                            <td>
+                                <strong>{{ participant[0] }}</strong>
+                            </td>
+                            <td>{{ participant[1] or 0 }}</td>
+                            <td>
+                                {% if participant[2] %}
+                                <div class="rating-stars">
+                                    {% for i in range(5) %}
+                                    {% if i < participant[2]|round %}
+                                    <i class="fas fa-star"></i>
+                                    {% else %}
+                                    <i class="far fa-star"></i>
+                                    {% endif %}
+                                    {% endfor %}
+                                    {{ "%.1f"|format(participant[2]) }}
+                                </div>
+                                {% else %}
+                                <span class="text-muted">No ratings yet</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ participant[3] or 0 }}</td>
+                            {% if session.is_admin %}
+                            <td>
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                        <i class="fas fa-cog"></i> Actions
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item" href="javascript:void(0)" onclick="viewUserProfile('{{ participant[0] }}')">
+                                            <i class="fas fa-user text-primary"></i> View Profile
+                                        </a></li>
+                                        <li><a class="dropdown-item" href="javascript:void(0)" onclick="viewUserVideos('{{ participant[0] }}')">
+                                            <i class="fas fa-video text-info"></i> View Videos
+                                        </a></li>
+                                        <li><a class="dropdown-item" href="javascript:void(0)" onclick="viewUserAnalytics('{{ participant[0] }}')">
+                                            <i class="fas fa-chart-bar text-success"></i> View Analytics
+                                        </a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item" href="javascript:void(0)" onclick="sendUserMessage('{{ participant[0] }}')">
+                                            <i class="fas fa-envelope text-secondary"></i> Send Message
+                                        </a></li>
+                                        <li><a class="dropdown-item" href="javascript:void(0)" onclick="sendUserWarning('{{ participant[0] }}')">
+                                            <i class="fas fa-exclamation-triangle text-warning"></i> Send Warning
+                                        </a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item" href="javascript:void(0)" onclick="blockUserFromLeaderboard('{{ participant[0] }}')">
+                                            <i class="fas fa-ban text-danger"></i> Block User
+                                        </a></li>
+                                        {% if session.admin_level == 'super' %}
+                                        <li><a class="dropdown-item text-danger" href="javascript:void(0)" onclick="removeFromLeaderboard('{{ participant[0] }}')">
+                                            <i class="fas fa-user-times"></i> Remove from Leaderboard
+                                        </a></li>
+                                        {% endif %}
+                                    </ul>
+                                </div>
+                            </td>
+                            {% endif %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+        <i class="fas fa-medal fa-5x text-muted mb-4"></i>
+        <h3 class="text-muted">No participants yet</h3>
+        <p class="text-muted">Be the first to join the competition!</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// ===== ADMIN FUNCTIONS =====
+
+// Navigation Functions
+function viewUserProfile(username) {
+    window.location.href = `/profile/${username}`;
+}
+
+function viewUserVideos(username) {
+    window.location.href = `/user/${username}/videos`;
+}
+
+function viewUserAnalytics(username) {
+    window.location.href = `/admin/user/${username}/analytics`;
+}
+
+// Communication Functions
+function sendUserMessage(username) {
+    const message = prompt(`Send a message to ${username}:`);
+    if (message && message.trim()) {
+        fetch(`/admin/user/${username}/message`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCsrfToken()
+            },
+            body: JSON.stringify({
+                message: message.trim()
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showAdminToast(`Message sent to ${username}`, 'success');
+            } else {
+                showAdminToast(data.message || 'Failed to send message', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showAdminToast('Network error occurred', 'error');
+        });
+    }
+}
+
+function sendUserWarning(username) {
+    const warning = prompt(`Send a warning to ${username}:`);
+    if (warning && warning.trim()) {
+        fetch(`/admin/user/${username}/warning`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCsrfToken()
+            },
+            body: JSON.stringify({
+                message: warning.trim()
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showAdminToast(`Warning sent to ${username}`, 'success');
+            } else {
+                showAdminToast(data.message || 'Failed to send warning', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showAdminToast('Network error occurred', 'error');
+        });
+    }
+}
+
+// Moderation Functions
+function blockUserFromLeaderboard(username) {
+    const reason = prompt(`Block ${username}? Enter reason (optional):`);
+    if (reason !== null) { // User didn't cancel
+        fetch(`/admin/user/${username}/block`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCsrfToken()
+            },
+            body: JSON.stringify({
+                reason: reason || 'Blocked from leaderboard'
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showAdminToast(`${username} blocked successfully`, 'success');
+                // Remove user from leaderboard table
+                const row = document.querySelector(`button[onclick*="${username}"]`).closest('tr');
+                if (row) {
+                    row.style.transition = 'all 0.3s ease';
+                    row.style.opacity = '0';
+                    row.style.transform = 'translateX(-100px)';
+                    setTimeout(() => row.remove(), 300);
+                }
+            } else {
+                showAdminToast(data.message || 'Failed to block user', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showAdminToast('Network error occurred', 'error');
+        });
+    }
+}
+
+function removeFromLeaderboard(username) {
+    const confirmation = prompt(`⚠️ REMOVE FROM LEADERBOARD ⚠️\n\nThis will remove ${username} from the leaderboard and hide all their content.\n\nType "REMOVE" to confirm:`);
+    
+    if (confirmation === 'REMOVE') {
+        fetch(`/admin/user/${username}/remove_from_leaderboard`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCsrfToken()
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showAdminToast(`${username} removed from leaderboard`, 'success');
+                // Remove user from leaderboard table with animation
+                const row = document.querySelector(`button[onclick*="${username}"]`).closest('tr');
+                if (row) {
+                    row.style.transition = 'all 0.5s ease';
+                    row.style.opacity = '0';
+                    row.style.transform = 'scale(0.8)';
+                    setTimeout(() => {
+                        row.remove();
+                        // Recalculate ranks
+                        updateLeaderboardRanks();
+                    }, 500);
+                }
+            } else {
+                showAdminToast(data.message || 'Failed to remove user from leaderboard', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showAdminToast('Network error occurred', 'error');
+        });
+    } else if (confirmation !== null && confirmation !== '') {
+        showAdminToast('Incorrect confirmation. User not removed.', 'warning');
+    }
+}
+
+// Utility Functions
+function updateLeaderboardRanks() {
+    const rows = document.querySelectorAll('tbody tr');
+    rows.forEach((row, index) => {
+        const rankCell = row.querySelector('.rank-badge');
+        if (rankCell) {
+            const newRank = index + 1;
+            if (newRank === 1) {
+                rankCell.innerHTML = '<i class="fas fa-trophy text-warning"></i>';
+            } else if (newRank === 2) {
+                rankCell.innerHTML = '<i class="fas fa-medal text-secondary"></i>';
+            } else if (newRank === 3) {
+                rankCell.innerHTML = '<i class="fas fa-medal text-warning"></i>';
+            } else {
+                rankCell.textContent = newRank;
+            }
+        }
+    });
+}
+
+function getCsrfToken() {
+    const token = document.querySelector('meta[name="csrf-token"]');
+    return token ? token.getAttribute('content') : '';
+}
+
+function showAdminToast(message, type = 'info') {
+    // Create toast container if it doesn't exist
+    let toastContainer = document.getElementById('admin-toast-container');
+    if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.id = 'admin-toast-container';
+        toastContainer.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 9999;';
+        document.body.appendChild(toastContainer);
+    }
+
+    // Create toast element
+    const toast = document.createElement('div');
+    toast.className = `alert alert-${getBootstrapClass(type)} alert-dismissible fade show admin-toast`;
+    toast.style.cssText = 'margin-bottom: 10px; min-width: 300px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);';
+    
+    const icon = getToastIcon(type);
+    toast.innerHTML = `
+        <i class="${icon}"></i> ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+
+    toastContainer.appendChild(toast);
+
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+        if (toast.parentNode) {
+            toast.classList.remove('show');
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toast.remove();
+                }
+            }, 150);
+        }
+    }, 5000);
+}
+
+function getBootstrapClass(type) {
+    const classMap = {
+        'success': 'success',
+        'error': 'danger',
+        'warning': 'warning',
+        'info': 'info'
+    };
+    return classMap[type] || 'info';
+}
+
+function getToastIcon(type) {
+    const iconMap = {
+        'success': 'fas fa-check-circle',
+        'error': 'fas fa-exclamation-circle',
+        'warning': 'fas fa-exclamation-triangle',
+        'info': 'fas fa-info-circle'
+    };
+    return iconMap[type] || 'fas fa-info-circle';
+}
+
+// Page animations
+document.addEventListener('DOMContentLoaded', function() {
+    // Animate leaderboard rows
+    const rows = document.querySelectorAll('tbody tr');
+    rows.forEach((row, index) => {
+        row.style.opacity = '0';
+        row.style.transform = 'translateY(20px)';
+        
+        setTimeout(() => {
+            row.style.transition = 'all 0.5s ease';
+            row.style.opacity = '1';
+            row.style.transform = 'translateY(0)';
+        }, index * 100);
+    });
+
+    // Animate rank badges
+    const rankBadges = document.querySelectorAll('.rank-badge');
+    rankBadges.forEach((badge, index) => {
+        setTimeout(() => {
+            badge.style.animation = 'pulse 0.6s ease-out';
+        }, (index * 100) + 200);
+    });
+});
+
+// Add pulse animation styles
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+        100% { transform: scale(1); }
+    }
+    
+    .leaderboard-table .table-hover tbody tr:hover {
+        background-color: rgba(13, 110, 253, 0.05);
+        transform: scale(1.01);
+        transition: all 0.2s ease;
+    }
+    
+    .admin-toast {
+        animation: slideInRight 0.3s ease-out;
+    }
+    
+    @keyframes slideInRight {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+`;
+document.head.appendChild(style);
+</script>
+{% endblock %}
