@@ -16,14 +16,6 @@ os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 os.makedirs('static/thumbnails', exist_ok=True)
 os.makedirs('static/avatars', exist_ok=True)
 
-# Initialize database on startup
-def ensure_db_initialized():
-    """Ensure database is initialized when app starts"""
-    if not os.path.exists('tournament.db'):
-        init_db()
-
-ensure_db_initialized()
-
 # Database setup
 def init_db():
     conn = sqlite3.connect('tournament.db')
@@ -296,6 +288,15 @@ def init_db():
     
     conn.commit()
     conn.close()
+
+# Initialize database on startup for production
+def ensure_db_initialized():
+    """Ensure database is initialized when app starts"""
+    if not os.path.exists('tournament.db'):
+        init_db()
+
+# Initialize database when module is imported (for production deployment)
+ensure_db_initialized()
 
 # Helper functions
 def login_required(f):
