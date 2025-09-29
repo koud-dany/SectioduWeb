@@ -14,6 +14,15 @@ app.config.from_object(Config)
 # Ensure upload directory exists
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 os.makedirs('static/thumbnails', exist_ok=True)
+os.makedirs('static/avatars', exist_ok=True)
+
+# Initialize database on startup
+def ensure_db_initialized():
+    """Ensure database is initialized when app starts"""
+    if not os.path.exists('tournament.db'):
+        init_db()
+
+ensure_db_initialized()
 
 # Database setup
 def init_db():

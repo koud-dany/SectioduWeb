@@ -57,6 +57,45 @@ python run_app.py
 
 Visit `http://localhost:5000` to access the application.
 
+## Deployment on Render (Free)
+
+### Prerequisites
+- GitHub account with your code pushed to a repository
+- Render account (free at render.com)
+
+### Deployment Steps
+
+1. **Prepare your repository** (already done):
+   - `requirements.txt` includes `gunicorn`
+   - `render.yaml` and `Procfile` are present
+   - Code is committed to GitHub
+
+2. **Deploy on Render**:
+   - Go to [Render.com](https://render.com) and sign up/login
+   - Click "New +" → "Web Service"
+   - Connect your GitHub repository
+   - Configure:
+     - **Name**: videovote-app
+     - **Environment**: Python
+     - **Build Command**: `pip install -r requirements.txt`
+     - **Start Command**: `gunicorn app:app --bind 0.0.0.0:$PORT`
+
+3. **Set Environment Variables** in Render dashboard:
+   ```
+   SECRET_KEY=your-super-secret-key-here
+   FLASK_ENV=production
+   STRIPE_PUBLISHABLE_KEY=pk_test_your_publishable_key_here
+   STRIPE_SECRET_KEY=sk_test_your_secret_key_here
+   ```
+
+4. **Deploy**: Click "Deploy" and wait for completion
+
+### Troubleshooting Render Deployment
+
+- **"gunicorn: command not found"**: Ensure `gunicorn==21.2.0` is in `requirements.txt`
+- **Stripe errors**: Set environment variables for Stripe keys
+- **Database issues**: SQLite works on Render's free tier
+
 ## Project Structure
 
 ```
