@@ -158,12 +158,12 @@
             <div class="row g-3">
                 {% for video in user_videos %}
                 <div class="col-sm-6 col-lg-4">
-                    <div class="card video-card h-100 border-0 shadow-sm">
-                        <div class="position-relative video-thumbnail" style="aspect-ratio: 16/9; overflow: hidden;">
-                            <video class="w-100 h-100" style="object-fit: cover;" muted preload="metadata" 
-                                   onmouseover="this.play()" onmouseout="this.pause(); this.currentTime = 0;">
-                                <source src="{{ url_for('static', filename='uploads/' + video[3]) }}" type="video/mp4">
-                            </video>
+                    <a href="{{ url_for('video_detail', video_id=video[0]) }}" class="text-decoration-none d-block video-card-link">
+                        <div class="card video-card h-100 border-0 shadow-sm" style="cursor: pointer;">
+                            <div class="position-relative video-thumbnail" style="aspect-ratio: 16/9; overflow: hidden;">
+                                <video class="w-100 h-100" style="object-fit: cover; pointer-events: none;" muted preload="metadata">
+                                    <source src="{{ url_for('static', filename='uploads/' + video[3]) }}" type="video/mp4">
+                                </video>
                             
                             <!-- Video Overlay -->
                             <div class="position-absolute top-0 start-0 w-100 h-100 bg-dark bg-opacity-25 d-flex align-items-center justify-content-center opacity-0 hover-overlay" style="transition: opacity 0.3s;">
@@ -179,57 +179,64 @@
                             </div>
                         </div>
                         
-                        <div class="card-body">
-                            <h6 class="card-title mb-2">
-                                <a href="{{ url_for('video_detail', video_id=video[0]) }}" class="text-decoration-none text-dark">
+                        <div class="card-body p-3">
+                            <!-- Unified Content Block -->
+                            <div class="d-flex flex-column h-100">
+                                <h6 class="card-title mb-2 text-dark fw-semibold">
                                     {{ video[1] }}
-                                </a>
-                            </h6>
-                            {% if video[2] %}
-                            <p class="card-text text-muted small mb-2" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-clamp: 2;">
-                                {{ video[2] }}
-                            </p>
-                            {% endif %}
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div class="d-flex align-items-center">
-                                    {% if profile_user[8] %}
-                                    <img src="{{ url_for('static', filename='avatars/' + profile_user[8]) }}" 
-                                         alt="{{ profile_user[1] }}'s Avatar" 
-                                         class="rounded-circle me-2"
-                                         style="width: 20px; height: 20px; object-fit: cover;">
-                                    {% else %}
-                                    <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center me-2" 
-                                         style="width: 20px; height: 20px; font-size: 0.6rem;">
-                                        <i class="fas fa-user text-white"></i>
+                                </h6>
+                                
+                                {% if video[2] %}
+                                <p class="card-text text-muted small mb-3 flex-grow-1" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-clamp: 2;">
+                                    {{ video[2] }}
+                                </p>
+                                {% endif %}
+                                
+                                <!-- Author and Rating Row -->
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <div class="d-flex align-items-center">
+                                        {% if profile_user[8] %}
+                                        <img src="{{ url_for('static', filename='avatars/' + profile_user[8]) }}" 
+                                             alt="{{ profile_user[1] }}'s Avatar" 
+                                             class="rounded-circle me-2"
+                                             style="width: 20px; height: 20px; object-fit: cover;">
+                                        {% else %}
+                                        <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center me-2" 
+                                             style="width: 20px; height: 20px; font-size: 0.6rem;">
+                                            <i class="fas fa-user text-white"></i>
+                                        </div>
+                                        {% endif %}
+                                        <small class="text-muted">{{ video[4].split()[0] }}</small>
+                                    </div>
+                                    <div class="d-flex gap-1">
+                                        {% for i in range(5) %}
+                                            {% if i < (video[6]|round if video[6] else 0) %}
+                                            <i class="fas fa-star text-warning" style="font-size: 0.8rem;"></i>
+                                            {% else %}
+                                            <i class="far fa-star text-muted" style="font-size: 0.8rem;"></i>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                
+                                <!-- Stats and Actions Row -->
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">{{ video[5] }} votes • {{ video[7] }} comments</small>
+                                    {% if is_own_profile %}
+                                    <div class="btn-group btn-group-sm" style="pointer-events: auto;">
+                                        <button class="btn btn-outline-primary btn-sm" data-video-id="{{ video[0] }}" onclick="event.stopPropagation(); editVideo(this)" title="Edit">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-outline-danger btn-sm" data-video-id="{{ video[0] }}" data-video-title="{{ video[1] }}" onclick="event.stopPropagation(); confirmDeleteVideoFromProfile(this)" title="Delete">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
                                     </div>
                                     {% endif %}
-                                    <small class="text-muted">{{ video[4].split()[0] }}</small>
-                                </div>
-                                <div class="d-flex gap-1">
-                                    {% for i in range(5) %}
-                                        {% if i < (video[6]|round if video[6] else 0) %}
-                                        <i class="fas fa-star text-warning" style="font-size: 0.8rem;"></i>
-                                        {% else %}
-                                        <i class="far fa-star text-muted" style="font-size: 0.8rem;"></i>
-                                        {% endif %}
-                                    {% endfor %}
                                 </div>
                             </div>
-                            {% if is_own_profile %}
-                            <div class="mt-2 d-flex justify-content-between">
-                                <small class="text-muted">{{ video[5] }} votes • {{ video[7] }} comments</small>
-                                <div class="btn-group btn-group-sm">
-                                    <button class="btn btn-outline-primary btn-sm" data-video-id="{{ video[0] }}" onclick="editVideo(this)" title="Edit">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <button class="btn btn-outline-danger btn-sm" data-video-id="{{ video[0] }}" data-video-title="{{ video[1] }}" onclick="confirmDeleteVideoFromProfile(this)" title="Delete">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </div>
-                            </div>
-                            {% endif %}
                         </div>
                     </div>
+                    </a>
                 </div>
                 {% endfor %}
             </div>
@@ -454,27 +461,101 @@
 .animate-ping {
     animation: pulse 2s infinite;
 }
+
+/* Enhanced Video Card Link Styling */
+.video-card-link {
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.video-card-link:hover {
+    text-decoration: none !important;
+    color: inherit;
+    transform: translateY(-5px);
+}
+
+.video-card-link:focus {
+    outline: 3px solid rgba(0,102,204,0.4);
+    outline-offset: 2px;
+}
+
+.video-card-link:active {
+    transform: translateY(-2px) scale(0.98);
+}
+
+/* Enhanced hover states for profile video cards */
+.video-card-link:hover .card {
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15) !important;
+    border-color: rgba(0,102,204,0.2);
+}
+
+.video-card-link:hover .card-title {
+    color: #0066cc !important;
+}
+
+.video-card-link .card-title {
+    transition: color 0.3s ease;
+}
+
+/* Ensure edit/delete buttons work properly */
+.video-card-link .btn-group {
+    position: relative;
+    z-index: 10;
+}
+
+/* Add subtle visual feedback for clickable cards */
+.video-card-link .card {
+    border: 1px solid rgba(0,0,0,0.125);
+    transition: all 0.3s ease;
+}
+
+.video-card-link:hover .card {
+    border-color: rgba(0,102,204,0.3);
+    box-shadow: 0 8px 25px rgba(0,102,204,0.1), 0 4px 15px rgba(0,0,0,0.1) !important;
+}
+
+/* Smooth animation for video thumbnails */
+.video-card-link:hover .video-thumbnail {
+    transform: scale(1.02);
+}
+
+.video-thumbnail {
+    transition: transform 0.3s ease;
+    overflow: hidden;
+}
 </style>
 <script>
-// Video hover effects
+// Enhanced video hover effects for clickable cards
 document.querySelectorAll('.video-card').forEach(card => {
     const video = card.querySelector('video');
     const overlay = card.querySelector('.hover-overlay');
+    const cardLink = card.closest('.video-card-link');
     
-    card.addEventListener('mouseenter', () => {
+    // Handle video hover effects
+    const handleMouseEnter = () => {
         if (video) {
             video.play().catch(e => console.log('Video play failed:', e));
             if (overlay) overlay.style.opacity = '1';
         }
-    });
+    };
     
-    card.addEventListener('mouseleave', () => {
+    const handleMouseLeave = () => {
         if (video) {
             video.pause();
             video.currentTime = 0;
             if (overlay) overlay.style.opacity = '0';
         }
-    });
+    };
+    
+    // Apply hover effects to either the card or the link wrapper
+    if (cardLink) {
+        cardLink.addEventListener('mouseenter', handleMouseEnter);
+        cardLink.addEventListener('mouseleave', handleMouseLeave);
+    } else {
+        card.addEventListener('mouseenter', handleMouseEnter);
+        card.addEventListener('mouseleave', handleMouseLeave);
+    }
 });
 
 // Subscribe functionality (placeholder)

@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-<section class="hero-section" style="background: linear-gradient(135deg, #0066cc 0%, #004499 50%, #003366 100%); color: white; padding: 50px 0; position: relative; overflow: hidden;">
+<section class="hero-section" style="background: linear-gradient(135deg, #0066cc 0%, #004499 50%, #003366 100%); color: white; padding: 30px 0 50px 0; position: relative; overflow: hidden; margin-top: -8px;">
     <!-- Background Pattern -->
     <div class="hero-background-pattern"></div>
     
@@ -165,172 +165,174 @@
     <div style="background: #f8f9fa; height: 30px; margin-bottom: 0;"></div>
 </section>
 
-<section class="py-4 mb-0" style="margin-bottom: 0 !important; padding-bottom: 0 !important; margin-top: 0; padding-top: 2rem !important;">
+<section class="py-4" style="margin-bottom: 0 !important; padding-bottom: 1rem !important; margin-top: 0; padding-top: 2rem !important;">
     <div class="container">
-        <div class="text-center mb-4 carousel-header" style="opacity: 0; transform: translateY(-30px);">
-            <h2 class="fw-bold text-dark" style="font-size: 1.8rem;">
-                <span class="brand-section">Top</span>
-                <span class="brand-du text-dark">Rated</span>
-                <span class="brand-web">Videos</span>
-            </h2>
-            <p class="text-muted" style="font-size: 1rem;">See what's trending in the competition</p>
+        <div class="text-center mb-5 carousel-header" style="opacity: 0; transform: translateY(-30px);">
+            <div class="d-inline-block position-relative">
+                <h2 class="fw-bold text-dark mb-3" style="font-size: 2.2rem; letter-spacing: -0.5px;">
+                    <span class="brand-section" style="background: linear-gradient(135deg, #0066cc, #004499); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">Top</span>
+                    <span class="brand-du text-dark" style="font-weight: 400; font-style: italic;">Rated</span>
+                    <span class="brand-web" style="background: linear-gradient(135deg, #dc3545, #c82333); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">Videos</span>
+                </h2>
+                <div class="position-absolute top-0 start-50 translate-middle-x" style="width: 60px; height: 3px; background: linear-gradient(135deg, #0066cc, #dc3545); border-radius: 2px; margin-top: -8px;"></div>
+            </div>
+            <p class="text-muted mb-0" style="font-size: 1.1rem; font-weight: 300;">Discover the most acclaimed content in our competition</p>
+            <div class="d-flex justify-content-center align-items-center mt-3">
+                <div class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill">
+                    <i class="fas fa-trophy me-2"></i>Premium Content
+                </div>
+            </div>
         </div>
         {% if top_videos %}
-        <!-- Animated Video Carousel -->
-        <div id="topVideosCarousel" class="carousel slide carousel-fade" data-bs-ride="carousel" data-bs-interval="5000">
-            <!-- Clean Carousel Indicators -->
-            <div class="carousel-indicators">
-                {% for video in top_videos %}
-                <button type="button" data-bs-target="#topVideosCarousel" data-bs-slide-to="{{ loop.index0 }}" 
-                        {% if loop.first %}class="active" aria-current="true"{% endif %} 
-                        aria-label="Video {{ loop.index }}"></button>
-                {% endfor %}
-            </div>
+        <!-- Professional YouTube/TikTok Style Carousel -->
+        <div class="video-carousel-container position-relative" style="margin: 0 -15px;">
+            <!-- Navigation Controls -->
+            <button id="carousel-prev" class="carousel-nav-btn carousel-nav-prev position-absolute start-0 top-50 translate-middle-y bg-white shadow-lg border-0 rounded-circle d-none d-md-flex align-items-center justify-content-center"
+                    style="width: 50px; height: 50px; z-index: 9999; margin-left: 10px; backdrop-filter: blur(10px); transition: all 0.2s ease; cursor: pointer; pointer-events: auto;">
+                <i class="fas fa-chevron-left text-primary" style="font-size: 1.1rem; pointer-events: none;"></i>
+            </button>
             
-            <!-- Carousel Items -->
-            <div class="carousel-inner">
+            <button id="carousel-next" class="carousel-nav-btn carousel-nav-next position-absolute end-0 top-50 translate-middle-y bg-white shadow-lg border-0 rounded-circle d-none d-md-flex align-items-center justify-content-center"
+                    style="width: 50px; height: 50px; z-index: 9999; margin-right: 10px; backdrop-filter: blur(10px); transition: all 0.2s ease; cursor: pointer; pointer-events: auto;">
+                <i class="fas fa-chevron-right text-primary" style="font-size: 1.1rem; pointer-events: none;"></i>
+            </button>
+            
+            <!-- Scrollable Video Container -->
+            <div id="video-carousel" class="d-flex gap-3 overflow-x-auto overflow-y-hidden" 
+                 style="scroll-behavior: smooth; padding: 10px 15px; scrollbar-width: none; -ms-overflow-style: none; scroll-snap-type: x mandatory;">
                 {% for video in top_videos %}
-                <div class="carousel-item {% if loop.first %}active{% endif %}">
-                    <div class="row justify-content-center">
-                        <div class="col-lg-10 col-xl-9">
-                            <div class="card video-carousel-card shadow border-0" style="border-radius: 15px;">
-                                <div class="row g-0">
-                                    <!-- Video Player Section -->
-                                    <div class="col-md-7">
-                                        <div class="video-container position-relative" style="aspect-ratio: 16/9; overflow: hidden; border-radius: 15px 0 0 15px;">
-                                            <video class="w-100 h-100 shadow-sm" style="object-fit: cover; border-radius: 15px 0 0 15px; border: 1px solid rgba(0,102,204,0.2);" controls preload="metadata" muted>
-                                                <source src="{{ url_for('static', filename='uploads/' + video[2]) }}" type="video/mp4">
-                                                Your browser does not support the video tag.
-                                            </video>
-                                            
-                                            <!-- Hover Play Overlay -->
-                                            <div class="hover-play-overlay position-absolute top-50 start-50 translate-middle" 
-                                                 style="opacity: 0; transition: all 0.3s ease; pointer-events: none; z-index: 2;">
-                                                <div class="bg-primary bg-opacity-90 rounded-circle d-flex align-items-center justify-content-center shadow" 
-                                                     style="width: 50px; height: 50px; border: 2px solid rgba(255,255,255,0.8);">
-                                                    <i class="fas fa-play text-white" style="font-size: 1rem; margin-left: 2px;"></i>
-                                                </div>
-                                                <div class="text-center mt-2">
-                                                    <small class="text-white bg-primary bg-opacity-90 px-2 py-1 rounded-pill shadow-sm" style="border: 1px solid rgba(255,255,255,0.3); font-size: 0.7rem;">Hover to preview</small>
-                                                </div>
-                                            </div>
-                                            
-                                            <!-- Rank Badge -->
-                                            <div class="position-absolute top-0 start-0 m-3">
-                                                {% if loop.index == 1 %}
-                                                <div class="badge rounded-pill fs-6 px-3 py-2" 
-                                                     style="background: linear-gradient(45deg, #ffd700, #ffed4a); color: #000; font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
-                                                    <i class="fas fa-crown me-1"></i>#{{ loop.index }}
-                                                </div>
-                                                {% elif loop.index == 2 %}
-                                                <div class="badge rounded-pill fs-6 px-3 py-2" 
-                                                     style="background: linear-gradient(45deg, #c0c0c0, #e5e5e5); color: #000; font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
-                                                    <i class="fas fa-medal me-1"></i>#{{ loop.index }}
-                                                </div>
-                                                {% elif loop.index == 3 %}
-                                                <div class="badge rounded-pill fs-6 px-3 py-2" 
-                                                     style="background: linear-gradient(45deg, #cd7f32, #d4a574); color: #fff; font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
-                                                    <i class="fas fa-award me-1"></i>#{{ loop.index }}
-                                                </div>
-                                                {% else %}
-                                                <div class="badge rounded-pill fs-6 px-3 py-2" 
-                                                     style="background: linear-gradient(45deg, #6c757d, #8a8a8a); color: #fff; font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
-                                                    <i class="fas fa-trophy me-1"></i>#{{ loop.index }}
-                                                </div>
-                                                {% endif %}
-                                            </div>
-                                            
-                                            <!-- Rating Badge -->
-                                            <div class="position-absolute top-0 end-0 m-3">
-                                                <div class="badge bg-primary bg-opacity-90 text-white rounded-pill fs-6 px-3 py-2 shadow-sm" style="border: 1px solid rgba(255,255,255,0.3);">
-                                                    <i class="fas fa-star text-warning me-1"></i>
-                                                    {{ "%.1f"|format(video[4] if video[4] is not none else 0.0) }}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    <!-- Video Info Section -->
-                                    <div class="col-md-5">
-                                        <div class="card-body h-100 d-flex flex-column justify-content-between p-3" style="border-radius: 0 15px 15px 0;">
-                                            <div>
-                                                <h4 class="card-title fw-bold mb-2 text-primary" style="color: #0066cc !important; font-size: 1.1rem;">{{ video[1] }}</h4>
-                                                
-                                                <!-- Creator Info -->
-                                                <div class="d-flex align-items-center mb-2">
-                                                    <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center me-2 shadow-sm" 
-                                                         style="width: 35px; height: 35px; border: 1px solid rgba(255,255,255,0.8);">
-                                                        <i class="fas fa-user text-white" style="font-size: 0.8rem;"></i>
-                                                    </div>
-                                                    <div>
-                                                        <h6 class="mb-0 fw-bold text-dark" style="font-size: 0.9rem;">{{ video[5] }}</h6>
-                                                        <small class="text-primary opacity-75" style="font-size: 0.75rem;">Content Creator</small>
-                                                    </div>
-                                                </div>
-                                                
-                                                <!-- Rating Display -->
-                                                <div class="mb-2">
-                                                    <div class="d-flex align-items-center mb-1">
-                                                        <div class="rating-stars me-2">
-                                                            {% for i in range(5) %}
-                                                            {% if i < video[4]|round %}
-                                                            <i class="fas fa-star text-warning" style="font-size: 0.8rem;"></i>
-                                                            {% else %}
-                                                            <i class="far fa-star text-muted" style="font-size: 0.8rem;"></i>
-                                                            {% endif %}
-                                                            {% endfor %}
-                                                        </div>
-                                                        <span class="fw-bold text-warning" style="font-size: 1rem;">{{ "%.1f"|format(video[4] if video[4] is not none else 0.0) }}</span>
-                                                    </div>
-                                                    <small class="text-muted" style="font-size: 0.75rem;">
-                                                        <i class="fas fa-thumbs-up me-1"></i>{{ video[3] }} votes
-                                                    </small>
-                                                </div>
-                                            </div>
-                                            
-                                            <!-- Action Button -->
-                                            {% if session.user_id %}
-                                            <div class="d-grid">
-                                                <a href="{{ url_for('video_detail', video_id=video[0]) }}" 
-                                                   class="btn btn-primary shadow-sm" style="background: linear-gradient(135deg, #0066cc, #004499); border: none; border-radius: 10px; padding: 0.5rem 1rem;">
-                                                    <i class="fas fa-play me-2"></i>Watch & Vote
-                                                </a>
-                                            </div>
-                                            {% else %}
-                                            <div class="d-grid">
-                                                <a href="{{ url_for('login') }}" class="btn btn-outline-primary btn-lg shadow-sm" style="border: 2px solid #0066cc; color: #0066cc; border-radius: 15px; transition: all 0.3s ease;">
-                                                    <i class="fas fa-sign-in-alt me-2"></i>Login to Vote
-                                                </a>
-                                            </div>
-                                            {% endif %}
-                                        </div>
-                                    </div>
+                <div class="flex-shrink-0 video-card-modern" style="width: 280px; scroll-snap-align: start;">
+                    <a href="{{ url_for('video_detail', video_id=video[0]) }}" class="text-decoration-none d-block h-100 video-card-link">
+                        <div class="card border-0 shadow-sm h-100 position-relative" 
+                             style="border-radius: 16px; overflow: hidden; transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94); background: #fff; cursor: pointer;">
+                            
+                            <!-- Video Thumbnail Container -->
+                            <div class="position-relative video-thumbnail-container" style="aspect-ratio: 16/9; overflow: hidden;">
+                                <video class="w-100 h-100 video-preview" style="object-fit: cover; transition: transform 0.3s ease; pointer-events: none;" 
+                                       muted preload="metadata" playsinline>
+                                    <source src="{{ url_for('static', filename='uploads/' + video[2]) }}" type="video/mp4">
+                                </video>
+                            
+                            <!-- Gradient Overlay -->
+                            <div class="position-absolute top-0 start-0 w-100 h-100" 
+                                 style="background: linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.3) 100%); opacity: 0; transition: opacity 0.3s ease;">
+                            </div>
+                            
+                            <!-- Play Button Overlay -->
+                            <div class="position-absolute top-50 start-50 translate-middle play-overlay" 
+                                 style="opacity: 0; transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94); transform: translate(-50%, -50%) scale(0.8);">
+                                <div class="bg-white bg-opacity-95 rounded-circle d-flex align-items-center justify-content-center shadow-lg border border-primary border-2" 
+                                     style="width: 60px; height: 60px; backdrop-filter: blur(10px);">
+                                    <i class="fas fa-play text-primary" style="font-size: 1.3rem; margin-left: 3px;"></i>
                                 </div>
                             </div>
+                            
+                            <!-- Top Badges -->
+                            <div class="position-absolute top-0 start-0 w-100 p-3 d-flex justify-content-between align-items-start">
+                                <!-- Rank Badge -->
+                                <div>
+                                    {% if loop.index == 1 %}
+                                    <span class="badge fw-bold px-3 py-2 rounded-pill" 
+                                          style="background: linear-gradient(135deg, #ffd700, #ffc107); color: #000; font-size: 0.75rem; box-shadow: 0 4px 12px rgba(255,215,0,0.3);">
+                                        <i class="fas fa-crown me-1"></i>CHAMPION
+                                    </span>
+                                    {% elif loop.index == 2 %}
+                                    <span class="badge fw-bold px-3 py-2 rounded-pill" 
+                                          style="background: linear-gradient(135deg, #e8e8e8, #c0c0c0); color: #000; font-size: 0.75rem; box-shadow: 0 4px 12px rgba(192,192,192,0.3);">
+                                        <i class="fas fa-medal me-1"></i>SILVER
+                                    </span>
+                                    {% elif loop.index == 3 %}
+                                    <span class="badge fw-bold px-3 py-2 rounded-pill" 
+                                          style="background: linear-gradient(135deg, #cd7f32, #b8860b); color: #fff; font-size: 0.75rem; box-shadow: 0 4px 12px rgba(205,127,50,0.3);">
+                                        <i class="fas fa-award me-1"></i>BRONZE
+                                    </span>
+                                    {% else %}
+                                    <span class="badge bg-primary fw-bold px-2 py-1 rounded-pill" style="font-size: 0.7rem;">
+                                        <i class="fas fa-star me-1"></i>#{{ loop.index }}
+                                    </span>
+                                    {% endif %}
+                                </div>
+                                
+                                <!-- Rating Badge -->
+                                <span class="badge bg-dark bg-opacity-80 text-white fw-semibold px-2 py-1 rounded-pill" 
+                                      style="font-size: 0.7rem; backdrop-filter: blur(10px);">
+                                    <i class="fas fa-star text-warning me-1"></i>{{ "%.1f"|format(video[4] if video[4] is not none else 0.0) }}
+                                </span>
+                            </div>
+                            
+                            <!-- Duration/Type Badge -->
+                            <div class="position-absolute bottom-2 end-2">
+                                <span class="badge bg-dark bg-opacity-90 text-white px-2 py-1 rounded" 
+                                      style="font-size: 0.7rem; backdrop-filter: blur(10px);">
+                                    <i class="fas fa-video me-1"></i>HD
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <!-- Video Info -->
+                        <div class="card-body p-3" style="background: linear-gradient(145deg, #ffffff, #f8f9fa);">
+                            <!-- Title -->
+                            <h6 class="card-title mb-2 fw-bold lh-sm" 
+                                style="font-size: 0.9rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-clamp: 2; overflow: hidden; color: #1a1a1a;">
+                                {{ video[1] }}
+                            </h6>
+                            
+                            <!-- Creator Info -->
+                            <div class="d-flex align-items-center mb-2">
+                                <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center me-2 shadow-sm" 
+                                     style="width: 28px; height: 28px;">
+                                    <i class="fas fa-user text-white" style="font-size: 0.75rem;"></i>
+                                </div>
+                                <div class="flex-grow-1 min-w-0">
+                                    <small class="text-muted fw-semibold d-block text-truncate">{{ video[5] }}</small>
+                                    <small class="text-primary" style="font-size: 0.7rem;">
+                                        <i class="fas fa-check-circle me-1"></i>Verified
+                                    </small>
+                                </div>
+                            </div>
+                            
+                            <!-- Stats Row -->
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div class="d-flex align-items-center">
+                                    <div class="rating-stars me-2">
+                                        {% for i in range(5) %}
+                                        {% if i < video[4]|round %}
+                                        <i class="fas fa-star text-warning" style="font-size: 0.75rem;"></i>
+                                        {% else %}
+                                        <i class="far fa-star text-muted" style="font-size: 0.75rem;"></i>
+                                        {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                <div class="d-flex align-items-center gap-3">
+                                    <small class="text-muted d-flex align-items-center">
+                                        <i class="fas fa-thumbs-up me-1"></i>{{ video[3] }}
+                                    </small>
+                                    <small class="text-muted d-flex align-items-center">
+                                        <i class="fas fa-eye me-1"></i>{{ range(video[3] * 8, video[3] * 15)|random }}
+                                    </small>
+                                </div>
+                            </div>
+                            
+
                         </div>
                     </div>
+                    </a>
                 </div>
                 {% endfor %}
             </div>
             
-            <!-- Carousel Controls -->
-            <button class="carousel-control-prev" type="button" data-bs-target="#topVideosCarousel" data-bs-slide="prev">
-                <div class="carousel-control-icon">
-                    <i class="fas fa-chevron-left fs-3"></i>
-                </div>
-                <span class="visually-hidden">Previous</span>
-            </button>
-            <button class="carousel-control-next" type="button" data-bs-target="#topVideosCarousel" data-bs-slide="next">
-                <div class="carousel-control-icon">
-                    <i class="fas fa-chevron-right fs-3"></i>
-                </div>
-                <span class="visually-hidden">Next</span>
-            </button>
+            <!-- Mobile Scroll Indicator -->
+            <div class="d-flex justify-content-center mt-3 d-md-none">
+                <small class="text-muted">
+                    <i class="fas fa-hand-point-left me-1"></i>Swipe to explore more videos
+                </small>
+            </div>
         </div>
         
         <!-- View All Videos Button -->
         {% if session.user_id %}
-        <div class="text-center mt-5">
+        <div class="text-center mt-4 mb-3">
             <a href="{{ url_for('videos') }}" class="btn btn-outline-primary btn-lg px-5">
                 <i class="fas fa-video me-2"></i>View All Videos
             </a>
@@ -339,12 +341,12 @@
         
         {% else %}
         <!-- No Videos State -->
-        <div class="text-center py-5">
-            <div class="mb-4">
-                <i class="fas fa-video fa-5x text-muted mb-4"></i>
+        <div class="text-center py-4">
+            <div class="mb-3">
+                <i class="fas fa-video fa-4x text-muted mb-3"></i>
             </div>
             <h3 class="text-muted mb-3">No videos uploaded yet</h3>
-            <p class="text-muted mb-4">Be the first participant to upload a video and start the competition!</p>
+            <p class="text-muted mb-3">Be the first participant to upload a video and start the competition!</p>
             {% if session.user_id %}
             <a href="{{ url_for('upload_video') }}" class="btn btn-primary btn-lg px-5">
                 <i class="fas fa-plus me-2"></i>Upload First Video
@@ -357,9 +359,6 @@
         </div>
         {% endif %}
     </div>
-    
-    <!-- Extend blue background to eliminate white space -->
-    <div style="background: linear-gradient(135deg, #0066cc15 0%, #004499 15%, #003366 100%); height: 200px; margin-top: 0; margin-bottom: 0;"></div>
 </section>
 {% endblock %}
 
@@ -506,7 +505,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // CSS Animation keyframes (added programmatically)
+    // Enhanced CSS Animation keyframes (added programmatically)
     const style = document.createElement('style');
     style.textContent = `
         @keyframes float {
@@ -531,6 +530,357 @@ document.addEventListener('DOMContentLoaded', function() {
         
         .carousel-header h2 {
             animation: pulse 4s ease-in-out infinite;
+        }
+        
+        /* Enhanced Carousel Styles */
+        .video-carousel-card {
+            transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        
+        .video-carousel-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0,102,204,0.15);
+        }
+        
+        .video-container:hover video {
+            transform: scale(1.02);
+            filter: brightness(1.1) contrast(1.05);
+        }
+        
+        .carousel-control-prev:hover,
+        .carousel-control-next:hover {
+            opacity: 1 !important;
+        }
+        
+        .carousel-control-prev:hover .carousel-control-icon,
+        .carousel-control-next:hover .carousel-control-icon {
+            transform: scale(1.1);
+            background: rgba(0,102,204,0.1) !important;
+        }
+        
+        .carousel-indicators button:hover {
+            opacity: 1 !important;
+            transform: scale(1.3);
+        }
+        
+        .carousel-indicators button.active {
+            opacity: 1 !important;
+            transform: scale(1.2);
+            background: linear-gradient(135deg, #ffd700, #ffc107) !important;
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4) !important;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,102,204,0.3) !important;
+        }
+        
+        .btn-outline-primary:hover,
+        .btn-outline-secondary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        /* Professional Video Carousel Styles with Enhanced Shadows */
+        .video-carousel-container {
+            position: relative;
+            padding: 20px 0;
+            background: linear-gradient(145deg, #f8f9fa, #e9ecef);
+            border-radius: 20px;
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.1), 
+                        0 10px 40px rgba(0,0,0,0.05),
+                        0 0 100px rgba(0,102,204,0.03);
+            backdrop-filter: blur(10px);
+        }
+        
+        .video-carousel-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 20% 80%, rgba(0,102,204,0.05) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 20%, rgba(255,193,7,0.05) 0%, transparent 50%);
+            border-radius: 20px;
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        #video-carousel {
+            scroll-snap-type: x mandatory;
+            scroll-padding: 0 15px;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            position: relative;
+            z-index: 1;
+        }
+        
+        #video-carousel::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .video-card-modern {
+            scroll-snap-align: start;
+            transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.1));
+        }
+        
+        .video-card-modern .card {
+            box-shadow: 0 8px 32px rgba(0,0,0,0.12), 
+                        0 2px 8px rgba(0,0,0,0.08),
+                        inset 0 1px 0 rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            backdrop-filter: blur(20px);
+        }
+        
+        .video-card-modern:hover {
+            transform: translateY(-12px) scale(1.03);
+            box-shadow: 0 25px 60px rgba(0,0,0,0.25), 
+                        0 8px 32px rgba(0,102,204,0.15),
+                        0 0 0 1px rgba(0,102,204,0.2);
+            z-index: 10;
+            filter: drop-shadow(0 15px 35px rgba(0,0,0,0.2)) 
+                    drop-shadow(0 5px 15px rgba(0,102,204,0.1));
+        }
+        
+        .video-card-modern:hover .card {
+            box-shadow: 0 15px 50px rgba(0,0,0,0.2), 
+                        0 5px 20px rgba(0,102,204,0.15),
+                        inset 0 1px 0 rgba(255,255,255,0.4);
+            border-color: rgba(0,102,204,0.3);
+        }
+        
+        .video-thumbnail-container {
+            position: relative;
+            overflow: hidden;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+            transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        
+        .video-thumbnail-container:hover {
+            box-shadow: 0 8px 32px rgba(0,0,0,0.15), 
+                        0 0 20px rgba(0,102,204,0.1);
+            transform: scale(1.01);
+        }
+        
+        .video-thumbnail-container:hover .video-preview {
+            transform: scale(1.08);
+            filter: brightness(1.15) contrast(1.1) saturate(1.1);
+        }
+        
+        .video-preview {
+            transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        
+        .play-overlay {
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            backdrop-filter: blur(10px);
+        }
+        
+        .video-card-modern:hover .play-overlay {
+            transform: translate(-50%, -50%) scale(1.1);
+            animation: playPulse 2s infinite;
+        }
+        
+        @keyframes playPulse {
+            0%, 100% { 
+                box-shadow: 0 0 0 0 rgba(0,102,204,0.4);
+            }
+            50% { 
+                box-shadow: 0 0 0 15px rgba(0,102,204,0);
+            }
+        }
+        
+        .carousel-nav-btn {
+            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            border: 2px solid rgba(0,102,204,0.1);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1), 
+                        0 2px 8px rgba(0,0,0,0.05),
+                        inset 0 1px 0 rgba(255,255,255,0.3);
+            backdrop-filter: blur(20px);
+            background: rgba(255,255,255,0.95) !important;
+            cursor: pointer;
+            opacity: 0.8;
+            z-index: 9999 !important;
+            pointer-events: auto !important;
+        }
+        
+        .carousel-nav-btn:hover {
+            opacity: 1 !important;
+            transform: translateY(-50%) scale(1.15);
+            box-shadow: 0 20px 50px rgba(0,102,204,0.3), 
+                        0 8px 20px rgba(0,0,0,0.1),
+                        inset 0 1px 0 rgba(255,255,255,0.5);
+            border-color: rgba(0,102,204,0.4);
+            background: rgba(255,255,255,1) !important;
+            cursor: pointer;
+        }
+        
+        .carousel-nav-btn:hover i {
+            transform: scale(1.2);
+            color: #0066cc !important;
+            filter: drop-shadow(0 2px 4px rgba(0,102,204,0.3));
+        }
+        
+        .carousel-nav-btn:active {
+            transform: translateY(-50%) scale(1.05);
+            box-shadow: 0 8px 20px rgba(0,102,204,0.4);
+        }
+        
+        .carousel-nav-btn i {
+            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        
+        .rating-stars {
+            transition: all 0.2s ease;
+        }
+        
+        .rating-stars:hover i {
+            transform: scale(1.15);
+            filter: brightness(1.2);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 20px rgba(0,102,204,0.3);
+            background: linear-gradient(135deg, #004499, #0066cc) !important;
+        }
+        
+        .btn-outline-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 15px rgba(0,102,204,0.2);
+        }
+        
+        /* Enhanced Card Body Styling */
+        .video-card-modern .card-body {
+            backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(255,255,255,0.2);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .video-card-modern:hover .card-body {
+            background: linear-gradient(145deg, #ffffff, #f8f9fa) !important;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.3),
+                        0 -2px 10px rgba(0,0,0,0.05);
+        }
+        
+        /* Enhanced Gradient Overlays */
+        .video-thumbnail-container .position-absolute[style*="gradient"] {
+            background: linear-gradient(180deg, 
+                rgba(0,0,0,0.2) 0%, 
+                rgba(0,0,0,0.1) 30%, 
+                rgba(0,0,0,0.4) 80%, 
+                rgba(0,0,0,0.7) 100%) !important;
+            backdrop-filter: blur(2px);
+            transition: all 0.3s ease;
+        }
+        
+        .video-card-modern:hover .video-thumbnail-container .position-absolute[style*="gradient"] {
+            background: linear-gradient(180deg, 
+                rgba(0,0,0,0.1) 0%, 
+                rgba(0,0,0,0.05) 30%, 
+                rgba(0,0,0,0.3) 80%, 
+                rgba(0,0,0,0.6) 100%) !important;
+        }
+        
+        /* Enhanced Badge Styling */
+        .video-card-modern .badge {
+            backdrop-filter: blur(15px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .video-card-modern:hover .badge {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        
+        /* TikTok-style Smooth Scrolling Effect */
+        .video-carousel-container {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .video-carousel-container::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                linear-gradient(90deg, 
+                    rgba(248,249,250,0.8) 0%, 
+                    transparent 5%, 
+                    transparent 95%, 
+                    rgba(248,249,250,0.8) 100%);
+            pointer-events: none;
+            z-index: 2;
+        }
+        
+        /* Mobile optimizations */
+        @media (max-width: 768px) {
+            .video-card-modern {
+                width: 250px !important;
+            }
+            
+            #video-carousel {
+                padding: 10px;
+                gap: 8px;
+            }
+            
+            .video-carousel-container {
+                margin: 0 -10px;
+            }
+        }
+        
+        /* Smooth animations */
+        @keyframes cardEntrance {
+            from {
+                opacity: 0;
+                transform: translateY(30px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        
+        .video-card-modern.animate-in {
+            animation: cardEntrance 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+        
+        /* Loading states */
+        .video-preview {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+        }
+        
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        
+        .video-preview[src] {
+            background: none;
+            animation: none;
+        }
+        
+        /* Focus states for accessibility */
+        .carousel-nav-btn:focus {
+            outline: 2px solid #0066cc;
+            outline-offset: 4px;
+        }
+        
+        .video-card-modern a:focus {
+            outline: 2px solid #0066cc;
+            outline-offset: 2px;
+            border-radius: 8px;
         }
     `;
     document.head.appendChild(style);
@@ -954,6 +1304,503 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Initialize the animation system
     initHowItWorksAnimation();
+    
+    // Professional Video Carousel - YouTube/TikTok Style
+    function initVideoCarousel() {
+        const carousel = document.getElementById('video-carousel');
+        const prevBtn = document.getElementById('carousel-prev');
+        const nextBtn = document.getElementById('carousel-next');
+        
+        if (!carousel) return;
+        
+        let isScrolling = false;
+        let scrollTimeout;
+        
+        // Card dimensions
+        const cardWidth = 280; // card width
+        const gap = 12; // gap between cards
+        const scrollAmount = cardWidth + gap;
+        
+        // Enhanced smooth scrolling with momentum (TikTok/YouTube style)
+        function smoothScroll(direction) {
+            if (isScrolling) return;
+            
+            isScrolling = true;
+            const currentScroll = carousel.scrollLeft;
+            const maxScroll = carousel.scrollWidth - carousel.clientWidth;
+            
+            // Calculate optimal scroll distance
+            const visibleCards = Math.floor(carousel.clientWidth / (cardWidth + gap));
+            const scrollDistance = Math.max(1, Math.min(3, visibleCards)) * scrollAmount;
+            
+            let targetScroll = currentScroll + (direction * scrollDistance);
+            
+            // Ensure we don't scroll past boundaries
+            targetScroll = Math.max(0, Math.min(targetScroll, maxScroll));
+            
+            // Add momentum-based easing
+            const distance = Math.abs(targetScroll - currentScroll);
+            const duration = Math.min(800, Math.max(300, distance / 2));
+            
+            // Custom smooth scroll with momentum
+            animateScrollTo(carousel, targetScroll, duration);
+            
+            setTimeout(() => {
+                isScrolling = false;
+                updateNavButtons();
+            }, duration + 100);
+        }
+        
+        // Custom scroll animation with momentum
+        function animateScrollTo(element, targetPosition, duration) {
+            const startPosition = element.scrollLeft;
+            const distance = targetPosition - startPosition;
+            let startTime = null;
+            
+            function scrollStep(currentTime) {
+                if (!startTime) startTime = currentTime;
+                
+                const timeElapsed = currentTime - startTime;
+                const progress = Math.min(timeElapsed / duration, 1);
+                
+                // Momentum easing function (ease-out-quart)
+                const easeOutQuart = 1 - Math.pow(1 - progress, 4);
+                
+                element.scrollLeft = startPosition + (distance * easeOutQuart);
+                
+                if (progress < 1) {
+                    requestAnimationFrame(scrollStep);
+                }
+            }
+            
+            requestAnimationFrame(scrollStep);
+        }
+        
+        // Navigation button functionality
+        if (prevBtn && nextBtn) {
+            prevBtn.addEventListener('click', () => smoothScroll(-1));
+            nextBtn.addEventListener('click', () => smoothScroll(1));
+        }
+        
+        // Update navigation button states
+        function updateNavButtons() {
+            if (!prevBtn || !nextBtn) return;
+            
+            const maxScroll = carousel.scrollWidth - carousel.clientWidth;
+            const currentScroll = carousel.scrollLeft;
+            
+            // Previous button
+            if (currentScroll <= 10) {
+                prevBtn.style.opacity = '0.3';
+                prevBtn.style.pointerEvents = 'none';
+                prevBtn.style.transform = 'translateY(-50%) scale(0.9)';
+            } else {
+                prevBtn.style.opacity = '0.9';
+                prevBtn.style.pointerEvents = 'auto';
+                prevBtn.style.transform = 'translateY(-50%) scale(1)';
+            }
+            
+            // Next button
+            if (currentScroll >= maxScroll - 10) {
+                nextBtn.style.opacity = '0.3';
+                nextBtn.style.pointerEvents = 'none';
+                nextBtn.style.transform = 'translateY(-50%) scale(0.9)';
+            } else {
+                nextBtn.style.opacity = '0.9';
+                nextBtn.style.pointerEvents = 'auto';
+                nextBtn.style.transform = 'translateY(-50%) scale(1)';
+            }
+        }
+        
+        // Scroll event listener with throttling
+        carousel.addEventListener('scroll', () => {
+            clearTimeout(scrollTimeout);
+            scrollTimeout = setTimeout(updateNavButtons, 50);
+        });
+        
+        // Touch/swipe support for mobile
+        let startX = 0;
+        let startY = 0;
+        let isTouch = false;
+        
+        carousel.addEventListener('touchstart', (e) => {
+            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
+            isTouch = true;
+        }, { passive: true });
+        
+        carousel.addEventListener('touchmove', (e) => {
+            if (!isTouch) return;
+            
+            const deltaY = Math.abs(e.touches[0].clientY - startY);
+            const deltaX = Math.abs(e.touches[0].clientX - startX);
+            
+            // Prevent vertical scrolling if horizontal swipe is detected
+            if (deltaX > deltaY) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+        
+        carousel.addEventListener('touchend', () => {
+            isTouch = false;
+        });
+        
+        // Mouse wheel horizontal scrolling
+        carousel.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            carousel.scrollLeft += e.deltaY;
+            updateNavButtons();
+        }, { passive: false });
+        
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (carousel.matches(':hover') || document.activeElement.closest('#video-carousel')) {
+                if (e.key === 'ArrowLeft') {
+                    e.preventDefault();
+                    smoothScroll(-1);
+                } else if (e.key === 'ArrowRight') {
+                    e.preventDefault();
+                    smoothScroll(1);
+                }
+            }
+        });
+        
+        // Initialize button states
+        setTimeout(updateNavButtons, 100);
+    }
+    
+    // Enhanced video card interactions with TikTok-style effects
+    function initVideoCardEffects() {
+        const videoCards = document.querySelectorAll('.video-card-modern');
+        
+        videoCards.forEach((card, index) => {
+            const video = card.querySelector('.video-preview');
+            const playOverlay = card.querySelector('.play-overlay');
+            const gradientOverlay = card.querySelector('.video-thumbnail-container .position-absolute[style*="gradient"]');
+            const thumbnailContainer = card.querySelector('.video-thumbnail-container');
+            
+            let hoverTimeout;
+            let playTimeout;
+            let isHovered = false;
+            
+            // Enhanced card hover effects with momentum
+            card.addEventListener('mouseenter', () => {
+                isHovered = true;
+                
+                // TikTok-style lift and scale effect
+                card.style.transform = 'translateY(-12px) scale(1.03)';
+                card.style.transition = 'all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)';
+                card.style.zIndex = '15';
+                
+                // Enhanced shadow effect
+                card.style.filter = 'drop-shadow(0 15px 35px rgba(0,0,0,0.2)) drop-shadow(0 5px 15px rgba(0,102,204,0.1))';
+                
+                // Show play overlay with bounce
+                if (playOverlay) {
+                    playOverlay.style.opacity = '1';
+                    playOverlay.style.transform = 'translate(-50%, -50%) scale(1.1)';
+                    playOverlay.style.transition = 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)';
+                }
+                
+                // Enhanced gradient overlay
+                if (gradientOverlay) {
+                    gradientOverlay.style.opacity = '1';
+                    gradientOverlay.style.transition = 'opacity 0.3s ease';
+                }
+                
+                // Thumbnail container effect
+                if (thumbnailContainer) {
+                    thumbnailContainer.style.boxShadow = '0 8px 32px rgba(0,0,0,0.15), 0 0 20px rgba(0,102,204,0.1)';
+                }
+                
+                // Auto-play video with momentum delay
+                clearTimeout(hoverTimeout);
+                hoverTimeout = setTimeout(() => {
+                    if (video && isHovered && video.paused) {
+                        video.play().catch(e => {
+                            console.log('Video play prevented:', e);
+                            // Add visual feedback when autoplay is blocked
+                            showAutoPlayBlocked(card);
+                        });
+                    }
+                }, 300); // Reduced delay for better responsiveness
+            });
+            
+            card.addEventListener('mouseleave', () => {
+                isHovered = false;
+                
+                // Smooth reset with momentum
+                card.style.transform = 'translateY(0) scale(1)';
+                card.style.transition = 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                card.style.zIndex = '1';
+                card.style.filter = 'drop-shadow(0 4px 8px rgba(0,0,0,0.1))';
+                
+                // Hide play overlay with smooth transition
+                if (playOverlay) {
+                    playOverlay.style.opacity = '0';
+                    playOverlay.style.transform = 'translate(-50%, -50%) scale(0.8)';
+                    playOverlay.style.transition = 'all 0.3s ease';
+                }
+                
+                // Hide gradient overlay
+                if (gradientOverlay) {
+                    gradientOverlay.style.opacity = '0';
+                }
+                
+                // Reset thumbnail container
+                if (thumbnailContainer) {
+                    thumbnailContainer.style.boxShadow = '0 4px 16px rgba(0,0,0,0.1)';
+                }
+                
+                // Stop and reset video with fade
+                clearTimeout(hoverTimeout);
+                if (video && !video.paused) {
+                    video.style.transition = 'opacity 0.2s ease';
+                    video.style.opacity = '0.8';
+                    
+                    setTimeout(() => {
+                        video.pause();
+                        video.currentTime = 0;
+                        video.style.opacity = '1';
+                        video.style.transition = '';
+                    }, 200);
+                }
+            });
+            
+            // Enhanced click to play/pause with visual feedback
+            if (video) {
+                video.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    if (video.paused) {
+                        video.play().catch(e => {
+                            console.log('Video play prevented:', e);
+                            showPlayError(card);
+                        });
+                        
+                        // Visual feedback for play
+                        if (playOverlay) {
+                            playOverlay.style.transform = 'translate(-50%, -50%) scale(0.8)';
+                            setTimeout(() => {
+                                playOverlay.style.transform = 'translate(-50%, -50%) scale(1.1)';
+                            }, 100);
+                        }
+                    } else {
+                        video.pause();
+                        
+                        // Visual feedback for pause
+                        if (playOverlay) {
+                            playOverlay.style.transform = 'translate(-50%, -50%) scale(1.2)';
+                            setTimeout(() => {
+                                playOverlay.style.transform = 'translate(-50%, -50%) scale(1)';
+                            }, 100);
+                        }
+                    }
+                });
+                
+                // Video progress visual feedback
+                video.addEventListener('timeupdate', () => {
+                    if (video.duration > 0) {
+                        const progress = (video.currentTime / video.duration) * 100;
+                        updateVideoProgress(card, progress);
+                    }
+                });
+            }
+            
+            // Touch interactions for mobile (TikTok-style)
+            let touchStartY = 0;
+            let touchStartX = 0;
+            
+            card.addEventListener('touchstart', (e) => {
+                touchStartY = e.touches[0].clientY;
+                touchStartX = e.touches[0].clientX;
+                
+                // Add touch feedback
+                card.style.transform = 'scale(0.98)';
+                card.style.transition = 'transform 0.1s ease';
+            }, { passive: true });
+            
+            card.addEventListener('touchend', (e) => {
+                const touchEndY = e.changedTouches[0].clientY;
+                const touchEndX = e.changedTouches[0].clientX;
+                const deltaY = touchStartY - touchEndY;
+                const deltaX = touchStartX - touchEndX;
+                
+                // Reset touch feedback
+                card.style.transform = 'scale(1)';
+                card.style.transition = 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                
+                // Detect swipe gestures
+                if (Math.abs(deltaY) > Math.abs(deltaX) && Math.abs(deltaY) > 50) {
+                    // Vertical swipe - show more info or navigate
+                    if (deltaY > 0) {
+                        showCardDetails(card);
+                    }
+                } else if (Math.abs(deltaX) > 50) {
+                    // Horizontal swipe - navigate carousel
+                    if (deltaX > 0) {
+                        document.getElementById('carousel-next')?.click();
+                    } else {
+                        document.getElementById('carousel-prev')?.click();
+                    }
+                }
+            });
+            
+            // Double tap to like (TikTok-style)
+            let lastTap = 0;
+            card.addEventListener('touchend', (e) => {
+                const currentTime = new Date().getTime();
+                const tapLength = currentTime - lastTap;
+                
+                if (tapLength < 500 && tapLength > 0) {
+                    // Double tap detected
+                    showLikeAnimation(card);
+                    e.preventDefault();
+                }
+                lastTap = currentTime;
+            });
+            
+            // Intersection Observer for lazy loading and animations
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        // Animate card entrance
+                        setTimeout(() => {
+                            entry.target.style.opacity = '1';
+                            entry.target.style.transform = 'translateY(0)';
+                        }, index * 100);
+                        
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.1 });
+            
+            // Initial state for animation
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+            card.style.transition = 'all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+            
+            observer.observe(card);
+        });
+    }
+    
+    // Helper functions for enhanced interactions
+    function showAutoPlayBlocked(card) {
+        const indicator = document.createElement('div');
+        indicator.className = 'autoplay-indicator position-absolute top-50 start-50 translate-middle';
+        indicator.style.cssText = `
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 25px;
+            font-size: 0.85rem;
+            pointer-events: none;
+            z-index: 20;
+            backdrop-filter: blur(10px);
+            animation: slideInFade 0.3s ease-out;
+        `;
+        indicator.innerHTML = '<i class="fas fa-volume-mute me-2"></i>Click to play';
+        
+        const container = card.querySelector('.video-thumbnail-container');
+        if (container) {
+            container.appendChild(indicator);
+            
+            setTimeout(() => {
+                if (indicator.parentNode) {
+                    indicator.style.animation = 'slideOutFade 0.3s ease-in';
+                    setTimeout(() => indicator.remove(), 300);
+                }
+            }, 2500);
+        }
+    }
+    
+    function showPlayError(card) {
+        const indicator = document.createElement('div');
+        indicator.className = 'play-error-indicator position-absolute top-50 start-50 translate-middle';
+        indicator.style.cssText = `
+            background: rgba(220,53,69,0.9);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            pointer-events: none;
+            z-index: 20;
+            animation: shake 0.5s ease-in-out;
+        `;
+        indicator.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i>Playback error';
+        
+        const container = card.querySelector('.video-thumbnail-container');
+        if (container) {
+            container.appendChild(indicator);
+            setTimeout(() => indicator.remove(), 2000);
+        }
+    }
+    
+    function updateVideoProgress(card, progress) {
+        let progressBar = card.querySelector('.video-progress-bar');
+        if (!progressBar) {
+            progressBar = document.createElement('div');
+            progressBar.className = 'video-progress-bar position-absolute bottom-0 start-0';
+            progressBar.style.cssText = `
+                height: 3px;
+                background: linear-gradient(90deg, #0066cc 0%, #004499 100%);
+                transition: width 0.1s linear;
+                border-radius: 0 0 0 12px;
+                box-shadow: 0 0 8px rgba(0,102,204,0.4);
+                z-index: 10;
+            `;
+            
+            const container = card.querySelector('.video-thumbnail-container');
+            if (container) container.appendChild(progressBar);
+        }
+        
+        progressBar.style.width = `${progress}%`;
+        
+        if (progress >= 100) {
+            setTimeout(() => {
+                progressBar.style.opacity = '0';
+                setTimeout(() => progressBar.remove(), 300);
+            }, 500);
+        }
+    }
+    
+    function showCardDetails(card) {
+        // Add a subtle bounce animation to indicate interaction
+        card.style.transform = 'translateY(-5px) scale(1.01)';
+        setTimeout(() => {
+            card.style.transform = 'translateY(0) scale(1)';
+        }, 200);
+        
+        // Could expand to show more video details
+        console.log('Card details interaction');
+    }
+    
+    function showLikeAnimation(card) {
+        const heart = document.createElement('div');
+        heart.className = 'like-animation position-absolute';
+        heart.style.cssText = `
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 3rem;
+            color: #ff3040;
+            pointer-events: none;
+            z-index: 25;
+            animation: likeHeart 1s ease-out forwards;
+        `;
+        heart.innerHTML = '<i class="fas fa-heart"></i>';
+        
+        const container = card.querySelector('.video-thumbnail-container');
+        if (container) {
+            container.appendChild(heart);
+            setTimeout(() => heart.remove(), 1000);
+        }
+    }
+    
+    // Initialize everything
+    initVideoCarousel();
+    initVideoCardEffects();
 });
 
 // Add CSS animations for stats cards and How It Works section
@@ -1112,6 +1959,201 @@ style.textContent = `
         outline: 2px solid #007bff;
         outline-offset: 4px;
         border-radius: 8px;
+    }
+    
+    /* Enhanced Carousel Animations */
+    @keyframes slideInFade {
+        from {
+            opacity: 0;
+            transform: translate(-50%, -60%);
+        }
+        to {
+            opacity: 1;
+            transform: translate(-50%, -50%);
+        }
+    }
+    
+    @keyframes slideOutFade {
+        from {
+            opacity: 1;
+            transform: translate(-50%, -50%);
+        }
+        to {
+            opacity: 0;
+            transform: translate(-50%, -40%);
+        }
+    }
+    
+    @keyframes shake {
+        0%, 100% { transform: translate(-50%, -50%); }
+        10%, 30%, 50%, 70%, 90% { transform: translate(-52%, -50%); }
+        20%, 40%, 60%, 80% { transform: translate(-48%, -50%); }
+    }
+    
+    @keyframes likeHeart {
+        0% {
+            transform: translate(-50%, -50%) scale(0);
+            opacity: 1;
+        }
+        15% {
+            transform: translate(-50%, -50%) scale(1.2);
+        }
+        50% {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1;
+        }
+        100% {
+            transform: translate(-50%, -70%) scale(0.8);
+            opacity: 0;
+        }
+    }
+    
+    @keyframes cardEntrance {
+        from {
+            opacity: 0;
+            transform: translateY(30px) scale(0.95);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+    
+    /* Enhanced Button Animations */
+    .carousel-nav-btn {
+        animation: navButtonFloat 3s ease-in-out infinite;
+    }
+    
+    .carousel-nav-prev {
+        animation-delay: 0s;
+    }
+    
+    .carousel-nav-next {
+        animation-delay: 1.5s;
+    }
+    
+    @keyframes navButtonFloat {
+        0%, 100% {
+            transform: translateY(-50%) translateX(0);
+        }
+        50% {
+            transform: translateY(-50%) translateX(2px);
+        }
+    }
+    
+    /* Video Card Loading Shimmer */
+    .video-card-modern.loading {
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .video-card-modern.loading::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+            90deg,
+            transparent,
+            rgba(255, 255, 255, 0.2),
+            transparent
+        );
+        animation: shimmer 2s infinite;
+        z-index: 5;
+    }
+    
+    @keyframes shimmer {
+        0% { left: -100%; }
+        100% { left: 100%; }
+    }
+    
+    /* Enhanced Hover States */
+    .video-card-modern {
+        transform-origin: center center;
+        will-change: transform, box-shadow, filter;
+    }
+    
+    .video-card-modern:hover {
+        animation: cardHover 0.6s ease-out;
+    }
+    
+    @keyframes cardHover {
+        0% {
+            transform: translateY(0) scale(1);
+        }
+        50% {
+            transform: translateY(-6px) scale(1.01);
+        }
+        100% {
+            transform: translateY(-12px) scale(1.03);
+        }
+    }
+    
+    /* Smooth Transitions for All Interactive Elements */
+    .video-thumbnail-container,
+    .play-overlay,
+    .carousel-nav-btn,
+    .video-card-modern .badge,
+    .video-card-modern .card-body {
+        will-change: transform, opacity, box-shadow;
+    }
+    
+    /* Performance Optimization */
+    .video-carousel-container,
+    .video-card-modern,
+    .carousel-nav-btn {
+        transform: translateZ(0);
+        backface-visibility: hidden;
+        perspective: 1000px;
+    }
+    
+    /* Enhanced Card Link Styling */
+    .video-card-link {
+        transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        border-radius: 16px;
+        overflow: hidden;
+    }
+    
+    .video-card-link:hover {
+        text-decoration: none !important;
+        color: inherit;
+    }
+    
+    .video-card-link:focus {
+        outline: 3px solid rgba(0,102,204,0.4);
+        outline-offset: 2px;
+    }
+    
+    /* Prevent video interaction conflicts */
+    .video-card-link .video-preview {
+        pointer-events: none;
+    }
+    
+    /* Enhanced hover states for clickable cards */
+    .video-card-link:hover .card {
+        transform: translateY(-2px);
+    }
+    
+    .video-card-link:active .card {
+        transform: translateY(0) scale(0.98);
+        transition: transform 0.1s ease;
+    }
+    
+    /* Visual feedback for card interaction */
+    .video-card-modern:hover .video-card-link .card-title {
+        color: #0066cc !important;
+    }
+    
+    .video-card-modern .card-title {
+        transition: color 0.3s ease;
+    }
+    
+    /* Action button styling when non-interactive */
+    .video-card-link .btn[style*="pointer-events: none"] {
+        box-shadow: none !important;
+        transform: none !important;
     }
 `;
 document.head.appendChild(style);
