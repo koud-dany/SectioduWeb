@@ -11,6 +11,18 @@ from config import Config
 app = Flask(__name__)
 app.config.from_object(Config)
 
+# Template context processor to make payment status available in all templates
+@app.context_processor
+def inject_user_status():
+    if 'user_id' in session:
+        conn = sqlite3.connect('tournament.db')
+        c = conn.cursor()
+        c.execute('SELECT is_paid FROM users WHERE id = ?', (session['user_id'],))
+        result = c.fetchone()
+        conn.close()
+        return {'current_user_is_paid': result[0] if result else False}
+    return {'current_user_is_paid': False}
+
 # Ensure upload directory exists
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 os.makedirs('static/thumbnails', exist_ok=True)
@@ -27,7 +39,7 @@ def init_db():
         username TEXT UNIQUE NOT NULL,
         email TEXT UNIQUE NOT NULL,
         password_hash TEXT NOT NULL,
-        is_paid BOOLEAN DEFAULT TRUE,
+        is_paid BOOLEAN DEFAULT FALSE,
         registration_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         first_name TEXT,
         last_name TEXT,
@@ -308,6 +320,27 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+def paid_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session:
+            flash('Please log in to access this page.')
+            return redirect(url_for('login'))
+        
+        # Check if user has paid
+        conn = sqlite3.connect('tournament.db')
+        c = conn.cursor()
+        c.execute('SELECT is_paid FROM users WHERE id = ?', (session['user_id'],))
+        user = c.fetchone()
+        conn.close()
+        
+        if not user or not user[0]:
+            flash('Payment required to access this feature. Please upgrade your account.', 'warning')
+            return redirect(url_for('upgrade'))
+        
+        return f(*args, **kwargs)
+    return decorated_function
+
 @app.context_processor
 def inject_user_avatar():
     """Inject current user's avatar into all templates"""
@@ -477,10 +510,10 @@ def register():
         conn = sqlite3.connect('tournament.db')
         c = conn.cursor()
         try:
-            c.execute('INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)',
-                     (username, email, password_hash))
+            c.execute('INSERT INTO users (username, email, password_hash, is_paid) VALUES (?, ?, ?, ?)',
+                     (username, email, password_hash, False))
             conn.commit()
-            flash('Registration successful! Please log in.')
+            flash('Registration successful! Please upgrade to premium to start uploading videos.')
             return redirect(url_for('login'))
         except sqlite3.IntegrityError:
             flash('Username or email already exists')
@@ -515,8 +548,13 @@ def dashboard():
         video_list[4] = float(video_list[4]) if video_list[4] is not None else 0.0  # average_rating
         user_videos.append(tuple(video_list))
     
+    # Get user's payment status
+    c.execute('SELECT is_paid FROM users WHERE id = ?', (session['user_id'],))
+    payment_result = c.fetchone()
+    user_payment_status = payment_result[0] if payment_result else False
+    
     conn.close()
-    return render_template('dashboard.html', user_videos=user_videos)
+    return render_template('dashboard.html', user_videos=user_videos, is_paid=user_payment_status)
 
 @app.route('/videos')
 def videos():
@@ -568,6 +606,7 @@ def videos():
 
 @app.route('/upload_video', methods=['GET', 'POST'])
 @login_required
+@paid_required
 def upload_video():
     if request.method == 'POST':
         try:
@@ -1156,6 +1195,57 @@ def account_settings():
 def upgrade():
     """Upgrade/subscription page"""
     return render_template('upgrade.html')
+
+@app.route('/create_payment_intent', methods=['POST'])
+@login_required
+def create_payment_intent():
+    """Create a Stripe payment intent for subscription"""
+    try:
+        import stripe
+        stripe.api_key = app.config['STRIPE_SECRET_KEY']
+        
+        intent = stripe.PaymentIntent.create(
+            amount=app.config['PARTICIPANT_FEE'],  # $25 in cents
+            currency='usd',
+            metadata={
+                'user_id': session['user_id'],
+                'type': 'subscription'
+            }
+        )
+        
+        return jsonify({
+            'client_secret': intent.client_secret
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+
+@app.route('/confirm_payment', methods=['POST'])
+@login_required
+def confirm_payment():
+    """Confirm payment and update user status"""
+    try:
+        import stripe
+        stripe.api_key = app.config['STRIPE_SECRET_KEY']
+        
+        payment_intent_id = request.json.get('payment_intent_id')
+        
+        # Verify payment intent
+        intent = stripe.PaymentIntent.retrieve(payment_intent_id)
+        
+        if intent.status == 'succeeded' and intent.metadata.get('user_id') == str(session['user_id']):
+            # Update user payment status
+            conn = sqlite3.connect('tournament.db')
+            c = conn.cursor()
+            c.execute('UPDATE users SET is_paid = TRUE WHERE id = ?', (session['user_id'],))
+            conn.commit()
+            conn.close()
+            
+            return jsonify({'success': True, 'message': 'Payment successful! You can now upload videos.'})
+        else:
+            return jsonify({'success': False, 'message': 'Payment verification failed'}), 400
+            
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 400
 
 @app.route('/delete_video/<int:video_id>', methods=['POST'])
 @login_required

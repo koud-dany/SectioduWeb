@@ -48,24 +48,38 @@
                     <span class="badge bg-primary px-3 py-2 rounded-pill">Most Popular</span>
                 </div>
                 <div class="card-header bg-primary text-white text-center py-4">
-                    <h4 class="fw-bold">Pro</h4>
-                    <h2>$9.99<span class="fs-6 opacity-75">/month</span></h2>
+                    <h4 class="fw-bold">Premium</h4>
+                    <h2>$25<span class="fs-6 opacity-75">/one-time</span></h2>
                 </div>
                 <div class="card-body">
                     <ul class="list-unstyled">
-                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Upload up to 50 videos</li>
+                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Unlimited video uploads</li>
                         <li class="mb-2"><i class="fas fa-check text-success me-2"></i>HD video quality</li>
-                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Advanced analytics</li>
-                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Custom thumbnails</li>
-                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Priority support</li>
+                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Basic analytics</li>
+                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Community features</li>
+                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Standard support</li>
                         <li class="mb-2"><i class="fas fa-check text-success me-2"></i>No ads</li>
-                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Channel customization</li>
+                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Profile customization</li>
                     </ul>
                 </div>
                 <div class="card-footer bg-primary text-center">
-                    <button class="btn btn-warning rounded-pill px-4 fw-bold" onclick="upgradeToPro()">
-                        <i class="fas fa-rocket me-2"></i>Upgrade to Pro
+                    <button class="btn btn-warning rounded-pill px-4 fw-bold" id="upgrade-btn" onclick="initializePayment()">
+                        <i class="fas fa-rocket me-2"></i>Upgrade Now
                     </button>
+                    
+                    <!-- Stripe Payment Form (hidden by default) -->
+                    <div id="payment-form" style="display: none;" class="mt-3">
+                        <div id="card-element" class="form-control mb-3">
+                            <!-- Stripe Elements will create form elements here -->
+                        </div>
+                        <button id="submit-payment" class="btn btn-success rounded-pill px-4">
+                            <i class="fas fa-credit-card me-2"></i>Pay $25
+                        </button>
+                        <button id="cancel-payment" class="btn btn-outline-secondary rounded-pill px-4 ms-2" onclick="cancelPayment()">
+                            Cancel
+                        </button>
+                        <div id="payment-errors" role="alert" class="text-danger mt-2"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -208,11 +222,112 @@
 {% endblock %}
 
 {% block scripts %}
+<!-- Stripe JavaScript -->
+<script src="https://js.stripe.com/v3/"></script>
 <script>
-function upgradeToPro() {
-    // This would integrate with Stripe or another payment processor
-    alert('Pro upgrade functionality would redirect to payment processing. This is a demo version.');
-    // window.location.href = '/payment/pro';
+// Initialize Stripe
+const stripe = Stripe('{{ config.STRIPE_PUBLISHABLE_KEY }}');
+const elements = stripe.elements();
+
+// Create an instance of the card Element
+const cardElement = elements.create('card', {
+    style: {
+        base: {
+            fontSize: '16px',
+            color: '#424770',
+            '::placeholder': {
+                color: '#aab7c4',
+            },
+        },
+    },
+});
+
+let paymentFormMounted = false;
+
+function initializePayment() {
+    const paymentForm = document.getElementById('payment-form');
+    const upgradeBtn = document.getElementById('upgrade-btn');
+    
+    paymentForm.style.display = 'block';
+    upgradeBtn.style.display = 'none';
+    
+    if (!paymentFormMounted) {
+        cardElement.mount('#card-element');
+        paymentFormMounted = true;
+    }
+    
+    setupPaymentHandler();
+}
+
+function cancelPayment() {
+    const paymentForm = document.getElementById('payment-form');
+    const upgradeBtn = document.getElementById('upgrade-btn');
+    
+    paymentForm.style.display = 'none';
+    upgradeBtn.style.display = 'block';
+}
+
+function setupPaymentHandler() {
+    const submitButton = document.getElementById('submit-payment');
+    const errorElement = document.getElementById('payment-errors');
+    
+    submitButton.addEventListener('click', async function(event) {
+        event.preventDefault();
+        
+        submitButton.disabled = true;
+        submitButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
+        
+        // Create payment intent
+        try {
+            const response = await fetch('/create_payment_intent', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+            
+            const { client_secret } = await response.json();
+            
+            // Confirm payment with Stripe
+            const { error, paymentIntent } = await stripe.confirmCardPayment(client_secret, {
+                payment_method: {
+                    card: cardElement,
+                }
+            });
+            
+            if (error) {
+                errorElement.textContent = error.message;
+                submitButton.disabled = false;
+                submitButton.innerHTML = '<i class="fas fa-credit-card me-2"></i>Pay $25';
+            } else {
+                // Payment succeeded, confirm with server
+                const confirmResponse = await fetch('/confirm_payment', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        payment_intent_id: paymentIntent.id
+                    })
+                });
+                
+                const result = await confirmResponse.json();
+                
+                if (result.success) {
+                    alert('Payment successful! You can now upload videos.');
+                    window.location.href = '/upload_video';
+                } else {
+                    errorElement.textContent = result.message || 'Payment verification failed';
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = '<i class="fas fa-credit-card me-2"></i>Pay $25';
+                }
+            }
+        } catch (err) {
+            errorElement.textContent = 'An error occurred: ' + err.message;
+            submitButton.disabled = false;
+            submitButton.innerHTML = '<i class="fas fa-credit-card me-2"></i>Pay $25';
+        }
+    });
 }
 
 function upgradeToEnterprise() {
