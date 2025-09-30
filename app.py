@@ -2304,17 +2304,41 @@ def debug_stripe_config():
     if not session.get('user_id'):
         return jsonify({'error': 'Not authenticated'}), 401
     
+    stripe_pub_key = app.config.get('STRIPE_PUBLISHABLE_KEY', '')
+    stripe_secret_key = app.config.get('STRIPE_SECRET_KEY', '')
+    
     config_info = {
-        'stripe_publishable_key_present': bool(app.config.get('STRIPE_PUBLISHABLE_KEY')),
-        'stripe_secret_key_present': bool(app.config.get('STRIPE_SECRET_KEY')),
-        'stripe_publishable_key_length': len(app.config.get('STRIPE_PUBLISHABLE_KEY', '')),
-        'stripe_secret_key_length': len(app.config.get('STRIPE_SECRET_KEY', '')),
+        'stripe_publishable_key_present': bool(stripe_pub_key),
+        'stripe_secret_key_present': bool(stripe_secret_key),
+        'stripe_publishable_key_length': len(stripe_pub_key),
+        'stripe_secret_key_length': len(stripe_secret_key),
+        'stripe_publishable_key_preview': stripe_pub_key[:12] + '...' if stripe_pub_key else 'None',
+        'stripe_secret_key_preview': stripe_secret_key[:12] + '...' if stripe_secret_key else 'None',
         'participant_fee': app.config.get('PARTICIPANT_FEE'),
         'environment_variables': {
-            'STRIPE_PUBLISHABLE_KEY': bool(os.environ.get('STRIPE_PUBLISHABLE_KEY')),
-            'STRIPE_SECRET_KEY': bool(os.environ.get('STRIPE_SECRET_KEY')),
-        }
+            'STRIPE_PUBLISHABLE_KEY_env': bool(os.environ.get('STRIPE_PUBLISHABLE_KEY')),
+            'STRIPE_SECRET_KEY_env': bool(os.environ.get('STRIPE_SECRET_KEY')),
+            'SECRET_KEY_env': bool(os.environ.get('SECRET_KEY')),
+        },
+        'environment_variables_preview': {
+            'STRIPE_PUBLISHABLE_KEY_env': (os.environ.get('STRIPE_PUBLISHABLE_KEY', '')[:12] + '...') if os.environ.get('STRIPE_PUBLISHABLE_KEY') else 'None',
+            'STRIPE_SECRET_KEY_env': (os.environ.get('STRIPE_SECRET_KEY', '')[:12] + '...') if os.environ.get('STRIPE_SECRET_KEY') else 'None',
+        },
+        'stripe_config_file_available': False,  # Will be False on Render since it's in .gitignore
     }
+    
+    # Try to check if stripe_config.py is available
+    try:
+        from stripe_config import get_stripe_keys
+        config_info['stripe_config_file_available'] = True
+        local_keys = get_stripe_keys()
+        config_info['stripe_config_file_keys'] = {
+            'publishable_present': bool(local_keys.get('publishable_key')),
+            'secret_present': bool(local_keys.get('secret_key')),
+        }
+    except ImportError:
+        config_info['stripe_config_file_available'] = False
+        config_info['stripe_config_file_keys'] = 'ImportError - file not available'
     
     return jsonify(config_info)
 
