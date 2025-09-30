@@ -1102,7 +1102,7 @@ def like_comment():
         user_disliked = c.fetchone() is not None
         
         conn.commit()
-        conn.close()
+        conn.close();
         
         return jsonify({
             'success': True,
@@ -1172,7 +1172,7 @@ def dislike_comment():
         user_disliked = c.fetchone() is not None
         
         conn.commit()
-        conn.close()
+        conn.close();
         
         return jsonify({
             'success': True,
@@ -1198,7 +1198,7 @@ def get_replies(comment_id):
                      ORDER BY c.comment_date ASC''', (comment_id,))
         replies = c.fetchall()
         
-        conn.close()
+        conn.close();
         
         # Format replies for JSON response
         formatted_replies = []
@@ -1273,7 +1273,7 @@ def profile(username=None):
                  LIMIT 5''', (user_id,))
     recent_comments = c.fetchall()
     
-    conn.close()
+    conn.close();
     
     return render_template('profile.html', 
                          profile_user=user,
@@ -1322,7 +1322,7 @@ def edit_profile():
                          (first_name, last_name, bio, location, website, session['user_id']))
             
             conn.commit()
-            conn.close()
+            conn.close();
             
             flash('Profile updated successfully!', 'success')
             return redirect(url_for('profile'))
@@ -1338,7 +1338,7 @@ def edit_profile():
     c.execute('''SELECT username, email, first_name, last_name, bio, location, 
                         website, avatar_filename FROM users WHERE id = ?''', (session['user_id'],))
     user = c.fetchone()
-    conn.close()
+    conn.close();
     
     return render_template('edit_profile.html', user=user)
 
@@ -1377,7 +1377,7 @@ def account_settings():
                 else:
                     flash('Current password is incorrect', 'error')
                 
-                conn.close()
+                conn.close();
             except Exception as e:
                 flash('Error changing password. Please try again.', 'error')
             
@@ -1391,7 +1391,7 @@ def account_settings():
                 c.execute('UPDATE users SET is_blocked = 1, block_reason = ? WHERE id = ?', 
                          ('Account deactivated by user', session['user_id']))
                 conn.commit()
-                conn.close()
+                conn.close();
                 flash('Account has been deactivated', 'info')
                 return redirect(url_for('logout'))
             except Exception as e:
@@ -1405,7 +1405,7 @@ def account_settings():
                         website, avatar_filename, registration_date FROM users WHERE id = ?''', 
              (session['user_id'],))
     user = c.fetchone()
-    conn.close()
+    conn.close();
     
     return render_template('account_settings.html', user=user)
 
@@ -1421,7 +1421,16 @@ def create_payment_intent():
     """Create a Stripe payment intent for subscription"""
     try:
         import stripe
-        stripe.api_key = app.config['STRIPE_SECRET_KEY']
+        
+        # Check if Stripe keys are configured
+        stripe_secret = app.config.get('STRIPE_SECRET_KEY')
+        if not stripe_secret or stripe_secret == '':
+            return jsonify({'error': 'Stripe configuration missing. Please check environment variables.'}), 500
+        
+        stripe.api_key = stripe_secret
+        
+        print(f"Creating payment intent for user {session['user_id']}")
+        print(f"Amount: {app.config['PARTICIPANT_FEE']} cents")
         
         intent = stripe.PaymentIntent.create(
             amount=app.config['PARTICIPANT_FEE'],  # $35 in cents
@@ -1432,11 +1441,23 @@ def create_payment_intent():
             }
         )
         
+        print(f"Payment intent created: {intent.id}")
+        
         return jsonify({
             'client_secret': intent.client_secret
         })
+    except stripe.error.InvalidRequestError as e:
+        print(f"Stripe Invalid Request Error: {str(e)}")
+        return jsonify({'error': f'Invalid request: {str(e)}'}), 400
+    except stripe.error.AuthenticationError as e:
+        print(f"Stripe Authentication Error: {str(e)}")
+        return jsonify({'error': 'Stripe authentication failed. Please check API keys.'}), 401
+    except stripe.error.StripeError as e:
+        print(f"Stripe Error: {str(e)}")
+        return jsonify({'error': f'Stripe error: {str(e)}'}), 400
     except Exception as e:
-        return jsonify({'error': str(e)}), 400
+        print(f"General Error: {str(e)}")
+        return jsonify({'error': f'Server error: {str(e)}'}), 500
 
 @app.route('/confirm_payment', methods=['POST'])
 @login_required
@@ -1444,12 +1465,25 @@ def confirm_payment():
     """Confirm payment and update user status"""
     try:
         import stripe
-        stripe.api_key = app.config['STRIPE_SECRET_KEY']
+        
+        # Check if Stripe keys are configured
+        stripe_secret = app.config.get('STRIPE_SECRET_KEY')
+        if not stripe_secret or stripe_secret == '':
+            return jsonify({'success': False, 'error': 'Stripe configuration missing.'}), 500
+        
+        stripe.api_key = stripe_secret
         
         payment_intent_id = request.json.get('payment_intent_id')
+        if not payment_intent_id:
+            return jsonify({'success': False, 'message': 'Payment intent ID missing'}), 400
+        
+        print(f"Confirming payment intent: {payment_intent_id}")
         
         # Verify payment intent
         intent = stripe.PaymentIntent.retrieve(payment_intent_id)
+        
+        print(f"Payment intent status: {intent.status}")
+        print(f"Payment intent metadata: {intent.metadata}")
         
         if intent.status == 'succeeded' and intent.metadata.get('user_id') == str(session['user_id']):
             # Update user payment status
@@ -1457,14 +1491,26 @@ def confirm_payment():
             c = conn.cursor()
             c.execute('UPDATE users SET is_paid = TRUE WHERE id = ?', (session['user_id'],))
             conn.commit()
-            conn.close()
+            conn.close();
+            
+            print(f"User {session['user_id']} payment status updated to paid")
             
             return jsonify({'success': True, 'message': 'Payment successful! You can now upload videos.'})
         else:
             return jsonify({'success': False, 'message': 'Payment verification failed'}), 400
             
+    except stripe.error.InvalidRequestError as e:
+        print(f"Stripe Invalid Request Error: {str(e)}")
+        return jsonify({'success': False, 'error': f'Invalid request: {str(e)}'}), 400
+    except stripe.error.AuthenticationError as e:
+        print(f"Stripe Authentication Error: {str(e)}")
+        return jsonify({'success': False, 'error': 'Stripe authentication failed.'}), 401
+    except stripe.error.StripeError as e:
+        print(f"Stripe Error: {str(e)}")
+        return jsonify({'success': False, 'error': f'Stripe error: {str(e)}'}), 400
     except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 400
+        print(f"General Error: {str(e)}")
+        return jsonify({'success': False, 'error': f'Server error: {str(e)}'}), 500
 
 @app.route('/delete_video/<int:video_id>', methods=['POST'])
 @login_required
@@ -1498,7 +1544,7 @@ def delete_video(video_id):
         c.execute('DELETE FROM videos WHERE id = ?', (video_id,))
         
         conn.commit()
-        conn.close()
+        conn.close();
         
         flash('Video deleted successfully!', 'success')
         return redirect(url_for('dashboard'))
@@ -1524,7 +1570,7 @@ def deactivate_account():
         # Deactivate account
         c.execute('UPDATE users SET is_deactivated = TRUE WHERE id = ?', (session['user_id'],))
         conn.commit()
-        conn.close()
+        conn.close();
         
         # Clear session
         session.clear()
@@ -1570,7 +1616,7 @@ def delete_account():
         c.execute('DELETE FROM users WHERE id = ?', (user_id,))
         
         conn.commit()
-        conn.close()
+        conn.close();
         
         # Clear session
         session.clear()
@@ -1650,7 +1696,7 @@ def admin_dashboard():
                  ORDER BY v.upload_date ASC LIMIT 10''')
     pending_videos = c.fetchall()
     
-    conn.close()
+    conn.close();
     
     return render_template('admin/dashboard.html', 
                          stats=stats, 
@@ -1696,7 +1742,7 @@ def admin_users():
                   LIMIT ? OFFSET ?''', params + [per_page, offset])
     users = c.fetchall()
     
-    conn.close()
+    conn.close();
     
     total_pages = (total_users + per_page - 1) // per_page
     
@@ -1749,7 +1795,7 @@ def admin_videos():
                   LIMIT ? OFFSET ?''', params + [per_page, offset])
     videos = c.fetchall()
     
-    conn.close()
+    conn.close();
     
     total_pages = (total_videos + per_page - 1) // per_page
     
@@ -1806,7 +1852,7 @@ def admin_block_user(user_id):
             flash(f'User {username} has been unblocked', 'success')
     
     conn.commit()
-    conn.close()
+    conn.close();
     return redirect(url_for('admin_users'))
 
 @app.route('/admin/user/<int:user_id>/admin', methods=['POST'])
@@ -1838,7 +1884,7 @@ def admin_toggle_admin(user_id):
             flash(f'Revoked admin privileges from {username}', 'success')
     
     conn.commit()
-    conn.close()
+    conn.close();
     return redirect(url_for('admin_users'))
 
 @app.route('/admin/video/<int:video_id>/approve', methods=['POST'])
@@ -1911,7 +1957,7 @@ def admin_block_video(video_id):
             flash(f'Video "{title}" has been unblocked', 'success')
     
     conn.commit()
-    conn.close()
+    conn.close();
     return redirect(request.referrer or url_for('admin_videos'))
 
 @app.route('/admin/messages', methods=['GET', 'POST'])
@@ -1959,7 +2005,7 @@ def admin_messages():
             message_count += 1
         
         conn.commit()
-        conn.close()
+        conn.close();
         
         log_admin_action(session['user_id'], 'send_message', 'message', None, 
                         f"Sent message '{subject}' to {message_count} users")
@@ -1983,7 +2029,7 @@ def admin_messages():
     c.execute('SELECT id, username, email FROM users ORDER BY username')
     users = c.fetchall()
     
-    conn.close()
+    conn.close();
     
     return render_template('admin/messages.html', recent_messages=recent_messages, users=users)
 
@@ -2026,7 +2072,7 @@ def admin_reports():
         pending_count = resolved_count = dismissed_count = total_count = 0
     
     finally:
-        conn.close()
+        conn.close();
     
     return render_template('admin/reports.html', 
                          reports=reports, 
@@ -2082,7 +2128,7 @@ def admin_analytics():
         active_users = []
     
     finally:
-        conn.close()
+        conn.close();
     
     return render_template('admin/analytics.html', 
                          user_growth=user_growth,
@@ -2115,7 +2161,7 @@ def admin_handle_report(report_id):
     report = c.fetchone()
     
     conn.commit()
-    conn.close()
+    conn.close();
     
     if report:
         log_admin_action(session['user_id'], f'{status}_report', 'report', report_id, 
@@ -2147,7 +2193,7 @@ def admin_delete_user(user_id):
     
     if not user:
         flash('User not found.', 'error')
-        conn.close()
+        conn.close();
         return redirect(url_for('admin_users'))
     
     username = user[0]
@@ -2181,17 +2227,17 @@ def admin_delete_user(user_id):
         c.execute('DELETE FROM videos WHERE user_id = ?', (user_id,))
         c.execute('DELETE FROM users WHERE id = ?', (user_id,))
         
-        conn.commit()
+        conn.commit();
         
         log_admin_action(session['user_id'], 'delete_user', 'user', user_id, 
                         f"Permanently deleted user account: {username}")
         flash(f'User account "{username}" has been permanently deleted.', 'success')
         
     except Exception as e:
-        conn.rollback()
+        conn.rollback();
         flash(f'Error deleting user account: {str(e)}', 'error')
     finally:
-        conn.close()
+        conn.close();
     
     return redirect(url_for('admin_users'))
 
@@ -2208,7 +2254,7 @@ def admin_delete_video(video_id):
     
     if not video:
         flash('Video not found.', 'error')
-        conn.close()
+        conn.close();
         return redirect(url_for('admin_videos'))
     
     title, filename, user_id = video
@@ -2226,17 +2272,17 @@ def admin_delete_video(video_id):
         c.execute('DELETE FROM reports WHERE reported_type = "video" AND reported_id = ?', (video_id,))
         c.execute('DELETE FROM videos WHERE id = ?', (video_id,))
         
-        conn.commit()
+        conn.commit();
         
         log_admin_action(session['user_id'], 'delete_video', 'video', video_id, 
                         f"Permanently deleted video: {title}")
         flash(f'Video "{title}" has been permanently deleted.', 'success')
         
     except Exception as e:
-        conn.rollback()
+        conn.rollback();
         flash(f'Error deleting video: {str(e)}', 'error')
     finally:
-        conn.close()
+        conn.close();
     
     return redirect(url_for('admin_videos'))
 
@@ -2250,6 +2296,27 @@ def admin_settings():
         return redirect(url_for('admin_settings'))
     
     return render_template('admin/settings.html')
+
+@app.route('/debug/stripe_config')
+@login_required
+def debug_stripe_config():
+    """Debug route to check Stripe configuration (remove in production)"""
+    if not session.get('user_id'):
+        return jsonify({'error': 'Not authenticated'}), 401
+    
+    config_info = {
+        'stripe_publishable_key_present': bool(app.config.get('STRIPE_PUBLISHABLE_KEY')),
+        'stripe_secret_key_present': bool(app.config.get('STRIPE_SECRET_KEY')),
+        'stripe_publishable_key_length': len(app.config.get('STRIPE_PUBLISHABLE_KEY', '')),
+        'stripe_secret_key_length': len(app.config.get('STRIPE_SECRET_KEY', '')),
+        'participant_fee': app.config.get('PARTICIPANT_FEE'),
+        'environment_variables': {
+            'STRIPE_PUBLISHABLE_KEY': bool(os.environ.get('STRIPE_PUBLISHABLE_KEY')),
+            'STRIPE_SECRET_KEY': bool(os.environ.get('STRIPE_SECRET_KEY')),
+        }
+    }
+    
+    return jsonify(config_info)
 
 if __name__ == '__main__':
     init_db()

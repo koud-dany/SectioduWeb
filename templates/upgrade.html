@@ -183,8 +183,16 @@
 <!-- Stripe JavaScript -->
 <script src="https://js.stripe.com/v3/"></script>
 <script>
-// Initialize Stripe
-const stripe = Stripe('{{ config.STRIPE_PUBLISHABLE_KEY }}');
+// Initialize Stripe - Get key from Flask config
+const stripePublishableKey = '{{ config.STRIPE_PUBLISHABLE_KEY }}';
+console.log('Stripe key loaded:', stripePublishableKey ? 'Key present' : 'Key missing');
+
+if (!stripePublishableKey || stripePublishableKey === '') {
+    console.error('Stripe publishable key is missing!');
+    alert('Payment system configuration error. Please contact support.');
+}
+
+const stripe = Stripe(stripePublishableKey);
 const elements = stripe.elements();
 
 // Create an instance of the card Element
@@ -244,7 +252,19 @@ function setupPaymentHandler() {
                 },
             });
             
-            const { client_secret } = await response.json();
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to create payment intent');
+            }
+            
+            const responseData = await response.json();
+            console.log('Payment intent response:', responseData);
+            
+            if (!responseData.client_secret) {
+                throw new Error('No client secret received from server');
+            }
+            
+            const { client_secret } = responseData;
             
             // Confirm payment with Stripe
             const { error, paymentIntent } = await stripe.confirmCardPayment(client_secret, {

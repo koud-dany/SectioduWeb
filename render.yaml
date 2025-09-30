@@ -10,7 +10,11 @@ services:
         value: 3.11.0
       - key: FLASK_ENV
         value: production
+      - key: SECRET_KEY
+        sync: false
       - key: STRIPE_PUBLISHABLE_KEY
         sync: false
       - key: STRIPE_SECRET_KEY
         sync: false
+      - key: DATABASE_URL
+        value: sqlite:///tournament.db
