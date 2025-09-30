@@ -1,70 +1,75 @@
 {% extends "base.html" %}
 
-{% block title %}Upgrade to Premium - SectionduWeb{% endblock %}
+{% block title %}Join Video Tournament - SectionduWeb{% endblock %}
 
 {% block content %}
 <div class="container-fluid py-5" style="max-width: 1000px; margin: 0 auto;">
     <!-- Header -->
     <div class="text-center mb-5">
         <h1 class="display-4 fw-bold text-primary mb-3">
-            <i class="fas fa-crown text-warning me-3"></i>
-            Upgrade to Premium
+            <i class="fas fa-trophy text-warning me-3"></i>
+            Join Video Tournament
         </h1>
-        <p class="lead text-muted">Unlock exclusive features and take your video experience to the next level</p>
+        <p class="lead text-muted">Pay the one-time entry fee to participate in our exciting video tournament</p>
     </div>
     
-    <!-- Pricing Plans -->
-    <div class="row g-4 mb-5">
-        <!-- Free Plan -->
-        <div class="col-lg-4">
+    <!-- Tournament Entry -->
+    <div class="row justify-content-center mb-5">
+        <!-- Free Features -->
+        <div class="col-lg-5">
             <div class="card h-100 border-0 shadow">
                 <div class="card-header bg-light text-center py-4">
-                    <h4 class="fw-bold">Free</h4>
-                    <h2 class="text-primary">$0<span class="fs-6 text-muted">/month</span></h2>
+                    <h4 class="fw-bold">Free Account</h4>
+                    <h2 class="text-success">$0<span class="fs-6 text-muted"> - No Payment Required</span></h2>
                 </div>
                 <div class="card-body">
                     <ul class="list-unstyled">
-                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Upload up to 5 videos</li>
-                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Basic video quality</li>
-                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Community features</li>
-                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Standard support</li>
-                        <li class="mb-2"><i class="fas fa-times text-muted me-2"></i>HD video uploads</li>
-                        <li class="mb-2"><i class="fas fa-times text-muted me-2"></i>Advanced analytics</li>
-                        <li class="mb-2"><i class="fas fa-times text-muted me-2"></i>Priority support</li>
+                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Watch all tournament videos</li>
+                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Comment on videos</li>
+                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Like/dislike videos</li>
+                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Vote on tournament entries</li>
+                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>View leaderboards</li>
+                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Create profile</li>
+                        <li class="mb-2"><i class="fas fa-times text-muted me-2"></i>Upload videos to tournament</li>
                     </ul>
                 </div>
                 <div class="card-footer bg-light text-center">
                     <button class="btn btn-outline-secondary rounded-pill px-4" disabled>
-                        Current Plan
+                        <i class="fas fa-user me-2"></i>Current Status
                     </button>
                 </div>
             </div>
         </div>
         
-        <!-- Pro Plan -->
-        <div class="col-lg-4">
-            <div class="card h-100 border-primary shadow-lg position-relative">
+        <!-- Tournament Participant -->
+        <div class="col-lg-5">
+            <div class="card h-100 border-warning shadow-lg position-relative">
                 <div class="position-absolute top-0 start-50 translate-middle">
-                    <span class="badge bg-primary px-3 py-2 rounded-pill">Most Popular</span>
+                    <span class="badge bg-warning text-dark px-3 py-2 rounded-pill fw-bold">
+                        <i class="fas fa-trophy me-1"></i>Tournament Entry
+                    </span>
                 </div>
-                <div class="card-header bg-primary text-white text-center py-4">
-                    <h4 class="fw-bold">Premium</h4>
-                    <h2>$25<span class="fs-6 opacity-75">/one-time</span></h2>
+                <div class="card-header bg-gradient text-white text-center py-4" style="background: linear-gradient(135deg, #ffd700, #ffb347);">
+                    <h4 class="fw-bold text-dark">Tournament Participant</h4>
+                    <h2 class="text-dark">$35<span class="fs-6 opacity-75"> - One-time Payment</span></h2>
                 </div>
                 <div class="card-body">
+                    <div class="text-center mb-3">
+                        <p class="text-muted">Everything in Free Account, PLUS:</p>
+                    </div>
                     <ul class="list-unstyled">
-                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Unlimited video uploads</li>
-                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>HD video quality</li>
-                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Basic analytics</li>
-                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Community features</li>
-                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Standard support</li>
-                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>No ads</li>
-                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Profile customization</li>
+                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i><strong>Upload videos to tournament</strong></li>
+                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Compete for prizes and recognition</li>
+                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>HD video quality uploads</li>
+                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Enhanced profile features</li>
+                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Tournament performance analytics</li>
+                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Priority listing in leaderboards</li>
+                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Unlimited video submissions</li>
                     </ul>
                 </div>
-                <div class="card-footer bg-primary text-center">
-                    <button class="btn btn-warning rounded-pill px-4 fw-bold" id="upgrade-btn" onclick="initializePayment()">
-                        <i class="fas fa-rocket me-2"></i>Upgrade Now
+                <div class="card-footer text-center" style="background: linear-gradient(135deg, #ffd700, #ffb347);">
+                    <button class="btn btn-dark rounded-pill px-5 fw-bold py-2" id="upgrade-btn" onclick="initializePayment()">
+                        <i class="fas fa-trophy me-2"></i>Join Tournament Now
                     </button>
                     
                     <!-- Stripe Payment Form (hidden by default) -->
@@ -73,7 +78,7 @@
                             <!-- Stripe Elements will create form elements here -->
                         </div>
                         <button id="submit-payment" class="btn btn-success rounded-pill px-4">
-                            <i class="fas fa-credit-card me-2"></i>Pay $25
+                            <i class="fas fa-credit-card me-2"></i>Pay $35
                         </button>
                         <button id="cancel-payment" class="btn btn-outline-secondary rounded-pill px-4 ms-2" onclick="cancelPayment()">
                             Cancel
@@ -83,86 +88,39 @@
                 </div>
             </div>
         </div>
-        
-        <!-- Enterprise Plan -->
-        <div class="col-lg-4">
-            <div class="card h-100 border-0 shadow">
-                <div class="card-header bg-dark text-white text-center py-4">
-                    <h4 class="fw-bold">Enterprise</h4>
-                    <h2>$29.99<span class="fs-6 opacity-75">/month</span></h2>
-                </div>
-                <div class="card-body">
-                    <ul class="list-unstyled">
-                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Unlimited video uploads</li>
-                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>4K video quality</li>
-                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Advanced analytics & insights</li>
-                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>White-label branding</li>
-                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>24/7 premium support</li>
-                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>API access</li>
-                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Team collaboration</li>
-                    </ul>
-                </div>
-                <div class="card-footer bg-dark text-center">
-                    <button class="btn btn-outline-light rounded-pill px-4" onclick="upgradeToEnterprise()">
-                        <i class="fas fa-building me-2"></i>Contact Sales
-                    </button>
-                </div>
-            </div>
-        </div>
     </div>
     
-    <!-- Features Comparison -->
+    <!-- Tournament Information -->
     <div class="card shadow-sm border-0 mb-5">
-        <div class="card-header bg-light">
-            <h4 class="mb-0">
-                <i class="fas fa-comparison text-primary me-2"></i>
-                Feature Comparison
+        <div class="card-header bg-gradient text-white" style="background: linear-gradient(135deg, #667eea, #764ba2);">
+            <h4 class="mb-0 text-center">
+                <i class="fas fa-info-circle me-2"></i>
+                Why Join the Tournament?
             </h4>
         </div>
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover mb-0">
-                    <thead class="bg-light">
-                        <tr>
-                            <th class="border-0">Features</th>
-                            <th class="border-0 text-center">Free</th>
-                            <th class="border-0 text-center text-primary">Pro</th>
-                            <th class="border-0 text-center">Enterprise</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><i class="fas fa-video text-primary me-2"></i>Video Uploads</td>
-                            <td class="text-center">5 videos</td>
-                            <td class="text-center text-primary fw-bold">50 videos</td>
-                            <td class="text-center">Unlimited</td>
-                        </tr>
-                        <tr>
-                            <td><i class="fas fa-hd-video text-primary me-2"></i>Video Quality</td>
-                            <td class="text-center">Standard</td>
-                            <td class="text-center text-primary fw-bold">HD (1080p)</td>
-                            <td class="text-center">4K Ultra HD</td>
-                        </tr>
-                        <tr>
-                            <td><i class="fas fa-chart-bar text-primary me-2"></i>Analytics</td>
-                            <td class="text-center">Basic</td>
-                            <td class="text-center text-primary fw-bold">Advanced</td>
-                            <td class="text-center">Professional</td>
-                        </tr>
-                        <tr>
-                            <td><i class="fas fa-palette text-primary me-2"></i>Customization</td>
-                            <td class="text-center"><i class="fas fa-times text-muted"></i></td>
-                            <td class="text-center text-primary"><i class="fas fa-check"></i></td>
-                            <td class="text-center"><i class="fas fa-check text-success"></i></td>
-                        </tr>
-                        <tr>
-                            <td><i class="fas fa-headset text-primary me-2"></i>Support</td>
-                            <td class="text-center">Standard</td>
-                            <td class="text-center text-primary fw-bold">Priority</td>
-                            <td class="text-center">24/7 Premium</td>
-                        </tr>
-                    </tbody>
-                </table>
+        <div class="card-body">
+            <div class="row g-4">
+                <div class="col-md-4 text-center">
+                    <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                        <i class="fas fa-trophy text-primary fa-2x"></i>
+                    </div>
+                    <h5>Compete for Prizes</h5>
+                    <p class="text-muted">Show your creative skills and compete with other participants for amazing prizes and recognition.</p>
+                </div>
+                <div class="col-md-4 text-center">
+                    <div class="bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                        <i class="fas fa-users text-success fa-2x"></i>
+                    </div>
+                    <h5>Build Your Audience</h5>
+                    <p class="text-muted">Get your videos seen by thousands of viewers and build a following in our active community.</p>
+                </div>
+                <div class="col-md-4 text-center">
+                    <div class="bg-warning bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                        <i class="fas fa-star text-warning fa-2x"></i>
+                    </div>
+                    <h5>Gain Recognition</h5>
+                    <p class="text-muted">Top performers are featured on our leaderboards and get special recognition badges.</p>
+                </div>
             </div>
         </div>
     </div>
@@ -180,12 +138,12 @@
                 <div class="accordion-item border-0 mb-3">
                     <h2 class="accordion-header">
                         <button class="accordion-button bg-light" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
-                            Can I cancel my subscription anytime?
+                            Is this a one-time payment or recurring subscription?
                         </button>
                     </h2>
                     <div id="faq1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
                         <div class="accordion-body">
-                            Yes, you can cancel your subscription at any time. You'll continue to have access to premium features until the end of your billing period.
+                            This is a <strong>one-time payment of $35</strong> to join the video tournament. There are no recurring charges or monthly fees. Once you pay, you can participate in the tournament indefinitely.
                         </div>
                     </div>
                 </div>
@@ -193,12 +151,12 @@
                 <div class="accordion-item border-0 mb-3">
                     <h2 class="accordion-header">
                         <button class="accordion-button collapsed bg-light" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
-                            What happens to my videos if I downgrade?
+                            What can I do with a free account?
                         </button>
                     </h2>
                     <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
                         <div class="accordion-body">
-                            Your existing videos will remain on the platform, but you won't be able to upload new videos beyond the free plan limits until you upgrade again.
+                            With a free account, you can watch all tournament videos, comment, like/dislike, vote on submissions, view leaderboards, and create your profile. You just cannot upload videos to compete in the tournament.
                         </div>
                     </div>
                 </div>
@@ -206,12 +164,12 @@
                 <div class="accordion-item border-0">
                     <h2 class="accordion-header">
                         <button class="accordion-button collapsed bg-light" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
-                            Do you offer discounts for annual subscriptions?
+                            How many videos can I upload after paying?
                         </button>
                     </h2>
                     <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
                         <div class="accordion-body">
-                            Yes! Annual subscriptions come with a 20% discount. Contact our sales team for more information about annual pricing.
+                            There's no limit! Once you pay the $35 tournament entry fee, you can upload unlimited videos to compete in the tournament. All uploads are in HD quality.
                         </div>
                     </div>
                 </div>
@@ -298,7 +256,7 @@ function setupPaymentHandler() {
             if (error) {
                 errorElement.textContent = error.message;
                 submitButton.disabled = false;
-                submitButton.innerHTML = '<i class="fas fa-credit-card me-2"></i>Pay $25';
+                submitButton.innerHTML = '<i class="fas fa-credit-card me-2"></i>Pay $35';
             } else {
                 // Payment succeeded, confirm with server
                 const confirmResponse = await fetch('/confirm_payment', {
@@ -319,22 +277,18 @@ function setupPaymentHandler() {
                 } else {
                     errorElement.textContent = result.message || 'Payment verification failed';
                     submitButton.disabled = false;
-                    submitButton.innerHTML = '<i class="fas fa-credit-card me-2"></i>Pay $25';
+                    submitButton.innerHTML = '<i class="fas fa-credit-card me-2"></i>Pay $35';
                 }
             }
         } catch (err) {
             errorElement.textContent = 'An error occurred: ' + err.message;
             submitButton.disabled = false;
-            submitButton.innerHTML = '<i class="fas fa-credit-card me-2"></i>Pay $25';
+            submitButton.innerHTML = '<i class="fas fa-credit-card me-2"></i>Pay $35';
         }
     });
 }
 
-function upgradeToEnterprise() {
-    // This would open a contact form or redirect to sales
-    alert('Enterprise upgrade would redirect to a contact form or sales page.');
-    // window.location.href = '/contact-sales';
-}
+// Tournament entry payment completed successfully
 
 // Animate pricing cards on load
 document.addEventListener('DOMContentLoaded', function() {

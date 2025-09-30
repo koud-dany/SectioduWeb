@@ -1,8 +1,83 @@
 {% extends "base.html" %}
 
-{% block title %}{{ video[1] }} - SectionduWeb{% endblock %}
+{% block title %}{{ video[2] }} - SectionduWeb{% endblock %}
 
 {% block content %}
+<style>
+/* Fix for thumbs up icon visibility */
+.like-btn i, .dislike-btn i {
+    display: inline-block !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    font-weight: normal !important;
+    min-width: 16px;
+    text-align: center;
+}
+
+.like-btn:hover i, .dislike-btn:hover i {
+    transform: scale(1.1);
+    transition: transform 0.2s ease;
+}
+
+/* Ensure proper icon states */
+.like-btn[data-liked="true"] i {
+    color: #0d6efd !important;
+    font-weight: 900 !important;
+}
+
+.dislike-btn[data-disliked="true"] i {
+    color: #dc3545 !important;
+    font-weight: 900 !important;
+}
+
+.like-btn[data-liked="true"] {
+    border-color: #0d6efd !important;
+}
+
+.dislike-btn[data-disliked="true"] {
+    border-color: #dc3545 !important;
+}
+
+/* Comment action buttons styling */
+.comment-actions .btn {
+    border: 1px solid #dee2e6;
+    background: transparent;
+    transition: all 0.2s ease;
+}
+
+.comment-actions .btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* YouTube-style video info styling */
+.video-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    line-height: 1.3;
+    margin-bottom: 0.75rem;
+}
+
+.video-stats {
+    font-size: 0.9rem;
+    color: #606060;
+}
+
+.channel-info {
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 1rem;
+    margin-bottom: 1rem;
+}
+
+.description-section {
+    background-color: #f9f9f9;
+    border-radius: 12px;
+    padding: 1rem;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+</style>
+
 <div class="container-fluid py-4" style="max-width: 1280px; margin: 0 auto;">
     <div class="row g-4">
         <!-- Main Video Content (YouTube-style main column) -->
@@ -27,64 +102,88 @@
                 </div>
             </div>
             
-            <!-- Enhanced Video Info Card -->
+            <!-- Enhanced Video Info Card (YouTube-style) -->
             <div class="card shadow-sm border-0 mb-4">
                 <div class="card-body p-4">
-                    <h2 class="card-title mb-3 text-primary">{{ video[1] }}</h2>
-                    <div class="d-flex justify-content-between align-items-start mb-4">
-                        <div class="d-flex align-items-center">
-                            <div class="position-relative me-3">
-                                {% if video[9] %}
-                                <img src="{{ url_for('static', filename='avatars/' + video[9]) }}" 
-                                     alt="{{ video[8] }}'s Avatar" 
-                                     class="rounded-circle shadow border border-2 border-light"
-                                     style="width: 50px; height: 50px; object-fit: cover;">
-                                {% else %}
-                                <div class="bg-gradient bg-primary rounded-circle d-flex align-items-center justify-content-center shadow border border-2 border-light" 
-                                     style="width: 50px; height: 50px;">
-                                    <i class="fas fa-user text-white fs-5"></i>
-                                </div>
-                                {% endif %}
-                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-success">
-                                    <i class="fas fa-check"></i>
-                                </span>
-                            </div>
-                            <div>
-                                <h5 class="mb-1">
-                                    <a href="{{ url_for('profile', username=video[8]) }}" class="text-decoration-none text-dark">
-                                        {{ video[8] }}
-                                    </a>
-                                </h5>
-                                <small class="text-muted">
-                                    <i class="fas fa-calendar-alt me-1"></i>{{ video[5] }}
+                    <!-- Video Title (YouTube-style) -->
+                    <h1 class="h3 fw-bold mb-3 text-dark">{{ video[2] }}</h1>
+                    
+                    <!-- Video Stats and Actions Row -->
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="d-flex align-items-center gap-3">
+                            <span class="text-muted">
+                                <i class="fas fa-eye me-1"></i>{{ video[14] if video[14] else 0 }} views
+                                {% if not session.user_id %}
+                                <small class="text-muted ms-2" title="Sign in to contribute to view counts">
+                                    <i class="fas fa-info-circle"></i>
                                 </small>
-                            </div>
+                                {% endif %}
+                            </span>
+                            <span class="text-muted">•</span>
+                            <span class="text-muted">{{ video[5] }}</span>
                         </div>
-                        <div class="text-end">
-                            <div class="card bg-warning bg-opacity-10 border-warning border-opacity-50 p-3 rounded-3">
-                                <div class="d-flex align-items-center justify-content-center mb-2">
-                                    {% for i in range(5) %}
-                                        {% if i < video[7]|round %}
-                                        <i class="fas fa-star text-warning fs-6"></i>
-                                        {% else %}
-                                        <i class="far fa-star text-muted fs-6"></i>
-                                        {% endif %}
-                                    {% endfor %}
-                                </div>
-                                <div class="text-center">
-                                    <h4 class="text-warning mb-1">{{ "%.1f"|format(video[7] if video[7] is not none else 0.0) }}</h4>
-                                    <small class="text-muted">{{ video[6] }} votes</small>
-                                </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="d-flex align-items-center">
+                                {% for i in range(5) %}
+                                    {% if i < video[7]|round %}
+                                    <i class="fas fa-star text-warning" style="font-size: 0.9rem;"></i>
+                                    {% else %}
+                                    <i class="far fa-star text-muted" style="font-size: 0.9rem;"></i>
+                                    {% endif %}
+                                {% endfor %}
+                                <span class="ms-2 fw-semibold">{{ "%.1f"|format(video[7] if video[7] is not none else 0.0) }}</span>
+                                <span class="text-muted ms-1">({{ video[6] }} votes)</span>
                             </div>
                         </div>
                     </div>
                     
-                    {% if video[2] %}
-                    <div class="alert alert-info border-0 rounded-3 bg-info bg-opacity-10">
-                        <h6 class="alert-heading">
-                            <i class="fas fa-info-circle me-2"></i>Description
-                        </h6>
-                        <p class="mb-0">{{ video[2] }}</p>
+                    <!-- Channel Info (YouTube-style) -->
+                    <div class="d-flex align-items-center mb-3 pb-3 border-bottom">
+                        <div class="d-flex align-items-center flex-grow-1">
+                            <div class="position-relative me-3">
+                                {% if video[-1] %}
+                                <img src="{{ url_for('static', filename='avatars/' + video[-1]) }}" 
+                                     alt="{{ video[-2] }}'s Avatar" 
+                                     class="rounded-circle shadow"
+                                     style="width: 48px; height: 48px; object-fit: cover;">
+                                {% else %}
+                                <div class="bg-gradient bg-primary rounded-circle d-flex align-items-center justify-content-center shadow" 
+                                     style="width: 48px; height: 48px;">
+                                    <i class="fas fa-user text-white"></i>
+                                </div>
+                                {% endif %}
+                                <span class="position-absolute bottom-0 end-0 bg-success rounded-circle border border-2 border-white" 
+                                      style="width: 16px; height: 16px;" title="Verified Creator">
+                                </span>
+                            </div>
+                            <div>
+                                <h6 class="mb-0 fw-semibold">
+                                    <a href="{{ url_for('profile', username=video[-2]) }}" class="text-decoration-none text-dark">
+                                        {{ video[-2] }}
+                                    </a>
+                                </h6>
+                                <small class="text-muted">Content Creator</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Description Section (YouTube-style expandable) -->
+                    {% if video[3] %}
+                    <div class="bg-light rounded-3 p-3">
+                        <div class="description-content">
+                            <p class="mb-2 lh-base">{{ video[3][:200] }}{% if video[3]|length > 200 %}...{% endif %}</p>
+                            {% if video[3]|length > 200 %}
+                            <button class="btn btn-link p-0 text-decoration-none fw-semibold" onclick="expandDescription()">
+                                Show more
+                            </button>
+                            {% endif %}
+                        </div>
+                        <div class="description-full d-none">
+                            <p class="mb-2 lh-base">{{ video[3] }}</p>
+                            <button class="btn btn-link p-0 text-decoration-none fw-semibold" onclick="collapseDescription()">
+                                Show less
+                            </button>
+                        </div>
                     </div>
                     {% endif %}
                 </div>
@@ -142,13 +241,13 @@
                     <!-- YouTube-Style Comments -->
                     <div class="comment-section" id="comments-container">
                         {% for comment in comments %}
-                        <div class="comment-thread mb-4" data-comment-id="{{ comment[3] }}">
+                        <div class="comment-thread mb-4" data-comment-id="{{ comment.id }}">
                             <!-- Main Comment -->
                             <div class="d-flex comment-item">
                                 <div class="flex-shrink-0 me-3">
-                                    {% if comment[5] %}
-                                    <img src="{{ url_for('static', filename='avatars/' + comment[5]) }}" 
-                                         alt="{{ comment[2] }}'s Avatar" 
+                                    {% if comment.avatar %}
+                                    <img src="{{ url_for('static', filename='avatars/' + comment.avatar) }}" 
+                                         alt="{{ comment.username }}'s Avatar" 
                                          class="rounded-circle shadow-sm border border-2 border-light"
                                          style="width: 40px; height: 40px; object-fit: cover;">
                                     {% else %}
@@ -161,43 +260,43 @@
                                 <div class="flex-grow-1">
                                     <div class="d-flex align-items-center mb-1">
                                         <h6 class="mb-0 me-2">
-                                            <a href="{{ url_for('profile', username=comment[2]) }}" class="text-decoration-none text-dark">
-                                                {{ comment[2] }}
+                                            <a href="{{ url_for('profile', username=comment.username) }}" class="text-decoration-none text-dark">
+                                                {{ comment.username }}
                                             </a>
                                         </h6>
-                                        <small class="text-muted">{{ comment[1] }}</small>
+                                        <small class="text-muted">{{ comment.date }}</small>
                                     </div>
-                                    <p class="mb-2">{{ comment[0] }}</p>
+                                    <p class="mb-2">{{ comment.text }}</p>
                                     
                                     <!-- Comment Actions (YouTube-style) -->
-                                    <div class="d-flex align-items-center gap-3">
-                                        <button class="btn btn-sm btn-outline-secondary like-btn" data-comment-id="{{ comment[3] }}" data-liked="false">
-                                            <i class="far fa-thumbs-up"></i>
-                                            <span class="like-count">0</span>
+                                    <div class="comment-actions d-flex align-items-center gap-3">
+                                        <button class="btn btn-sm btn-outline-secondary like-btn" data-comment-id="{{ comment.id }}" data-liked="{{ 'true' if comment.user_liked else 'false' }}" title="Like">
+                                            <i class="{% if comment.user_liked %}fas fa-thumbs-up{% else %}far fa-thumbs-up{% endif %} me-1"></i>
+                                            <span class="like-count">{{ comment.like_count }}</span>
                                         </button>
-                                        <button class="btn btn-sm btn-outline-secondary dislike-btn" data-comment-id="{{ comment[3] }}" data-disliked="false">
-                                            <i class="far fa-thumbs-down"></i>
+                                        <button class="btn btn-sm btn-outline-secondary dislike-btn" data-comment-id="{{ comment.id }}" data-disliked="{{ 'true' if comment.user_disliked else 'false' }}" title="Dislike">
+                                            <i class="{% if comment.user_disliked %}fas fa-thumbs-down{% else %}far fa-thumbs-down{% endif %}"></i>
                                         </button>
                                         {% if session.user_id %}
-                                        <button class="btn btn-sm btn-link text-muted reply-btn" data-comment-id="{{ comment[3] }}">
+                                        <button class="btn btn-sm btn-link text-muted reply-btn" data-comment-id="{{ comment.id }}">
                                             <i class="fas fa-reply me-1"></i>Reply
                                         </button>
                                         {% endif %}
                                     </div>
                                     
                                     <!-- Show Replies Button (YouTube-style) -->
-                                    {% if comment[4] > 0 %}
-                                    <div class="show-replies-btn mt-2" data-comment-id="{{ comment[3] }}">
-                                        <button class="btn btn-sm btn-link text-primary fw-bold p-0 toggle-replies d-flex align-items-center" data-comment-id="{{ comment[3] }}" data-expanded="false" style="text-decoration: none;">
+                                    {% if comment.reply_count > 0 %}
+                                    <div class="show-replies-btn mt-2" data-comment-id="{{ comment.id }}">
+                                        <button class="btn btn-sm btn-link text-primary fw-bold p-0 toggle-replies d-flex align-items-center" data-comment-id="{{ comment.id }}" data-expanded="false" style="text-decoration: none;">
                                             <i class="fas fa-chevron-down me-2"></i>
-                                            <span class="reply-count-text">{{ comment[4] }} replies</span>
+                                            <span class="reply-count-text">{{ comment.reply_count }} replies</span>
                                         </button>
                                     </div>
                                     {% endif %}
                                     
                                     <!-- Reply Form (Hidden by default) -->
                                     {% if session.user_id %}
-                                    <div class="reply-form mt-3" style="display: none;" data-comment-id="{{ comment[3] }}">
+                                    <div class="reply-form mt-3" style="display: none;" data-comment-id="{{ comment.id }}">
                                         <div class="d-flex">
                                             <div class="me-2">
                                                 <div class="bg-success rounded-circle d-flex align-items-center justify-content-center" 
@@ -210,7 +309,7 @@
                                                           rows="2" placeholder="Add a reply..."></textarea>
                                                 <div class="d-flex justify-content-end mt-2 gap-2">
                                                     <button class="btn btn-sm btn-outline-secondary cancel-reply">Cancel</button>
-                                                    <button class="btn btn-sm btn-primary submit-reply" data-video-id="{{ video[0] }}" data-parent-id="{{ comment[3] }}">Reply</button>
+                                                    <button class="btn btn-sm btn-primary submit-reply" data-video-id="{{ video[0] }}" data-parent-id="{{ comment.id }}">Reply</button>
                                                 </div>
                                             </div>
                                         </div>
@@ -218,7 +317,7 @@
                                     {% endif %}
                                     
                                     <!-- Replies Container (Initially hidden) -->
-                                    <div class="replies-container mt-3" data-comment-id="{{ comment[3] }}" style="display: none;">
+                                    <div class="replies-container mt-3" data-comment-id="{{ comment.id }}" style="display: none;">
                                         <!-- Replies will be loaded here -->
                                     </div>
                                 </div>
@@ -319,7 +418,7 @@
                                     </h6>
                                     <div class="d-flex align-items-center mb-1">
                                         {% if top_video[6] %}
-                                        <img src="{{ url_for('static', filename='uploads/' + top_video[6]) }}" 
+                                        <img src="{{ url_for('static', filename='avatars/' + top_video[6]) }}" 
                                              alt="{{ top_video[5] }}'s profile picture" 
                                              class="rounded-circle me-2" 
                                              style="width: 20px; height: 20px; object-fit: cover; border: 1px solid #dee2e6;">
@@ -662,6 +761,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Reply button handlers
     document.addEventListener('click', function(e) {
+        // Show/hide reply form
         if (e.target.closest('.reply-btn')) {
             const commentId = e.target.closest('.reply-btn').dataset.commentId;
             const replyForm = document.querySelector(`.reply-form[data-comment-id="${commentId}"]`);
@@ -679,26 +779,10 @@ document.addEventListener('DOMContentLoaded', function() {
             replyForm.style.display = 'none';
             replyForm.querySelector('.reply-input').value = '';
         }
-    });
-
-    // Handle keyboard shortcuts for reply inputs
-    document.addEventListener('keydown', function(e) {
-        if (e.target.classList.contains('reply-input')) {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                if (e.target.value.trim()) {
-                    const submitBtn = e.target.closest('.reply-form').querySelector('.submit-reply');
-                    submitBtn.click();
-                }
-            }
-            if (e.key === 'Escape') {
-                const cancelBtn = e.target.closest('.reply-form').querySelector('.cancel-reply');
-                cancelBtn.click();
-            }
-        }
         
         // Submit reply
         if (e.target.closest('.submit-reply')) {
+            e.preventDefault();
             const btn = e.target.closest('.submit-reply');
             const replyForm = btn.closest('.reply-form');
             const replyText = replyForm.querySelector('.reply-input').value.trim();
@@ -706,6 +790,10 @@ document.addEventListener('DOMContentLoaded', function() {
             const parentId = btn.dataset.parentId;
             
             if (!replyText) return;
+            
+            // Disable button during submission
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Replying...';
             
             fetch('/add_comment', {
                 method: 'POST',
@@ -733,9 +821,34 @@ document.addEventListener('DOMContentLoaded', function() {
             .catch(error => {
                 console.error('Error:', error);
                 alert('Error adding reply');
+            })
+            .finally(() => {
+                // Re-enable button
+                btn.disabled = false;
+                btn.innerHTML = 'Reply';
             });
         }
-        
+    });
+
+    // Handle keyboard shortcuts for reply inputs
+    document.addEventListener('keydown', function(e) {
+        if (e.target.classList.contains('reply-input')) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                if (e.target.value.trim()) {
+                    const submitBtn = e.target.closest('.reply-form').querySelector('.submit-reply');
+                    submitBtn.click();
+                }
+            }
+            if (e.key === 'Escape') {
+                const cancelBtn = e.target.closest('.reply-form').querySelector('.cancel-reply');
+                cancelBtn.click();
+            }
+        }
+    });
+
+    // Handle toggle replies and like buttons
+    document.addEventListener('click', function(e) {
         // Toggle replies dropdown
         if (e.target.closest('.toggle-replies')) {
             const btn = e.target.closest('.toggle-replies');
@@ -799,12 +912,37 @@ document.addEventListener('DOMContentLoaded', function() {
                     btn.dataset.liked = data.user_liked;
                     btn.querySelector('.like-count').textContent = data.like_count;
                     const icon = btn.querySelector('i');
+                    
                     if (data.user_liked) {
-                        icon.className = 'fas fa-thumbs-up text-primary';
-                        btn.classList.add('text-primary');
+                        // Liked state - solid blue icon
+                        icon.className = 'fas fa-thumbs-up me-1';
+                        icon.style.color = '#0d6efd'; // Bootstrap primary blue
+                        btn.classList.remove('btn-outline-secondary');
+                        btn.classList.add('btn-outline-primary');
                     } else {
-                        icon.className = 'far fa-thumbs-up';
-                        btn.classList.remove('text-primary');
+                        // Unliked state - regular gray icon
+                        icon.className = 'far fa-thumbs-up me-1';
+                        icon.style.color = '#6c757d'; // Bootstrap secondary gray
+                        btn.classList.remove('btn-outline-primary');
+                        btn.classList.add('btn-outline-secondary');
+                    }
+                    
+                    // Update dislike button state (mutual exclusivity handled by backend)
+                    const dislikeBtn = btn.parentElement.querySelector('.dislike-btn');
+                    if (dislikeBtn) {
+                        dislikeBtn.dataset.disliked = data.user_disliked;
+                        const dislikeIcon = dislikeBtn.querySelector('i');
+                        if (data.user_disliked) {
+                            dislikeIcon.className = 'fas fa-thumbs-down';
+                            dislikeIcon.style.color = '#dc3545';
+                            dislikeBtn.classList.remove('btn-outline-secondary');
+                            dislikeBtn.classList.add('btn-outline-danger');
+                        } else {
+                            dislikeIcon.className = 'far fa-thumbs-down';
+                            dislikeIcon.style.color = '#6c757d';
+                            dislikeBtn.classList.remove('btn-outline-danger');
+                            dislikeBtn.classList.add('btn-outline-secondary');
+                        }
                     }
                 } else {
                     alert(data.message);
@@ -812,6 +950,75 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .catch(error => {
                 console.error('Error:', error);
+                // Revert button state on error
+                const icon = btn.querySelector('i');
+                icon.style.color = '#6c757d';
+                icon.className = 'far fa-thumbs-up me-1';
+            });
+        }
+        
+        // Dislike button handler
+        if (e.target.closest('.dislike-btn')) {
+            const btn = e.target.closest('.dislike-btn');
+            const commentId = btn.dataset.commentId;
+            const isDisliked = btn.dataset.disliked === 'true';
+            const action = isDisliked ? 'undislike' : 'dislike';
+            
+            fetch('/dislike_comment', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `comment_id=${commentId}&action=${action}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    btn.dataset.disliked = data.user_disliked;
+                    const icon = btn.querySelector('i');
+                    
+                    if (data.user_disliked) {
+                        // Disliked state - solid red icon
+                        icon.className = 'fas fa-thumbs-down';
+                        icon.style.color = '#dc3545'; // Bootstrap danger red
+                        btn.classList.remove('btn-outline-secondary');
+                        btn.classList.add('btn-outline-danger');
+                    } else {
+                        // Not disliked state - regular gray icon
+                        icon.className = 'far fa-thumbs-down';
+                        icon.style.color = '#6c757d'; // Bootstrap secondary gray
+                        btn.classList.remove('btn-outline-danger');
+                        btn.classList.add('btn-outline-secondary');
+                    }
+                    
+                    // Update like button state (mutual exclusivity handled by backend)
+                    const likeBtn = btn.parentElement.querySelector('.like-btn');
+                    if (likeBtn) {
+                        likeBtn.dataset.liked = data.user_liked;
+                        likeBtn.querySelector('.like-count').textContent = data.like_count;
+                        const likeIcon = likeBtn.querySelector('i');
+                        if (data.user_liked) {
+                            likeIcon.className = 'fas fa-thumbs-up me-1';
+                            likeIcon.style.color = '#0d6efd';
+                            likeBtn.classList.remove('btn-outline-secondary');
+                            likeBtn.classList.add('btn-outline-primary');
+                        } else {
+                            likeIcon.className = 'far fa-thumbs-up me-1';
+                            likeIcon.style.color = '#6c757d';
+                            likeBtn.classList.remove('btn-outline-primary');
+                            likeBtn.classList.add('btn-outline-secondary');
+                        }
+                    }
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                // Revert button state on error
+                const icon = btn.querySelector('i');
+                icon.style.color = '#6c757d';
+                icon.className = 'far fa-thumbs-down';
             });
         }
     });
@@ -902,12 +1109,12 @@ document.addEventListener('DOMContentLoaded', function() {
                         </div>
                         <p class="mb-2">${comment.text}</p>
                         
-                        <div class="d-flex align-items-center gap-3">
-                            <button class="btn btn-sm btn-outline-secondary like-btn" data-comment-id="${comment.id}" data-liked="false">
-                                <i class="far fa-thumbs-up"></i>
+                        <div class="comment-actions d-flex align-items-center gap-3">
+                            <button class="btn btn-sm btn-outline-secondary like-btn" data-comment-id="${comment.id}" data-liked="false" title="Like">
+                                <i class="far fa-thumbs-up me-1"></i>
                                 <span class="like-count">0</span>
                             </button>
-                            <button class="btn btn-sm btn-outline-secondary dislike-btn" data-comment-id="${comment.id}">
+                            <button class="btn btn-sm btn-outline-secondary dislike-btn" data-comment-id="${comment.id}" data-disliked="false" title="Dislike">
                                 <i class="far fa-thumbs-down"></i>
                             </button>
                             <button class="btn btn-sm btn-link text-muted reply-btn" data-comment-id="${comment.id}">
@@ -965,12 +1172,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                     <p class="mb-2" style="font-size: 0.9rem;">${comment.text}</p>
                     
-                    <div class="d-flex align-items-center gap-3">
-                        <button class="btn btn-sm btn-outline-secondary like-btn" data-comment-id="${comment.id}" data-liked="false">
-                            <i class="far fa-thumbs-up"></i>
+                    <div class="comment-actions d-flex align-items-center gap-3">
+                        <button class="btn btn-sm btn-outline-secondary like-btn" data-comment-id="${comment.id}" data-liked="false" title="Like">
+                            <i class="far fa-thumbs-up me-1"></i>
                             <span class="like-count">0</span>
                         </button>
-                        <button class="btn btn-sm btn-outline-secondary dislike-btn" data-comment-id="${comment.id}">
+                        <button class="btn btn-sm btn-outline-secondary dislike-btn" data-comment-id="${comment.id}" data-disliked="false" title="Dislike">
                             <i class="far fa-thumbs-down"></i>
                         </button>
                     </div>
@@ -1010,77 +1217,18 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 3000);
     }
 
-    // Enhanced like/dislike functionality
-    document.addEventListener('click', function(e) {
-        if (e.target.closest('.like-btn')) {
-            const btn = e.target.closest('.like-btn');
-            const commentId = btn.dataset.commentId;
-            const isLiked = btn.dataset.liked === 'true';
-            
-            // Toggle like state
-            if (isLiked) {
-                btn.dataset.liked = 'false';
-                btn.classList.remove('btn-primary');
-                btn.classList.add('btn-outline-secondary');
-                btn.querySelector('i').className = 'far fa-thumbs-up';
-                // Decrease count
-                const countSpan = btn.querySelector('.like-count');
-                const currentCount = parseInt(countSpan.textContent) || 0;
-                countSpan.textContent = Math.max(0, currentCount - 1);
-            } else {
-                btn.dataset.liked = 'true';
-                btn.classList.remove('btn-outline-secondary');
-                btn.classList.add('btn-primary');
-                btn.querySelector('i').className = 'fas fa-thumbs-up';
-                // Increase count
-                const countSpan = btn.querySelector('.like-count');
-                const currentCount = parseInt(countSpan.textContent) || 0;
-                countSpan.textContent = currentCount + 1;
-                
-                // Remove dislike if active
-                const dislikeBtn = btn.parentNode.querySelector('.dislike-btn');
-                if (dislikeBtn && dislikeBtn.dataset.disliked === 'true') {
-                    dislikeBtn.dataset.disliked = 'false';
-                    dislikeBtn.classList.remove('btn-danger');
-                    dislikeBtn.classList.add('btn-outline-secondary');
-                    dislikeBtn.querySelector('i').className = 'far fa-thumbs-down';
-                }
-            }
-            
-            // Send to server (implement if needed)
-            // fetch('/like_comment', { ... })
-        }
-        
-        if (e.target.closest('.dislike-btn')) {
-            const btn = e.target.closest('.dislike-btn');
-            const isDisliked = btn.dataset.disliked === 'true';
-            
-            // Toggle dislike state
-            if (isDisliked) {
-                btn.dataset.disliked = 'false';
-                btn.classList.remove('btn-danger');
-                btn.classList.add('btn-outline-secondary');
-                btn.querySelector('i').className = 'far fa-thumbs-down';
-            } else {
-                btn.dataset.disliked = 'true';
-                btn.classList.remove('btn-outline-secondary');
-                btn.classList.add('btn-danger');
-                btn.querySelector('i').className = 'fas fa-thumbs-down';
-                
-                // Remove like if active
-                const likeBtn = btn.parentNode.querySelector('.like-btn');
-                if (likeBtn && likeBtn.dataset.liked === 'true') {
-                    likeBtn.dataset.liked = 'false';
-                    likeBtn.classList.remove('btn-primary');
-                    likeBtn.classList.add('btn-outline-secondary');
-                    likeBtn.querySelector('i').className = 'far fa-thumbs-up';
-                    const countSpan = likeBtn.querySelector('.like-count');
-                    const currentCount = parseInt(countSpan.textContent) || 0;
-                    countSpan.textContent = Math.max(0, currentCount - 1);
-                }
-            }
-        }
-    });
+
 });
+
+// Description expand/collapse functionality (YouTube-style)
+function expandDescription() {
+    document.querySelector('.description-content').classList.add('d-none');
+    document.querySelector('.description-full').classList.remove('d-none');
+}
+
+function collapseDescription() {
+    document.querySelector('.description-content').classList.remove('d-none');
+    document.querySelector('.description-full').classList.add('d-none');
+}
 </script>
 {% endblock %}

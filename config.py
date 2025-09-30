@@ -24,4 +24,4 @@ class Config:
     
     # App Settings
     VIDEOS_PER_PAGE = 12
-    PARTICIPANT_FEE = 2500  # $25 in cents
+    PARTICIPANT_FEE = 3500  # $35 in cents

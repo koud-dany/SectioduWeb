@@ -3,6 +3,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 import sqlite3
 import os
+import stripe
 from datetime import datetime
 from functools import wraps
 import traceback
@@ -269,6 +270,19 @@ def init_db():
         FOREIGN KEY (created_by) REFERENCES users (id)
     )''')
     
+    # Video views table - Track unique views per user per video
+    c.execute('''CREATE TABLE IF NOT EXISTS video_views (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER,
+        video_id INTEGER,
+        view_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        ip_address TEXT,
+        user_agent TEXT,
+        FOREIGN KEY (user_id) REFERENCES users (id),
+        FOREIGN KEY (video_id) REFERENCES videos (id),
+        UNIQUE(user_id, video_id)
+    )''')
+    
     # Create default admin user if not exists
     c.execute('SELECT COUNT(*) FROM users WHERE is_admin = 1')
     admin_count = c.fetchone()[0]
@@ -335,7 +349,7 @@ def paid_required(f):
         conn.close()
         
         if not user or not user[0]:
-            flash('Payment required to access this feature. Please upgrade your account.', 'warning')
+            flash('Tournament entry fee required to upload videos. Please pay the $35 participant fee.', 'warning')
             return redirect(url_for('upgrade'))
         
         return f(*args, **kwargs)
@@ -513,7 +527,7 @@ def register():
             c.execute('INSERT INTO users (username, email, password_hash, is_paid) VALUES (?, ?, ?, ?)',
                      (username, email, password_hash, False))
             conn.commit()
-            flash('Registration successful! Please upgrade to premium to start uploading videos.')
+            flash('Registration successful! Please pay the $35 tournament entry fee to start uploading videos.')
             return redirect(url_for('login'))
         except sqlite3.IntegrityError:
             flash('Username or email already exists')
@@ -763,21 +777,96 @@ def video_detail(video_id):
         conn.close()
         return redirect(url_for('videos'))
     
+    # Track video view (YouTube-style: one view per user account)
+    if 'user_id' in session:
+        user_id = session['user_id']
+        # Check if user has already viewed this video
+        c.execute('SELECT id FROM video_views WHERE user_id = ? AND video_id = ?', (user_id, video_id))
+        existing_view = c.fetchone()
+        
+        if not existing_view:
+            # Record new view
+            user_agent = request.headers.get('User-Agent', '')
+            ip_address = request.environ.get('HTTP_X_FORWARDED_FOR', request.environ.get('REMOTE_ADDR', ''))
+            
+            try:
+                c.execute('''INSERT INTO video_views (user_id, video_id, ip_address, user_agent) 
+                           VALUES (?, ?, ?, ?)''', (user_id, video_id, ip_address, user_agent))
+                
+                # Update video view count based on unique views
+                c.execute('SELECT COUNT(*) FROM video_views WHERE video_id = ?', (video_id,))
+                unique_view_count = c.fetchone()[0]
+                
+                c.execute('UPDATE videos SET view_count = ? WHERE id = ?', (unique_view_count, video_id))
+                conn.commit()
+            except sqlite3.IntegrityError:
+                # Handle race condition - view already recorded
+                pass
+    else:
+        # For anonymous users, track by session to prevent multiple views in same session
+        # This is a compromise - we can't perfectly track anonymous users like YouTube does
+        session_key = f'viewed_video_{video_id}'
+        if session_key not in session:
+            session[session_key] = True
+            # For anonymous users, we don't add to video_views table 
+            # Only logged-in users contribute to the official view count
+            # This encourages user registration while preventing spam
+    
     # Convert video tuple to list and ensure numeric fields are properly typed
     video = list(video_raw)
     # video[6] = total_votes, video[7] = average_rating
     video[6] = int(video[6]) if video[6] is not None else 0  # total_votes
     video[7] = float(video[7]) if video[7] is not None else 0.0  # average_rating
     
-    # Get comments with reply counts and user avatars (only parent comments, not replies)
+    # Get comments with reply counts, like counts, and user like status (only parent comments, not replies)
     c.execute('''SELECT c.comment, c.comment_date, u.username, c.id,
                         (SELECT COUNT(*) FROM comments replies 
                          WHERE replies.parent_id = c.id) as reply_count,
-                        u.avatar_filename
+                        u.avatar_filename,
+                        (SELECT COUNT(*) FROM comment_likes 
+                         WHERE comment_id = c.id) as like_count
                  FROM comments c JOIN users u ON c.user_id = u.id 
                  WHERE c.video_id = ? AND c.parent_id IS NULL
                  ORDER BY c.comment_date DESC''', (video_id,))
-    comments = c.fetchall()
+    comments_raw = c.fetchall()
+    
+    # Add user like and dislike status to each comment
+    comments = []
+    for comment in comments_raw:
+        comment_dict = {
+            'text': comment[0],
+            'date': comment[1], 
+            'username': comment[2],
+            'id': comment[3],
+            'reply_count': comment[4],
+            'avatar': comment[5],
+            'like_count': comment[6],
+            'user_liked': False,
+            'user_disliked': False
+        }
+        
+        # Check if current user liked or disliked this comment
+        if 'user_id' in session:
+            c.execute('SELECT id FROM comment_likes WHERE comment_id = ? AND user_id = ?', 
+                     (comment[3], session['user_id']))
+            comment_dict['user_liked'] = c.fetchone() is not None
+            
+            # Create comment_dislikes table if it doesn't exist
+            c.execute('''CREATE TABLE IF NOT EXISTS comment_dislikes (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                comment_id INTEGER,
+                user_id INTEGER,
+                dislike_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (comment_id) REFERENCES comments (id),
+                FOREIGN KEY (user_id) REFERENCES users (id),
+                UNIQUE(comment_id, user_id)
+            )''')
+            
+            c.execute('SELECT id FROM comment_dislikes WHERE comment_id = ? AND user_id = ?', 
+                     (comment[3], session['user_id']))
+            comment_dict['user_disliked'] = c.fetchone() is not None
+            
+        comments.append(comment_dict)
     
     # Get top-rated videos for sidebar (only approved and unblocked videos)
     c.execute('''SELECT v.id, v.title, v.filename, v.total_votes, v.average_rating, u.username, u.avatar_filename 
@@ -795,8 +884,55 @@ def video_detail(video_id):
         # avatar_filename (index 6) stays as is
         top_videos.append(tuple(video_list))
     
+    # Get current user avatar for comment form
+    current_user_avatar = None
+    if 'user_id' in session:
+        c.execute('SELECT avatar_filename FROM users WHERE id = ?', (session['user_id'],))
+        avatar_result = c.fetchone()
+        current_user_avatar = avatar_result[0] if avatar_result else None
+    
     conn.close()
-    return render_template('video_detail.html', video=video, comments=comments, top_videos=top_videos)
+    return render_template('video_detail.html', video=video, comments=comments, top_videos=top_videos, current_user_avatar=current_user_avatar)
+
+@app.route('/admin/recalculate_views')
+def recalculate_views():
+    """Admin function to recalculate view counts for all videos based on unique user views"""
+    if 'user_id' not in session:
+        flash('Access denied')
+        return redirect(url_for('login'))
+    
+    conn = sqlite3.connect('tournament.db')
+    c = conn.cursor()
+    
+    # Check if user is admin
+    c.execute('SELECT is_admin FROM users WHERE id = ?', (session['user_id'],))
+    result = c.fetchone()
+    if not result or not result[0]:
+        flash('Admin access required')
+        conn.close()
+        return redirect(url_for('index'))
+    
+    # Get all videos
+    c.execute('SELECT id FROM videos')
+    videos = c.fetchall()
+    
+    updated_count = 0
+    for video in videos:
+        video_id = video[0]
+        
+        # Count unique views for this video
+        c.execute('SELECT COUNT(*) FROM video_views WHERE video_id = ?', (video_id,))
+        unique_views = c.fetchone()[0]
+        
+        # Update video view count
+        c.execute('UPDATE videos SET view_count = ? WHERE id = ?', (unique_views, video_id))
+        updated_count += 1
+    
+    conn.commit()
+    conn.close()
+    
+    flash(f'Successfully recalculated view counts for {updated_count} videos')
+    return redirect(url_for('admin_dashboard'))
 
 @app.route('/leaderboard')
 def leaderboard():
@@ -941,8 +1077,11 @@ def like_comment():
         existing_like = c.fetchone()
         
         if action == 'like' and not existing_like:
-            # Add like
+            # Add like and remove any existing dislike
             c.execute('''INSERT INTO comment_likes (comment_id, user_id) VALUES (?, ?)''', 
+                      (comment_id, session['user_id']))
+            # Remove dislike if it exists (mutual exclusivity)
+            c.execute('''DELETE FROM comment_dislikes WHERE comment_id = ? AND user_id = ?''', 
                       (comment_id, session['user_id']))
         elif action == 'unlike' and existing_like:
             # Remove like
@@ -953,17 +1092,97 @@ def like_comment():
         c.execute('''SELECT COUNT(*) FROM comment_likes WHERE comment_id = ?''', (comment_id,))
         like_count = c.fetchone()[0]
         
+        # Check if user still has like/dislike after the operation
+        c.execute('''SELECT id FROM comment_likes WHERE comment_id = ? AND user_id = ?''', 
+                  (comment_id, session['user_id']))
+        user_liked = c.fetchone() is not None
+        
+        c.execute('''SELECT id FROM comment_dislikes WHERE comment_id = ? AND user_id = ?''', 
+                  (comment_id, session['user_id']))
+        user_disliked = c.fetchone() is not None
+        
         conn.commit()
         conn.close()
         
         return jsonify({
             'success': True,
             'like_count': like_count,
-            'user_liked': action == 'like'
+            'user_liked': user_liked,
+            'user_disliked': user_disliked
         })
         
     except Exception as e:
         return jsonify({'success': False, 'message': 'Error updating like'})
+
+@app.route('/dislike_comment', methods=['POST'])
+def dislike_comment():
+    if 'user_id' not in session:
+        return jsonify({'success': False, 'message': 'Please log in to dislike comments'})
+    
+    comment_id = request.form.get('comment_id')
+    action = request.form.get('action')  # 'dislike' or 'undislike'
+    
+    if not comment_id or not action:
+        return jsonify({'success': False, 'message': 'Missing required fields'})
+    
+    try:
+        conn = sqlite3.connect('tournament.db')
+        c = conn.cursor()
+        
+        # Create comment_dislikes table if it doesn't exist
+        c.execute('''CREATE TABLE IF NOT EXISTS comment_dislikes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            comment_id INTEGER,
+            user_id INTEGER,
+            dislike_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (comment_id) REFERENCES comments (id),
+            FOREIGN KEY (user_id) REFERENCES users (id),
+            UNIQUE(comment_id, user_id)
+        )''')
+        
+        # Check if user already disliked this comment
+        c.execute('''SELECT id FROM comment_dislikes 
+                     WHERE comment_id = ? AND user_id = ?''', 
+                  (comment_id, session['user_id']))
+        existing_dislike = c.fetchone()
+        
+        if action == 'dislike' and not existing_dislike:
+            # Add dislike and remove any existing like
+            c.execute('''INSERT INTO comment_dislikes (comment_id, user_id) VALUES (?, ?)''', 
+                      (comment_id, session['user_id']))
+            # Remove like if it exists (mutual exclusivity)
+            c.execute('''DELETE FROM comment_likes WHERE comment_id = ? AND user_id = ?''', 
+                      (comment_id, session['user_id']))
+        elif action == 'undislike' and existing_dislike:
+            # Remove dislike
+            c.execute('''DELETE FROM comment_dislikes WHERE comment_id = ? AND user_id = ?''', 
+                      (comment_id, session['user_id']))
+        
+        # Get updated like count (in case we removed a like)
+        c.execute('''SELECT COUNT(*) FROM comment_likes WHERE comment_id = ?''', (comment_id,))
+        like_count = c.fetchone()[0]
+        
+        # Check if user still has like/dislike after the operation
+        c.execute('''SELECT id FROM comment_likes WHERE comment_id = ? AND user_id = ?''', 
+                  (comment_id, session['user_id']))
+        user_liked = c.fetchone() is not None
+        
+        c.execute('''SELECT id FROM comment_dislikes WHERE comment_id = ? AND user_id = ?''', 
+                  (comment_id, session['user_id']))
+        user_disliked = c.fetchone() is not None
+        
+        conn.commit()
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'user_disliked': user_disliked,
+            'user_liked': user_liked,
+            'like_count': like_count
+        })
+        
+    except Exception as e:
+        return jsonify({'success': False, 'message': 'Error updating dislike'})
 
 @app.route('/get_replies/<int:comment_id>')
 def get_replies(comment_id):
@@ -1205,7 +1424,7 @@ def create_payment_intent():
         stripe.api_key = app.config['STRIPE_SECRET_KEY']
         
         intent = stripe.PaymentIntent.create(
-            amount=app.config['PARTICIPANT_FEE'],  # $25 in cents
+            amount=app.config['PARTICIPANT_FEE'],  # $35 in cents
             currency='usd',
             metadata={
                 'user_id': session['user_id'],

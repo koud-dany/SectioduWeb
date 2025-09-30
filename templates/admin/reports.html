@@ -88,11 +88,11 @@
                                 {% if report[6] == 'pending' %}
                                     <div class="btn-group" role="group">
                                         <button type="button" class="btn btn-sm btn-success" 
-                                                onclick="handleReport('{{ report[0] }}', 'resolved')" title="Mark as resolved">
+                                                onclick="handleReport({{ report[0] }}, 'resolved')" title="Mark as resolved">
                                             <i class="fas fa-check"></i>
                                         </button>
                                         <button type="button" class="btn btn-sm btn-secondary" 
-                                                onclick="handleReport('{{ report[0] }}', 'dismissed')" title="Dismiss report">
+                                                onclick="handleReport({{ report[0] }}, 'dismissed')" title="Dismiss report">
                                             <i class="fas fa-times"></i>
                                         </button>
                                     </div>
@@ -102,65 +102,63 @@
                                         data-bs-toggle="modal" data-bs-target="#reportModal{{ report[0] }}" title="View details">
                                     <i class="fas fa-eye"></i>
                                 </button>
+                                
+                                <!-- Report Details Modal -->
+                                <div class="modal fade" id="reportModal{{ report[0] }}" tabindex="-1">
+                                    <div class="modal-dialog modal-lg">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">Report Details</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <strong>Report ID:</strong> {{ report[0] }}<br>
+                                                        <strong>Reporter:</strong> {{ report[7] }}<br>
+                                                        <strong>Date:</strong> {{ report[5] }}<br>
+                                                        <strong>Status:</strong> 
+                                                        <span class="badge bg-{% if report[6] == 'pending' %}warning{% elif report[6] == 'resolved' %}success{% else %}secondary{% endif %}">
+                                                            {{ report[6]|title }}
+                                                        </span>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <strong>Reported Item:</strong> {{ report[1]|title }} (ID: {{ report[2] }})<br>
+                                                        <strong>Category:</strong> {{ report[3] }}<br>
+                                                        {% if report[8] %}
+                                                            <strong>Handled by:</strong> {{ report[8] }}
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                                
+                                                {% if report[4] %}
+                                                <hr>
+                                                <div>
+                                                    <strong>Description:</strong>
+                                                    <div class="mt-2 p-3 bg-light rounded">{{ report[4] }}</div>
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                            <div class="modal-footer">
+                                                {% if report[6] == 'pending' %}
+                                                    <button type="button" class="btn btn-success" onclick="handleReport({{ report[0] }}, 'resolved')">
+                                                        Mark as Resolved
+                                                    </button>
+                                                    <button type="button" class="btn btn-secondary" onclick="handleReport({{ report[0] }}, 'dismissed')">
+                                                        Dismiss Report
+                                                    </button>
+                                                {% endif %}
+                                                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </td>
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
-            
-            <!-- Report Details Modals -->
-            {% for report in reports %}
-            <div class="modal fade" id="reportModal{{ report[0] }}" tabindex="-1">
-                <div class="modal-dialog modal-lg">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title">Report Details</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                        </div>
-                        <div class="modal-body">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <strong>Report ID:</strong> {{ report[0] }}<br>
-                                    <strong>Reporter:</strong> {{ report[7] }}<br>
-                                    <strong>Date:</strong> {{ report[5] }}<br>
-                                    <strong>Status:</strong> 
-                                    <span class="badge bg-{% if report[6] == 'pending' %}warning{% elif report[6] == 'resolved' %}success{% else %}secondary{% endif %}">
-                                        {{ report[6]|title }}
-                                    </span>
-                                </div>
-                                <div class="col-md-6">
-                                    <strong>Reported Item:</strong> {{ report[1]|title }} (ID: {{ report[2] }})<br>
-                                    <strong>Category:</strong> {{ report[3] }}<br>
-                                    {% if report[8] %}
-                                        <strong>Handled by:</strong> {{ report[8] }}
-                                    {% endif %}
-                                </div>
-                            </div>
-                            
-                            {% if report[4] %}
-                            <hr>
-                            <div>
-                                <strong>Description:</strong>
-                                <div class="mt-2 p-3 bg-light rounded">{{ report[4] }}</div>
-                            </div>
-                            {% endif %}
-                        </div>
-                        <div class="modal-footer">
-                            {% if report[6] == 'pending' %}
-                                <button type="button" class="btn btn-success" onclick="handleReport('{{ report[0] }}', 'resolved')">
-                                    Mark as Resolved
-                                </button>
-                                <button type="button" class="btn btn-secondary" onclick="handleReport('{{ report[0] }}', 'dismissed')">
-                                    Dismiss Report
-                                </button>
-                            {% endif %}
-                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            {% endfor %}
         {% else %}
             <div class="text-center text-muted py-5">
                 <i class="fas fa-flag fa-3x mb-3"></i>
