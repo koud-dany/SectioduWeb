@@ -406,30 +406,67 @@ def upload_to_cloudinary(file_path, public_id):
                 'demo_mode': True
             }
         
-        # Real Cloudinary upload (when proper credentials are provided)
+        # Real Cloudinary upload (signed upload - no preset required)
         cloudinary_url = f"https://api.cloudinary.com/v1_1/{app.config['CLOUDINARY_CLOUD_NAME']}/video/upload"
+        
+        # Generate timestamp for signed upload
+        import time
+        timestamp = int(time.time())
+        
+        # Create signature for signed upload
+        import hashlib
+        import hmac
+        
+        params_to_sign = f"public_id={public_id}&resource_type=video&timestamp={timestamp}"
+        signature = hmac.new(
+            app.config['CLOUDINARY_API_SECRET'].encode('utf-8'),
+            params_to_sign.encode('utf-8'),
+            hashlib.sha1
+        ).hexdigest()
         
         with open(file_path, 'rb') as f:
             files = {'file': f}
             data = {
-                'upload_preset': app.config.get('CLOUDINARY_UPLOAD_PRESET', 'ml_default'),
                 'public_id': public_id,
-                'resource_type': 'video'
+                'resource_type': 'video',
+                'api_key': app.config['CLOUDINARY_API_KEY'],
+                'timestamp': timestamp,
+                'signature': signature
             }
             
-            response = requests.post(cloudinary_url, files=files, data=data)
-            result = response.json()
+            print(f"☁️ Uploading to Cloudinary: {public_id}")
+            response = requests.post(cloudinary_url, files=files, data=data, timeout=120)
             
-            if response.status_code == 200 and 'secure_url' in result:
-                return {
-                    'success': True,
-                    'url': result['secure_url'],
-                    'public_id': result['public_id']
-                }
+            print(f"☁️ Cloudinary response status: {response.status_code}")
+            
+            if response.status_code == 200:
+                result = response.json()
+                if 'secure_url' in result:
+                    print(f"✅ Cloudinary upload successful: {result['secure_url']}")
+                    return {
+                        'success': True,
+                        'url': result['secure_url'],
+                        'public_id': result['public_id']
+                    }
+                else:
+                    print(f"❌ Cloudinary upload failed: Missing secure_url in response")
+                    return {
+                        'success': False,
+                        'error': 'No secure_url in response'
+                    }
             else:
+                error_msg = "Unknown error"
+                try:
+                    result = response.json()
+                    error_msg = result.get('error', {}).get('message', str(result))
+                    print(f"❌ Cloudinary upload failed: {error_msg}")
+                except:
+                    error_msg = response.text or f"HTTP {response.status_code}"
+                    print(f"❌ Cloudinary upload failed: {error_msg}")
+                
                 return {
                     'success': False,
-                    'error': result.get('error', {}).get('message', 'Upload failed')
+                    'error': error_msg
                 }
     except Exception as e:
         return {
@@ -981,8 +1018,15 @@ def upload_video():
             final_filename = filename
             cloud_url = None
             
+            # Debug cloud storage detection
+            print(f"🔍 Cloud storage check:")
+            print(f"   should_use_cloud_storage(): {should_use_cloud_storage()}")
+            print(f"   RENDER env var: {os.environ.get('RENDER', 'Not set')}")
+            print(f"   USE_CLOUD_STORAGE: {app.config.get('USE_CLOUD_STORAGE', 'Not set')}")
+            print(f"   CLOUDINARY_CLOUD_NAME: {app.config.get('CLOUDINARY_CLOUD_NAME', 'Not set')}")
+            
             if should_use_cloud_storage():
-                print("Cloud storage required - uploading to Cloudinary...")
+                print("☁️  Cloud storage ENABLED - uploading to Cloudinary...")
                 
                 if app.config.get('CLOUDINARY_CLOUD_NAME'):
                     # Generate public_id without extension for Cloudinary
@@ -1019,7 +1063,7 @@ def upload_video():
             c = conn.cursor()
             c.execute('''INSERT INTO videos (user_id, title, description, filename, file_size, is_approved) 
                         VALUES (?, ?, ?, ?, ?, ?)''',
-                     (session['user_id'], title, description, final_filename, file_size_bytes, False))
+                     (session['user_id'], title, description, final_filename, file_size_bytes, True))
             
             video_id = c.lastrowid
             print(f"Video saved to database with ID: {video_id}")

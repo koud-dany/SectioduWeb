@@ -10,7 +10,9 @@ class Config:
     MAX_CONTENT_LENGTH = 100 * 1024 * 1024  # 100MB max file size
     
     # File Storage Configuration
-    USE_CLOUD_STORAGE = os.environ.get('USE_CLOUD_STORAGE', 'false').lower() == 'true'
+    # Force cloud storage on Render (ephemeral file system), allow override locally
+    USE_CLOUD_STORAGE = (os.environ.get('RENDER') is not None or 
+                        os.environ.get('USE_CLOUD_STORAGE', 'false').lower() == 'true')
     
     # AWS S3 Configuration (for cloud storage)
     AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID', '')
