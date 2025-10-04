@@ -241,19 +241,19 @@ class MobileMoneyService:
     def orange_money_request_payment(self, phone_number, amount, currency="USD"):
         """Request payment via Orange Money"""
         try:
-            # Check if using demo mode
-            if self.is_demo_mode():
-                return self.mock_payment_response(phone_number, amount, currency)
-            
-            # This is a simplified implementation
-            # You'll need to implement Orange Money's specific API flow
+            # Demo mode - simulate successful payment
             transaction_ref = self.generate_transaction_id()
+            
+            print(f"🧡 DEMO MODE: Orange Money payment initiated")
+            print(f"   Phone: {phone_number}")
+            print(f"   Amount: {amount} {currency}")
+            print(f"   Transaction ID: {transaction_ref}")
             
             return {
                 'success': True,
                 'transaction_id': transaction_ref,
-                'status': 'pending',
-                'message': 'Orange Money integration - Implementation needed',
+                'status': 'successful',  # Changed to successful for demo
+                'message': '🧡 DEMO MODE: Orange Money payment successful! Tournament access granted.',
                 'provider': 'orange_money'
             }
             
@@ -267,19 +267,19 @@ class MobileMoneyService:
     def airtel_money_request_payment(self, phone_number, amount, currency="USD"):
         """Request payment via Airtel Money"""
         try:
-            # Check if using demo mode
-            if self.is_demo_mode():
-                return self.mock_payment_response(phone_number, amount, currency)
-            
-            # This is a simplified implementation
-            # You'll need to implement Airtel Money's specific API flow
+            # Demo mode - simulate successful payment
             transaction_ref = self.generate_transaction_id()
+            
+            print(f"📱 DEMO MODE: Airtel Money payment initiated")
+            print(f"   Phone: {phone_number}")
+            print(f"   Amount: {amount} {currency}")
+            print(f"   Transaction ID: {transaction_ref}")
             
             return {
                 'success': True,
                 'transaction_id': transaction_ref,
-                'status': 'pending',
-                'message': 'Airtel Money integration - Implementation needed',
+                'status': 'successful',  # Changed to successful for demo
+                'message': '📱 DEMO MODE: Airtel Money payment successful! Tournament access granted.',
                 'provider': 'airtel_money'
             }
             

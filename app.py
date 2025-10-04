@@ -378,22 +378,28 @@ def paid_required(f):
             flash('Please log in to access this page.')
             return redirect(url_for('login'))
         
-        # TEMPORARY FIX: Always allow access for Render testing
-        # TODO: Set up persistent database storage on Render
-        return f(*args, **kwargs)
+        # RENDER FIX: Check payment confirmation in session first (more reliable on Render)
+        if session.get('payment_confirmed') and session.get('is_paid'):
+            print(f"✅ User {session['user_id']} access granted via session - payment confirmed at {session.get('payment_timestamp')}")
+            return f(*args, **kwargs)
         
-        # Original payment check (commented out for testing)
-        # conn = sqlite3.connect('tournament.db')
-        # c = conn.cursor()
-        # c.execute('SELECT is_paid FROM users WHERE id = ?', (session['user_id'],))
-        # user = c.fetchone()
-        # conn.close()
-        # 
-        # if not user or not user[0]:
-        #     flash('Tournament entry fee required to upload videos. Please pay the $35 participant fee.', 'warning')
-        #     return redirect(url_for('upgrade'))
-        # 
-        # return f(*args, **kwargs)
+        # Fallback: Check database for payment status
+        conn = sqlite3.connect('tournament.db')
+        c = conn.cursor()
+        c.execute('SELECT is_paid FROM users WHERE id = ?', (session['user_id'],))
+        user = c.fetchone()
+        conn.close()
+        
+        if user and user[0]:
+            # Update session to match database for future requests
+            session['is_paid'] = True
+            session['payment_confirmed'] = True
+            print(f"✅ User {session['user_id']} access granted via database - updating session")
+            return f(*args, **kwargs)
+        else:
+            print(f"❌ User {session['user_id']} payment required - redirecting to upgrade")
+            flash('Tournament entry fee required to upload videos. Please pay the $35 participant fee.', 'warning')
+            return redirect(url_for('upgrade'))
     return decorated_function
 
 @app.context_processor
@@ -618,7 +624,7 @@ def debug_force_upgrade():
     c = conn.cursor()
     
     print(f"🔧 FORCE UPGRADE: Updating user {session['user_id']} to paid status")
-    c.execute('UPDATE users SET is_paid = 1 WHERE id = ?', (session['user_id'],))
+    c.execute('UPDATE users SET is_paid = TRUE WHERE id = ?', (session['user_id'],))
     
     # Verify the update
     c.execute('SELECT is_paid FROM users WHERE id = ?', (session['user_id'],))
@@ -627,14 +633,20 @@ def debug_force_upgrade():
     conn.commit()
     conn.close()
     
+    # Enhanced session persistence for Render
+    session.permanent = True
     session['is_paid'] = True
-    session.modified = True
+    session['payment_confirmed'] = True
+    session['payment_timestamp'] = datetime.now().isoformat()
+    session['payment_method'] = 'debug_force'
     
     return jsonify({
         'success': True,
         'message': f'User {session["user_id"]} upgraded to paid status',
         'database_status': updated_status[0] if updated_status else None,
-        'session_status': session.get('is_paid')
+        'session_status': session.get('is_paid'),
+        'payment_confirmed': session.get('payment_confirmed'),
+        'redirect_url': url_for('upload_video')
     })
 
 @app.route('/dashboard')
@@ -1586,19 +1598,23 @@ def initiate_mobile_payment():
             
             # For demo/sandbox mode, immediately mark as successful and update user status
             if result['status'] == 'successful' or True:  # Always successful in demo mode
-                print(f"🔄 Updating user {session['user_id']} payment status to 1")
-                c.execute('UPDATE users SET is_paid = 1 WHERE id = ?', (session['user_id'],))
+                print(f"🔄 Updating user {session['user_id']} payment status to TRUE")
+                c.execute('UPDATE users SET is_paid = TRUE WHERE id = ?', (session['user_id'],))
                 
                 # Verify the update worked
                 c.execute('SELECT is_paid FROM users WHERE id = ?', (session['user_id'],))
                 updated_status = c.fetchone()
                 print(f"✅ User {session['user_id']} is_paid status after update: {updated_status[0] if updated_status else 'NOT FOUND'}")
                 
-                session['is_paid'] = True  # Update session immediately
-                print(f"🎯 Session updated for user {session['user_id']} - is_paid: {session.get('is_paid')}")
-                
-                # Force session to be saved
-                session.modified = True
+                # RENDER FIX: Enhanced session persistence
+                session.permanent = True  # Make session last longer
+                session['is_paid'] = True
+                session['payment_confirmed'] = True
+                session['payment_timestamp'] = datetime.now().isoformat()
+                session['payment_provider'] = provider
+                session['payment_amount'] = amount
+                print(f"🎯 Enhanced session updated for user {session['user_id']} - is_paid: {session.get('is_paid')}")
+                print(f"💾 Session data: payment_confirmed={session.get('payment_confirmed')}, timestamp={session.get('payment_timestamp')}")
                 
             conn.commit()
             conn.close()
@@ -1683,9 +1699,7 @@ def check_payment_status(transaction_id):
             
             # If payment is successful, update user status
             if result['status'] == 'successful':
-                c.execute('UPDATE users SET is_paid = 1 WHERE id = ?', (session['user_id'],))
-                session['is_paid'] = True
-                session.modified = True
+                c.execute('UPDATE users SET is_paid = TRUE WHERE id = ?', (session['user_id'],))
                 print(f"User {session['user_id']} payment confirmed via {provider}")
             
             conn.commit()
