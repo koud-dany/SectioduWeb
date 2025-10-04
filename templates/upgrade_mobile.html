@@ -393,6 +393,38 @@
     50% { transform: scale(1.05); }
 }
 
+/* Transaction Processing Animations */
+@keyframes processingPulse {
+    0%, 100% { 
+        transform: scale(1); 
+        box-shadow: 0 25px 80px rgba(0,0,0,0.15);
+    }
+    50% { 
+        transform: scale(1.02); 
+        box-shadow: 0 30px 100px rgba(102,126,234,0.3);
+    }
+}
+
+@keyframes successBounce {
+    0%, 20%, 50%, 80%, 100% {
+        transform: translateY(0) scale(1);
+    }
+    40% {
+        transform: translateY(-10px) scale(1.05);
+    }
+    60% {
+        transform: translateY(-5px) scale(1.02);
+    }
+}
+
+.processing-animation {
+    animation: processingPulse 2s ease-in-out infinite;
+}
+
+.success-bounce {
+    animation: successBounce 1s ease-out;
+}
+
 .fade-in-left {
     animation: fadeInLeft 0.8s ease-out;
 }
@@ -459,6 +491,35 @@ h1, h2, h3, h4, h5, h6 {
 body {
     margin-bottom: 0 !important;
     padding-bottom: 0 !important;
+}
+
+/* Transaction processing animations */
+.processing-animation {
+    animation: processingPulse 2s ease-in-out infinite;
+    border-color: #17a2b8 !important;
+}
+
+@keyframes processingPulse {
+    0%, 100% { 
+        box-shadow: 0 25px 80px rgba(0,0,0,0.15), 0 0 0 0 rgba(23, 162, 184, 0.4);
+    }
+    50% { 
+        box-shadow: 0 25px 80px rgba(0,0,0,0.15), 0 0 0 20px rgba(23, 162, 184, 0.1);
+    }
+}
+
+.success-glow {
+    animation: successGlow 1.5s ease-in-out;
+    border-color: #28a745 !important;
+}
+
+@keyframes successGlow {
+    0%, 100% { 
+        box-shadow: 0 25px 80px rgba(0,0,0,0.15);
+    }
+    50% { 
+        box-shadow: 0 25px 80px rgba(0,0,0,0.15), 0 0 30px rgba(40, 167, 69, 0.5);
+    }
 }
 
 /* Mobile responsiveness */
@@ -593,6 +654,16 @@ body {
                         <div class="loading-animation">
                             <div class="spinner"></div>
                         </div>
+                    </button>
+                </div>
+                
+                <!-- Debug Tools (Remove in Production) -->
+                <div class="text-center mt-2">
+                    <button class="btn btn-sm btn-outline-warning" onclick="checkUserStatus()" style="margin-right: 0.5rem;">
+                        <i class="fas fa-bug me-1"></i>Check Status
+                    </button>
+                    <button class="btn btn-sm btn-outline-success" onclick="forceUpgrade()">
+                        <i class="fas fa-tools me-1"></i>Force Upgrade
                     </button>
                 </div>
                 
@@ -830,13 +901,23 @@ async function initiatePayment() {
         if (result.success) {
             currentTransactionId = result.transaction_id;
             
-            // Show success message
-            showMessage(result.message, 'success');
+            // Show processing message with animation
+            showMessage('Payment initiated successfully! Processing...', 'success');
             
-            // Simulate processing time and show success
+            // Start transaction animation
+            startTransactionAnimation();
+            
+            // For demo mode or immediate success, redirect after animation
+            console.log('Payment result:', result);
+            
+            // Always treat as successful in demo mode and redirect
             setTimeout(() => {
-                showSuccessAndRedirect();
-            }, 2000);
+                showSuccessMessage();
+                setTimeout(() => {
+                    redirectToUpload();
+                }, 2000);
+            }, 3000); // Show processing animation for 3 seconds
+            
         } else {
             showMessage(result.message || result.error, 'error');
             resetButton();
@@ -858,6 +939,42 @@ function resetButton() {
     btnText.style.opacity = '1';
 }
 
+function showSuccessMessage() {
+    const submitBtn = document.getElementById('submit-payment');
+    const btnText = submitBtn.querySelector('.btn-text');
+    const paymentCard = document.getElementById('payment-card');
+    
+    // Remove processing animation
+    paymentCard.classList.remove('processing-animation');
+    
+    // Update button to show success
+    btnText.innerHTML = '<i class="fas fa-check-circle me-2"></i>Payment Successful!';
+    btnText.style.color = '#28a745';
+    
+    // Show success message
+    showMessage('🎉 Payment successful! Welcome to the tournament!', 'success');
+    
+    // Add success animation to payment card
+    paymentCard.classList.add('success-glow');
+    
+    // Update transaction status
+    const transactionStatus = document.getElementById('transaction-status');
+    if (transactionStatus) {
+        transactionStatus.innerHTML = `
+            <div class="d-flex align-items-center">
+                <i class="fas fa-check-circle text-success me-3" style="font-size: 1.2em;"></i>
+                <div>
+                    <strong class="text-success">Payment Confirmed!</strong>
+                    <div class="mt-1">
+                        <small class="text-success">You are now a tournament participant. Redirecting to upload...</small>
+                    </div>
+                </div>
+            </div>
+        `;
+        transactionStatus.className = 'alert alert-success alert-custom';
+    }
+}
+
 function showSuccessAndRedirect() {
     const paymentCard = document.getElementById('payment-card');
     const successState = document.getElementById('success-state');
@@ -870,10 +987,10 @@ function showSuccessAndRedirect() {
         successState.style.display = 'block';
         successState.classList.add('success-animation');
         
-        // Auto redirect after 5 seconds
+        // Auto redirect after 3 seconds
         setTimeout(() => {
             redirectToUpload();
-        }, 5000);
+        }, 3000);
     }, 1000);
 }
 
@@ -884,6 +1001,181 @@ function redirectToUpload() {
     setTimeout(() => {
         window.location.href = '/upload_video';
     }, 1500);
+}
+
+// Transaction Animation Functions
+function startTransactionAnimation() {
+    const submitBtn = document.getElementById('submit-payment');
+    const btnText = submitBtn.querySelector('.btn-text');
+    const loadingAnimation = submitBtn.querySelector('.loading-animation');
+    
+    // Update button to show processing state
+    btnText.innerHTML = '<i class="fas fa-credit-card me-2"></i>Processing Payment...';
+    btnText.style.opacity = '1';
+    loadingAnimation.style.display = 'none';
+    
+    // Add processing animation to payment card
+    const paymentCard = document.getElementById('payment-card');
+    paymentCard.classList.add('processing-animation');
+    
+    // Create transaction status display
+    const messagesDiv = document.getElementById('payment-messages');
+    messagesDiv.innerHTML = `
+        <div class="alert alert-info alert-custom" id="transaction-status">
+            <div class="d-flex align-items-center">
+                <div class="spinner-border spinner-border-sm me-3" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <div>
+                    <i class="fas fa-mobile-alt me-2"></i>
+                    <strong>Processing your payment...</strong>
+                    <div class="mt-1">
+                        <small id="transaction-step">Connecting to mobile money provider...</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Animate transaction steps
+    const steps = [
+        'Connecting to mobile money provider...',
+        'Validating phone number...',
+        'Processing payment request...',
+        'Awaiting confirmation...',
+        'Finalizing transaction...'
+    ];
+    
+    let stepIndex = 0;
+    const stepInterval = setInterval(() => {
+        stepIndex++;
+        if (stepIndex < steps.length) {
+            const stepElement = document.getElementById('transaction-step');
+            if (stepElement) {
+                stepElement.textContent = steps[stepIndex];
+            }
+        } else {
+            clearInterval(stepInterval);
+        }
+    }, 800);
+    
+    // Store interval for cleanup
+    window.transactionStepInterval = stepInterval;
+}
+
+function startPaymentStatusPolling() {
+    if (!currentTransactionId) return;
+    
+    let pollCount = 0;
+    const maxPolls = 30; // Poll for up to 5 minutes (30 * 10 seconds)
+    
+    const pollInterval = setInterval(async () => {
+        pollCount++;
+        
+        try {
+            const response = await fetch(`/check_payment_status/${currentTransactionId}`);
+            const result = await response.json();
+            
+            if (result.success && result.status === 'successful') {
+                clearInterval(pollInterval);
+                clearInterval(window.transactionStepInterval);
+                showTransactionSuccess();
+                setTimeout(() => showSuccessAndRedirect(), 2000);
+            } else if (result.status === 'failed') {
+                clearInterval(pollInterval);
+                clearInterval(window.transactionStepInterval);
+                showTransactionFailure();
+            } else if (pollCount >= maxPolls) {
+                clearInterval(pollInterval);
+                clearInterval(window.transactionStepInterval);
+                showTransactionTimeout();
+            }
+            // Continue polling if status is still pending
+        } catch (error) {
+            console.error('Payment status check error:', error);
+            if (pollCount >= maxPolls) {
+                clearInterval(pollInterval);
+                clearInterval(window.transactionStepInterval);
+                showTransactionTimeout();
+            }
+        }
+    }, 10000); // Poll every 10 seconds
+}
+
+function showTransactionSuccess() {
+    const statusDiv = document.getElementById('transaction-status');
+    if (statusDiv) {
+        statusDiv.innerHTML = `
+            <div class="d-flex align-items-center">
+                <div class="text-success me-3">
+                    <i class="fas fa-check-circle fa-2x"></i>
+                </div>
+                <div>
+                    <strong class="text-success">Payment Successful!</strong>
+                    <div class="mt-1">
+                        <small>Your account has been upgraded. Redirecting to upload page...</small>
+                    </div>
+                </div>
+            </div>
+        `;
+        statusDiv.className = 'alert alert-success alert-custom';
+    }
+    
+    // Stop processing animation and add success bounce
+    const paymentCard = document.getElementById('payment-card');
+    paymentCard.classList.remove('processing-animation');
+    paymentCard.classList.add('success-bounce');
+}
+
+function showTransactionFailure() {
+    const statusDiv = document.getElementById('transaction-status');
+    if (statusDiv) {
+        statusDiv.innerHTML = `
+            <div class="d-flex align-items-center">
+                <div class="text-danger me-3">
+                    <i class="fas fa-times-circle fa-2x"></i>
+                </div>
+                <div>
+                    <strong class="text-danger">Payment Failed</strong>
+                    <div class="mt-1">
+                        <small>Please try again or contact support if the issue persists.</small>
+                    </div>
+                </div>
+            </div>
+        `;
+        statusDiv.className = 'alert alert-danger alert-custom';
+    }
+    
+    resetButton();
+    const paymentCard = document.getElementById('payment-card');
+    paymentCard.classList.remove('processing-animation');
+}
+
+function showTransactionTimeout() {
+    const statusDiv = document.getElementById('transaction-status');
+    if (statusDiv) {
+        statusDiv.innerHTML = `
+            <div class="d-flex align-items-center">
+                <div class="text-warning me-3">
+                    <i class="fas fa-clock fa-2x"></i>
+                </div>
+                <div>
+                    <strong class="text-warning">Payment Processing</strong>
+                    <div class="mt-1">
+                        <small>Your payment is still being processed. Please check back in a few minutes.</small>
+                    </div>
+                    <button class="btn btn-sm btn-outline-primary mt-2" onclick="checkPaymentStatus()">
+                        <i class="fas fa-sync me-1"></i>Check Status
+                    </button>
+                </div>
+            </div>
+        `;
+        statusDiv.className = 'alert alert-warning alert-custom';
+    }
+    
+    resetButton();
+    const paymentCard = document.getElementById('payment-card');
+    paymentCard.classList.remove('processing-animation');
 }
 
 function goToDashboard() {
@@ -940,5 +1232,54 @@ document.addEventListener('DOMContentLoaded', function() {
     // Add smooth scroll behavior
     document.documentElement.style.scrollBehavior = 'smooth';
 });
+
+// Debug Functions
+async function checkUserStatus() {
+    try {
+        const response = await fetch('/debug/user_status');
+        const status = await response.json();
+        
+        console.log('User Status Debug:', status);
+        
+        let message = `
+            User ID: ${status.user_id}<br>
+            Session is_paid: ${status.session_is_paid}<br>
+            Database is_paid: ${status.current_user_is_paid}<br>
+            Recent transactions: ${status.recent_transactions.length}
+        `;
+        
+        showMessage(message, status.current_user_is_paid ? 'success' : 'error');
+        
+    } catch (error) {
+        console.error('Status check error:', error);
+        showMessage('Failed to check status', 'error');
+    }
+}
+
+async function forceUpgrade() {
+    try {
+        const response = await fetch('/debug/force_upgrade', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showMessage('✅ Force upgrade successful! You can now access upload.', 'success');
+            setTimeout(() => {
+                window.location.href = '/upload_video';
+            }, 2000);
+        } else {
+            showMessage('❌ Force upgrade failed', 'error');
+        }
+        
+    } catch (error) {
+        console.error('Force upgrade error:', error);
+        showMessage('Failed to force upgrade', 'error');
+    }
+}
 </script>
 {% endblock %}

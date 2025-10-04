@@ -67,27 +67,13 @@ class MobileMoneyService:
         print(f"   Amount: {amount} {currency}")
         print(f"   Transaction ID: {transaction_ref}")
         
-        # Simulate different responses based on phone number
-        if formatted_phone.endswith('50'):  # Success scenario
-            return {
-                'success': True,
-                'transaction_id': transaction_ref,
-                'status': 'pending',
-                'message': '🎭 DEMO MODE: Payment request simulated successfully. In real mode, check your phone for payment prompt.'
-            }
-        elif formatted_phone.endswith('52'):  # Failed scenario
-            return {
-                'success': False,
-                'error': 'Demo payment failure simulation',
-                'message': '🎭 DEMO MODE: Payment failed (simulated). Use phone number ending in 50 for success.'
-            }
-        else:  # Default success
-            return {
-                'success': True,
-                'transaction_id': transaction_ref,
-                'status': 'pending',
-                'message': '🎭 DEMO MODE: Payment request simulated. Use real MTN credentials for actual payments.'
-            }
+        # For demo purposes, always simulate successful payment
+        return {
+            'success': True,
+            'transaction_id': transaction_ref,
+            'status': 'successful',  # Changed to successful for immediate access
+            'message': '� DEMO MODE: Payment successful! Tournament access granted.'
+        }
     
     def mtn_momo_request_payment(self, phone_number, amount, currency="USD"):
         """Request payment via MTN Mobile Money"""

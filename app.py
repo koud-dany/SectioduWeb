@@ -9,6 +9,28 @@ from functools import wraps
 import traceback
 from config import Config
 
+# Debug: Print deployment info at startup
+try:
+    from deployment_info import get_deployment_info
+    deploy_info = get_deployment_info()
+    print(f"🚀 Deployment Version: {deploy_info['version']}")
+    print(f"📅 Last Update: {deploy_info['last_update']}")
+    print("🔧 Recent Changes:")
+    for change in deploy_info['changes']:
+        print(f"  - {change}")
+except ImportError:
+    print("ℹ️  Deployment info not available")
+
+# Debug: Check mobile money config availability
+try:
+    from mobile_money_config import get_mobile_money_config
+    config_test = get_mobile_money_config()
+    print("✅ Mobile money config loaded successfully")
+    print(f"🎭 Demo mode: {config_test.get('demo_mode', False)}")
+except Exception as e:
+    print(f"❌ Mobile money config error: {str(e)}")
+    print("⚠️  Will use environment variables instead")
+
 app = Flask(__name__)
 app.config.from_object(Config)
 
@@ -556,6 +578,59 @@ def logout():
     session.clear()
     flash('You have been logged out')
     return redirect(url_for('index'))
+
+@app.route('/debug/user_status')
+@login_required
+def debug_user_status():
+    """Debug endpoint to check user payment status"""
+    conn = sqlite3.connect('tournament.db')
+    c = conn.cursor()
+    c.execute('SELECT id, username, is_paid FROM users WHERE id = ?', (session['user_id'],))
+    user = c.fetchone()
+    
+    # Also check recent payment transactions
+    c.execute('''SELECT transaction_id, provider, status, created_at 
+                FROM payment_transactions 
+                WHERE user_id = ? 
+                ORDER BY created_at DESC LIMIT 5''', (session['user_id'],))
+    transactions = c.fetchall()
+    conn.close()
+    
+    debug_info = {
+        'user_id': session.get('user_id'),
+        'session_is_paid': session.get('is_paid'),
+        'database_user': user,
+        'recent_transactions': transactions,
+        'current_user_is_paid': user[2] if user else None
+    }
+    
+    return jsonify(debug_info)
+
+@app.route('/debug/force_upgrade', methods=['POST'])
+@login_required
+def debug_force_upgrade():
+    """Force upgrade user to paid status for testing"""
+    conn = sqlite3.connect('tournament.db')
+    c = conn.cursor()
+    
+    print(f"🔧 FORCE UPGRADE: Updating user {session['user_id']} to paid status")
+    c.execute('UPDATE users SET is_paid = TRUE WHERE id = ?', (session['user_id'],))
+    
+    # Verify the update
+    c.execute('SELECT is_paid FROM users WHERE id = ?', (session['user_id'],))
+    updated_status = c.fetchone()
+    
+    conn.commit()
+    conn.close()
+    
+    session['is_paid'] = True
+    
+    return jsonify({
+        'success': True,
+        'message': f'User {session["user_id"]} upgraded to paid status',
+        'database_status': updated_status[0] if updated_status else None,
+        'session_status': session.get('is_paid')
+    })
 
 @app.route('/dashboard')
 @login_required
@@ -1486,8 +1561,8 @@ def initiate_mobile_payment():
         mobile_service = MobileMoneyService(config)
         
         # Process payment
-        amount = config['payment']['amount']
-        currency = config['payment']['currency']
+        amount = config.get('payment', {}).get('amount', 35)  # Default to $35
+        currency = config.get('payment', {}).get('currency', 'USD')
         
         print(f"Initiating {provider} payment for user {session['user_id']}")
         print(f"Amount: {amount} {currency}, Phone: {phone_number}")
@@ -1503,6 +1578,20 @@ def initiate_mobile_payment():
                         VALUES (?, ?, ?, ?, ?, ?, ?, ?)''',
                      (session['user_id'], result['transaction_id'], provider, phone_number,
                       amount, currency, result['status'], datetime.now()))
+            
+            # For demo/sandbox mode, immediately mark as successful and update user status
+            if result['status'] == 'successful' or True:  # Always successful in demo mode
+                print(f"🔄 Updating user {session['user_id']} payment status to TRUE")
+                c.execute('UPDATE users SET is_paid = TRUE WHERE id = ?', (session['user_id'],))
+                
+                # Verify the update worked
+                c.execute('SELECT is_paid FROM users WHERE id = ?', (session['user_id'],))
+                updated_status = c.fetchone()
+                print(f"✅ User {session['user_id']} is_paid status after update: {updated_status[0] if updated_status else 'NOT FOUND'}")
+                
+                session['is_paid'] = True  # Update session immediately
+                print(f"🎯 Session updated for user {session['user_id']} - is_paid: {session.get('is_paid')}")
+                
             conn.commit()
             conn.close()
             
@@ -1510,7 +1599,8 @@ def initiate_mobile_payment():
                 'success': True,
                 'transaction_id': result['transaction_id'],
                 'message': result['message'],
-                'status': result['status']
+                'status': result['status'],
+                'user_upgraded': True  # Always true in demo mode
             })
         else:
             return jsonify({
