@@ -390,7 +390,7 @@ def is_demo_cloudinary():
             current_api_key in demo_api_keys)
 
 def upload_to_cloudinary(file_path, public_id):
-    """Upload file to Cloudinary (or simulate in demo mode)"""
+    """Upload file to Cloudinary using official SDK"""
     try:
         # Demo mode - simulate successful upload
         if is_demo_cloudinary():
@@ -406,71 +406,44 @@ def upload_to_cloudinary(file_path, public_id):
                 'demo_mode': True
             }
         
-        # Use simple file upload to auto-generated public_id
-        cloudinary_url = f"https://api.cloudinary.com/v1_1/{app.config['CLOUDINARY_CLOUD_NAME']}/auto/upload"
+        # Use official Cloudinary Python SDK
+        import cloudinary
+        import cloudinary.uploader
         
-        # Generate timestamp and signature for authenticated upload
-        import time
-        timestamp = int(time.time())
+        # Configure Cloudinary
+        cloudinary.config(
+            cloud_name=app.config['CLOUDINARY_CLOUD_NAME'],
+            api_key=app.config['CLOUDINARY_API_KEY'],
+            api_secret=app.config['CLOUDINARY_API_SECRET']
+        )
         
-        # Create a simple signature with just timestamp (most minimal approach)
-        import hashlib
-        import hmac
+        print(f"☁️ Uploading to Cloudinary using official SDK: {public_id}")
         
-        # Just use timestamp for signature
-        params_string = f"timestamp={timestamp}"
-        signature = hmac.new(
-            app.config['CLOUDINARY_API_SECRET'].encode('utf-8'),
-            params_string.encode('utf-8'),
-            hashlib.sha1
-        ).hexdigest()
+        # Upload using official SDK (handles all signature complexity)
+        result = cloudinary.uploader.upload(
+            file_path,
+            public_id=public_id,
+            resource_type="video",
+            overwrite=True,
+            folder="videos"
+        )
         
-        with open(file_path, 'rb') as f:
-            files = {'file': f}
-            data = {
-                'api_key': app.config['CLOUDINARY_API_KEY'],
-                'timestamp': str(timestamp),
-                'signature': signature,
-                'folder': 'videos'  # Organize videos in a folder
+        if 'secure_url' in result:
+            print(f"✅ Cloudinary upload successful: {result['secure_url']}")
+            return {
+                'success': True,
+                'url': result['secure_url'],
+                'public_id': result['public_id']
+            }
+        else:
+            print(f"❌ Cloudinary upload failed: Missing secure_url in response")
+            return {
+                'success': False,
+                'error': 'No secure_url in response'
             }
             
-            print(f"☁️ Simple Cloudinary upload to videos folder")
-            print(f"🔐 Signature: timestamp={timestamp} -> {signature}")
-            response = requests.post(cloudinary_url, files=files, data=data, timeout=120)
-            
-            print(f"☁️ Cloudinary response status: {response.status_code}")
-            
-            if response.status_code == 200:
-                result = response.json()
-                if 'secure_url' in result:
-                    print(f"✅ Cloudinary upload successful: {result['secure_url']}")
-                    return {
-                        'success': True,
-                        'url': result['secure_url'],
-                        'public_id': result['public_id']
-                    }
-                else:
-                    print(f"❌ Cloudinary upload failed: Missing secure_url in response")
-                    return {
-                        'success': False,
-                        'error': 'No secure_url in response'
-                    }
-            else:
-                error_msg = "Unknown error"
-                try:
-                    result = response.json()
-                    error_msg = result.get('error', {}).get('message', str(result))
-                    print(f"❌ Cloudinary upload failed: {error_msg}")
-                    print(f"❌ Full response: {result}")
-                except:
-                    error_msg = response.text or f"HTTP {response.status_code}"
-                    print(f"❌ Cloudinary upload failed: {error_msg}")
-                
-                return {
-                    'success': False,
-                    'error': error_msg
-                }
     except Exception as e:
+        print(f"❌ Cloudinary upload exception: {str(e)}")
         return {
             'success': False,
             'error': str(e)
