@@ -241,6 +241,10 @@ class MobileMoneyService:
     def orange_money_request_payment(self, phone_number, amount, currency="USD"):
         """Request payment via Orange Money"""
         try:
+            # Check if using demo mode
+            if self.is_demo_mode():
+                return self.mock_payment_response(phone_number, amount, currency)
+            
             # This is a simplified implementation
             # You'll need to implement Orange Money's specific API flow
             transaction_ref = self.generate_transaction_id()
@@ -263,6 +267,10 @@ class MobileMoneyService:
     def airtel_money_request_payment(self, phone_number, amount, currency="USD"):
         """Request payment via Airtel Money"""
         try:
+            # Check if using demo mode
+            if self.is_demo_mode():
+                return self.mock_payment_response(phone_number, amount, currency)
+            
             # This is a simplified implementation
             # You'll need to implement Airtel Money's specific API flow
             transaction_ref = self.generate_transaction_id()

@@ -457,6 +457,64 @@ def send_admin_email(recipient_email, subject, message):
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in Config.ALLOWED_EXTENSIONS
 
+# Debug routes
+@app.route('/debug/user_status')
+@login_required
+def debug_user_status():
+    """Debug endpoint to check user payment status"""
+    conn = sqlite3.connect('tournament.db')
+    c = conn.cursor()
+    
+    # Get user info
+    c.execute('SELECT id, username, email, is_paid FROM users WHERE id = ?', (session['user_id'],))
+    user = c.fetchone()
+    conn.close()
+    
+    debug_info = {
+        'user_id': session['user_id'],
+        'session_is_paid': session.get('is_paid', 'Not set'),
+        'database_is_paid': user[3] if user else 'User not found',
+        'username': user[1] if user else 'Unknown',
+        'email': user[2] if user else 'Unknown',
+        'can_access_upload': user[3] == 1 if user else False
+    }
+    
+    print(f"=== USER STATUS DEBUG ===")
+    for key, value in debug_info.items():
+        print(f"  {key}: {value}")
+    print(f"=== END USER STATUS DEBUG ===")
+    
+    return f"""
+    <h2>User Status Debug</h2>
+    <pre>{json.dumps(debug_info, indent=2)}</pre>
+    <p><a href="/upgrade">Go to Payment Page</a></p>
+    <p><a href="/upload_video">Try Upload Page</a></p>
+    <p><a href="/debug/force_upgrade">Force Upgrade (Debug)</a></p>
+    """
+
+@app.route('/debug/force_upgrade')
+@login_required
+def debug_force_upgrade():
+    """Debug endpoint to force upgrade user to paid status"""
+    conn = sqlite3.connect('tournament.db')
+    c = conn.cursor()
+    
+    # Force update user to paid status
+    c.execute('UPDATE users SET is_paid = TRUE WHERE id = ?', (session['user_id'],))
+    conn.commit()
+    conn.close()
+    
+    # Update session
+    session['is_paid'] = True
+    
+    return f"""
+    <h2>Debug: User Upgraded</h2>
+    <p>User ID {session['user_id']} has been upgraded to paid status.</p>
+    <p><a href="/debug/user_status">Check Status</a></p>
+    <p><a href="/upload_video">Go to Upload</a></p>
+    """
+
+
 # Routes
 @app.route('/')
 def index():
@@ -585,128 +643,56 @@ def debug_user_status():
     """Debug endpoint to check user payment status"""
     conn = sqlite3.connect('tournament.db')
     c = conn.cursor()
-    c.execute('SELECT id, username, is_paid FROM users WHERE id = ?', (session['user_id'],))
-    user = c.fetchone()
     
-    # Also check recent payment transactions
-    c.execute('''SELECT transaction_id, provider, status, created_at 
-                FROM payment_transactions 
-                WHERE user_id = ? 
-                ORDER BY created_at DESC LIMIT 5''', (session['user_id'],))
-    transactions = c.fetchall()
+    # Get user info
+    c.execute('SELECT id, username, email, is_paid FROM users WHERE id = ?', (session['user_id'],))
+    user = c.fetchone()
     conn.close()
     
     debug_info = {
-        'user_id': session.get('user_id'),
-        'session_is_paid': session.get('is_paid'),
-        'database_user': user,
-        'recent_transactions': transactions,
-        'current_user_is_paid': user[2] if user else None
+        'user_id': session['user_id'],
+        'session_is_paid': session.get('is_paid', 'Not set'),
+        'database_is_paid': user[3] if user else 'User not found',
+        'username': user[1] if user else 'Unknown',
+        'email': user[2] if user else 'Unknown',
+        'can_access_upload': user[3] == 1 if user else False
     }
     
-    return jsonify(debug_info)
+    print(f"=== USER STATUS DEBUG ===")
+    for key, value in debug_info.items():
+        print(f"  {key}: {value}")
+    print(f"=== END USER STATUS DEBUG ===")
+    
+    return f"""
+    <h2>User Status Debug</h2>
+    <pre>{json.dumps(debug_info, indent=2)}</pre>
+    <p><a href="/upgrade">Go to Payment Page</a></p>
+    <p><a href="/upload_video">Try Upload Page</a></p>
+    <p><a href="/debug/force_upgrade">Force Upgrade (Debug)</a></p>
+    """
 
-@app.route('/debug/force_upgrade', methods=['POST'])
+@app.route('/debug/force_upgrade')
 @login_required
 def debug_force_upgrade():
-    """Force upgrade user to paid status for testing"""
+    """Debug endpoint to force upgrade user to paid status"""
     conn = sqlite3.connect('tournament.db')
     c = conn.cursor()
     
-    print(f"🔧 FORCE UPGRADE: Updating user {session['user_id']} to paid status")
+    # Force update user to paid status
     c.execute('UPDATE users SET is_paid = TRUE WHERE id = ?', (session['user_id'],))
-    
-    # Verify the update
-    c.execute('SELECT is_paid FROM users WHERE id = ?', (session['user_id'],))
-    updated_status = c.fetchone()
-    
     conn.commit()
     conn.close()
     
+    # Update session
     session['is_paid'] = True
     
-    return jsonify({
-        'success': True,
-        'message': f'User {session["user_id"]} upgraded to paid status',
-        'database_status': updated_status[0] if updated_status else None,
-        'session_status': session.get('is_paid')
-    })
+    return f"""
+    <h2>Debug: User Upgraded</h2>
+    <p>User ID {session['user_id']} has been upgraded to paid status.</p>
+    <p><a href="/debug/user_status">Check Status</a></p>
+    <p><a href="/upload_video">Go to Upload</a></p>
+    """
 
-@app.route('/dashboard')
-@login_required
-def dashboard():
-    conn = sqlite3.connect('tournament.db')
-    c = conn.cursor()
-    
-    # Get user's videos
-    c.execute('''SELECT id, title, filename, total_votes, average_rating, upload_date 
-                 FROM videos WHERE user_id = ? ORDER BY upload_date DESC''', 
-              (session['user_id'],))
-    user_videos_raw = c.fetchall()
-    
-    # Convert to proper data types
-    user_videos = []
-    for video in user_videos_raw:
-        video_list = list(video)
-        video_list[3] = int(video_list[3]) if video_list[3] is not None else 0  # total_votes
-        video_list[4] = float(video_list[4]) if video_list[4] is not None else 0.0  # average_rating
-        user_videos.append(tuple(video_list))
-    
-    # Get user's payment status
-    c.execute('SELECT is_paid FROM users WHERE id = ?', (session['user_id'],))
-    payment_result = c.fetchone()
-    user_payment_status = payment_result[0] if payment_result else False
-    
-    conn.close()
-    return render_template('dashboard.html', user_videos=user_videos, is_paid=user_payment_status)
-
-@app.route('/videos')
-def videos():
-    # Get sort parameter from URL (default: recent)
-    sort_by = request.args.get('sort', 'recent')
-    print(f"=== VIDEOS DEBUG: Sort parameter = '{sort_by}' ===")
-    
-    conn = sqlite3.connect('tournament.db')
-    c = conn.cursor()
-    
-    # Determine sorting based on parameter
-    if sort_by == 'top_rated':
-        print("Using TOP RATED sorting")
-        # Sort by average rating first, then by votes, only show approved and unblocked videos with votes
-        c.execute('''SELECT v.id, v.title, v.filename, v.total_votes, v.average_rating, u.username, v.upload_date
-                     FROM videos v JOIN users u ON v.user_id = u.id 
-                     WHERE v.total_votes > 0 AND v.is_approved = 1 AND v.is_blocked = 0
-                     ORDER BY v.average_rating DESC, v.total_votes DESC''')
-    elif sort_by == 'most_voted':
-        print("Using MOST VOTED sorting")
-        # Sort by total votes, only show approved and unblocked videos
-        c.execute('''SELECT v.id, v.title, v.filename, v.total_votes, v.average_rating, u.username, v.upload_date
-                     FROM videos v JOIN users u ON v.user_id = u.id 
-                     WHERE v.is_approved = 1 AND v.is_blocked = 0
-                     ORDER BY v.total_votes DESC, v.average_rating DESC''')
-    else:  # recent (default)
-        print("Using RECENT sorting (default)")
-        # Sort by upload date (newest first), only show approved and unblocked videos
-        c.execute('''SELECT v.id, v.title, v.filename, v.total_votes, v.average_rating, u.username, v.upload_date
-                     FROM videos v JOIN users u ON v.user_id = u.id 
-                     WHERE v.is_approved = 1 AND v.is_blocked = 0
-                     ORDER BY v.upload_date DESC''')
-    
-    all_videos_raw = c.fetchall()
-    print(f"Found {len(all_videos_raw)} videos")
-    
-    # Convert to proper data types
-    all_videos = []
-    for video in all_videos_raw:
-        video_list = list(video)
-        video_list[3] = int(video_list[3]) if video_list[3] is not None else 0  # total_votes
-        video_list[4] = float(video_list[4]) if video_list[4] is not None else 0.0  # average_rating
-        all_videos.append(tuple(video_list))
-        print(f"  Video: {video_list[1]}, Votes: {video_list[3]}, Rating: {video_list[4]}")
-    
-    conn.close()
-    print(f"=== END VIDEOS DEBUG ===")
-    return render_template('videos.html', videos=all_videos, current_sort=sort_by)
 
 @app.route('/upload_video', methods=['GET', 'POST'])
 @login_required
@@ -1857,6 +1843,20 @@ def admin_dashboard():
     
     c.execute('SELECT COUNT(*) FROM users WHERE DATE(last_login) = DATE("now")')
     stats['active_today'] = c.fetchone()[0]
+    
+    # Video statistics
+    c.execute('SELECT COUNT(*) FROM videos')
+    stats['total_videos'] = c.fetchone()[0]
+    
+    c.execute('SELECT COUNT(*) FROM videos WHERE is_approved = 0')
+    stats['pending_videos'] = c.fetchone()[0]
+    
+    c.execute('SELECT COUNT(*) FROM videos WHERE is_blocked = 1')
+    stats['blocked_videos'] = c.fetchone()[0]
+    
+    c.execute('SELECT COUNT(*) FROM videos WHERE DATE(upload_date) = DATE("now")')
+    stats['videos_today'] = c.fetchone()[0]
+    
     
     # Video statistics
     c.execute('SELECT COUNT(*) FROM videos')
