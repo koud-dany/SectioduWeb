@@ -406,46 +406,36 @@ def upload_to_cloudinary(file_path, public_id):
                 'demo_mode': True
             }
         
-        # Use signed upload (proper method for Cloudinary)
-        cloudinary_url = f"https://api.cloudinary.com/v1_1/{app.config['CLOUDINARY_CLOUD_NAME']}/video/upload"
+        # Use simple file upload to auto-generated public_id
+        cloudinary_url = f"https://api.cloudinary.com/v1_1/{app.config['CLOUDINARY_CLOUD_NAME']}/auto/upload"
         
-        # Generate timestamp for signed upload
+        # Generate timestamp and signature for authenticated upload
         import time
         timestamp = int(time.time())
         
-        # Create signature for signed upload (include all parameters that will be sent)
+        # Create a simple signature with just timestamp (most minimal approach)
         import hashlib
         import hmac
         
-        # Parameters for signature (alphabetical order, only non-file parameters)
-        params_to_sign = {
-            'public_id': public_id,
-            'timestamp': str(timestamp)
-        }
-        
-        # Create signature string (alphabetical order)
-        sorted_params = sorted(params_to_sign.items())
-        params_string = '&'.join([f'{k}={v}' for k, v in sorted_params])
-        
+        # Just use timestamp for signature
+        params_string = f"timestamp={timestamp}"
         signature = hmac.new(
             app.config['CLOUDINARY_API_SECRET'].encode('utf-8'),
             params_string.encode('utf-8'),
             hashlib.sha1
         ).hexdigest()
         
-        print(f"🔐 Signature params: {params_string}")
-        print(f"🔐 Generated signature: {signature}")
-        
         with open(file_path, 'rb') as f:
             files = {'file': f}
             data = {
-                'public_id': public_id,
                 'api_key': app.config['CLOUDINARY_API_KEY'],
                 'timestamp': str(timestamp),
-                'signature': signature
+                'signature': signature,
+                'folder': 'videos'  # Organize videos in a folder
             }
             
-            print(f"☁️ Uploading to Cloudinary with signed upload: {public_id}")
+            print(f"☁️ Simple Cloudinary upload to videos folder")
+            print(f"🔐 Signature: timestamp={timestamp} -> {signature}")
             response = requests.post(cloudinary_url, files=files, data=data, timeout=120)
             
             print(f"☁️ Cloudinary response status: {response.status_code}")
