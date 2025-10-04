@@ -417,12 +417,26 @@ def upload_to_cloudinary(file_path, public_id):
         import hashlib
         import hmac
         
-        params_to_sign = f"public_id={public_id}&resource_type=video&timestamp={timestamp}"
+        # Build signature parameters in alphabetical order (required by Cloudinary)
+        # Only include parameters that will be sent to Cloudinary
+        signature_params = {
+            'public_id': public_id,
+            'resource_type': 'video',
+            'timestamp': str(timestamp)
+        }
+        
+        # Create the signature string with parameters in alphabetical order
+        sorted_params = sorted(signature_params.items())
+        params_string = '&'.join([f'{k}={v}' for k, v in sorted_params])
+        
         signature = hmac.new(
             app.config['CLOUDINARY_API_SECRET'].encode('utf-8'),
-            params_to_sign.encode('utf-8'),
+            params_string.encode('utf-8'),
             hashlib.sha1
         ).hexdigest()
+        
+        print(f"🔐 Signature params: {params_string}")
+        print(f"🔐 Generated signature: {signature}")
         
         with open(file_path, 'rb') as f:
             files = {'file': f}
@@ -430,7 +444,7 @@ def upload_to_cloudinary(file_path, public_id):
                 'public_id': public_id,
                 'resource_type': 'video',
                 'api_key': app.config['CLOUDINARY_API_KEY'],
-                'timestamp': timestamp,
+                'timestamp': str(timestamp),
                 'signature': signature
             }
             
