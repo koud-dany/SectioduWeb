@@ -86,9 +86,9 @@
             <div class="mb-3">
                 <div class="position-relative video-container" style="aspect-ratio: 16/9; max-width: 100%; background: #000; border-radius: 12px; overflow: hidden;">
                     <video class="w-100 h-100 shadow-lg" controls preload="metadata" style="object-fit: contain; border-radius: 12px;">
-                        <source src="{{ url_for('static', filename='uploads/' + video[4]) }}" type="video/mp4">
-                        <source src="{{ url_for('static', filename='uploads/' + video[4]) }}" type="video/webm">
-                        <source src="{{ url_for('static', filename='uploads/' + video[4]) }}" type="video/ogg">
+                        <source src="{{ get_video_url(video[4]) }}" type="video/mp4">
+                        <source src="{{ get_video_url(video[4]) }}" type="video/webm">
+                        <source src="{{ get_video_url(video[4]) }}" type="video/ogg">
                         <p class="text-center text-muted mt-3">
                             <i class="fas fa-exclamation-triangle me-2"></i>
                             Your browser does not support the video tag or the video format.
@@ -396,7 +396,7 @@
                                 <!-- Video Thumbnail -->
                                 <div class="position-relative me-3" style="min-width: 120px; width: 120px; height: 68px; overflow: hidden; border-radius: 8px; background: #f8f9fa;">
                                     <video class="w-100 h-100" style="object-fit: cover;" muted preload="metadata">
-                                        <source src="{{ url_for('static', filename='uploads/' + top_video[2]) }}" type="video/mp4">
+                                        <source src="{{ get_video_url(top_video[2]) }}" type="video/mp4">
                                     </video>
                                     <!-- Rating Badge -->
                                     <div class="position-absolute bottom-0 end-0 bg-dark text-white px-1 rounded-start" style="font-size: 0.7rem;">

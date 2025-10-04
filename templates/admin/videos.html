@@ -68,7 +68,7 @@
                             <td>
                                 <div class="d-flex align-items-center">
                                     <video width="80" height="60" class="rounded me-3" muted preload="metadata">
-                                        <source src="{{ url_for('static', filename='uploads/' + video[2]) }}" type="video/mp4">
+                                        <source src="{{ get_video_url(video[2]) }}" type="video/mp4">
                                     </video>
                                     <div>
                                         <div class="fw-bold">{{ video[1][:40] }}{{ '...' if video[1]|length > 40 else '' }}</div>

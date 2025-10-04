@@ -210,7 +210,7 @@
                             <div class="position-relative video-thumbnail-container" style="aspect-ratio: 16/9; overflow: hidden;">
                                 <video class="w-100 h-100 video-preview" style="object-fit: cover; transition: transform 0.3s ease; pointer-events: none;" 
                                        muted preload="metadata" playsinline>
-                                    <source src="{{ url_for('static', filename='uploads/' + video[2]) }}" type="video/mp4">
+                                    <source src="{{ get_video_url(video[2]) }}" type="video/mp4">
                                 </video>
                             
                             <!-- Gradient Overlay -->

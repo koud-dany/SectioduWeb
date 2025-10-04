@@ -9,6 +9,24 @@ class Config:
     UPLOAD_FOLDER = 'static/uploads'
     MAX_CONTENT_LENGTH = 100 * 1024 * 1024  # 100MB max file size
     
+    # File Storage Configuration
+    USE_CLOUD_STORAGE = os.environ.get('USE_CLOUD_STORAGE', 'false').lower() == 'true'
+    
+    # AWS S3 Configuration (for cloud storage)
+    AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID', '')
+    AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY', '')
+    AWS_BUCKET_NAME = os.environ.get('AWS_BUCKET_NAME', 'videovote-uploads')
+    AWS_REGION = os.environ.get('AWS_REGION', 'us-east-1')
+    
+    # Cloudinary Configuration (alternative cloud storage)
+    CLOUDINARY_CLOUD_NAME = os.environ.get('CLOUDINARY_CLOUD_NAME', 'dah47os9w')
+    CLOUDINARY_API_KEY = os.environ.get('CLOUDINARY_API_KEY', '868181856457282')
+    CLOUDINARY_API_SECRET = os.environ.get('CLOUDINARY_API_SECRET', 'gInN33v-vwB9wkRXvIuaJ7fN7jw')
+    CLOUDINARY_UPLOAD_PRESET = os.environ.get('CLOUDINARY_UPLOAD_PRESET', 'ml_default')
+    
+    # File extensions
+    ALLOWED_EXTENSIONS = {'mp4', 'avi', 'mov', 'wmv', 'flv', 'webm', 'mkv'}
+    
     # Mobile Money Configuration - Load from environment variables (set via .env Secret File in Render)
     MTN_MOMO_API_USER = os.environ.get('MTN_MOMO_API_USER', '')
     MTN_MOMO_API_KEY = os.environ.get('MTN_MOMO_API_KEY', '')

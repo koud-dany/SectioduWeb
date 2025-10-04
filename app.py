@@ -8,6 +8,8 @@ from datetime import datetime
 from functools import wraps
 import traceback
 from config import Config
+import urllib.parse
+import requests
 
 # Debug: Print deployment info at startup
 try:
@@ -43,8 +45,14 @@ def inject_user_status():
         c.execute('SELECT is_paid FROM users WHERE id = ?', (session['user_id'],))
         result = c.fetchone()
         conn.close()
-        return {'current_user_is_paid': result[0] if result else False}
-    return {'current_user_is_paid': False}
+        return {
+            'current_user_is_paid': result[0] if result else False,
+            'get_video_url': get_video_url
+        }
+    return {
+        'current_user_is_paid': False,
+        'get_video_url': get_video_url
+    }
 
 # Ensure upload directory exists
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
@@ -361,6 +369,103 @@ def ensure_db_initialized():
 # Initialize database when module is imported (for production deployment)
 ensure_db_initialized()
 
+# Cloud Storage Helper Functions
+def is_demo_cloudinary():
+    """Check if using demo Cloudinary credentials"""
+    demo_cloud_names = ['demo-videovote-cloud', 'your-cloud-name', 'test-cloud']
+    demo_api_keys = ['123456789012345', 'your-api-key', 'test-api-key']
+    
+    # Your real credentials - not demo mode
+    real_cloud_name = 'dah47os9w'
+    real_api_key = '868181856457282'
+    
+    current_cloud_name = app.config.get('CLOUDINARY_CLOUD_NAME', '')
+    current_api_key = app.config.get('CLOUDINARY_API_KEY', '')
+    
+    # If using real credentials, not demo mode
+    if current_cloud_name == real_cloud_name and current_api_key == real_api_key:
+        return False
+    
+    return (current_cloud_name in demo_cloud_names or 
+            current_api_key in demo_api_keys)
+
+def upload_to_cloudinary(file_path, public_id):
+    """Upload file to Cloudinary (or simulate in demo mode)"""
+    try:
+        # Demo mode - simulate successful upload
+        if is_demo_cloudinary():
+            print(f"☁️ DEMO MODE: Simulating Cloudinary upload for {public_id}")
+            
+            # Generate a mock Cloudinary URL
+            mock_url = f"https://res.cloudinary.com/{app.config['CLOUDINARY_CLOUD_NAME']}/video/upload/v1234567890/{public_id}.mp4"
+            
+            return {
+                'success': True,
+                'url': mock_url,
+                'public_id': public_id,
+                'demo_mode': True
+            }
+        
+        # Real Cloudinary upload (when proper credentials are provided)
+        cloudinary_url = f"https://api.cloudinary.com/v1_1/{app.config['CLOUDINARY_CLOUD_NAME']}/video/upload"
+        
+        with open(file_path, 'rb') as f:
+            files = {'file': f}
+            data = {
+                'upload_preset': app.config.get('CLOUDINARY_UPLOAD_PRESET', 'ml_default'),
+                'public_id': public_id,
+                'resource_type': 'video'
+            }
+            
+            response = requests.post(cloudinary_url, files=files, data=data)
+            result = response.json()
+            
+            if response.status_code == 200 and 'secure_url' in result:
+                return {
+                    'success': True,
+                    'url': result['secure_url'],
+                    'public_id': result['public_id']
+                }
+            else:
+                return {
+                    'success': False,
+                    'error': result.get('error', {}).get('message', 'Upload failed')
+                }
+    except Exception as e:
+        return {
+            'success': False,
+            'error': str(e)
+        }
+
+def should_use_cloud_storage():
+    """Check if we should use cloud storage (on Render or if configured)"""
+    # Always use cloud storage on Render (ephemeral file system)
+    if os.environ.get('RENDER') is not None:
+        return True
+    
+    # Use cloud storage if explicitly enabled
+    if app.config.get('USE_CLOUD_STORAGE', False):
+        return True
+    
+    # Use cloud storage if Cloudinary is configured (even in demo mode)
+    if app.config.get('CLOUDINARY_CLOUD_NAME'):
+        return True
+        
+    return False
+
+def get_video_url(filename):
+    """Get video URL - either local or cloud based on configuration"""
+    if should_use_cloud_storage():
+        # Check if it's a cloud URL already
+        if filename.startswith('http'):
+            return filename
+        # Generate Cloudinary URL
+        if app.config.get('CLOUDINARY_CLOUD_NAME'):
+            return f"https://res.cloudinary.com/{app.config['CLOUDINARY_CLOUD_NAME']}/video/upload/{filename}"
+    
+    # Fallback to local URL
+    return url_for('static', filename=f'uploads/{filename}')
+
 # Helper functions
 def login_required(f):
     @wraps(f)
@@ -616,6 +721,54 @@ def debug_user_status():
     
     return jsonify(debug_info)
 
+@app.route('/debug/video_files')
+@login_required 
+def debug_video_files():
+    """Debug endpoint to check video file status on Render"""
+    try:
+        conn = sqlite3.connect('tournament.db')
+        c = conn.cursor()
+        c.execute('SELECT id, title, filename, upload_date, file_size FROM videos ORDER BY upload_date DESC LIMIT 10')
+        videos = c.fetchall()
+        conn.close()
+        
+        file_status = []
+        upload_folder = app.config['UPLOAD_FOLDER']
+        
+        for video in videos:
+            video_id, title, filename, upload_date, file_size = video
+            file_path = os.path.join(upload_folder, filename)
+            exists = os.path.exists(file_path)
+            actual_size = os.path.getsize(file_path) if exists else 0
+            
+            file_status.append({
+                'video_id': video_id,
+                'title': title,
+                'filename': filename,
+                'upload_date': upload_date,
+                'expected_size': file_size,
+                'file_exists': exists,
+                'actual_size': actual_size,
+                'file_path': file_path
+            })
+        
+        return jsonify({
+            'upload_folder': upload_folder,
+            'upload_folder_exists': os.path.exists(upload_folder),
+            'videos': file_status,
+            'total_videos_in_db': len(videos),
+            'current_working_directory': os.getcwd(),
+            'render_info': {
+                'is_render': os.environ.get('RENDER') is not None,
+                'render_service_name': os.environ.get('RENDER_SERVICE_NAME', 'Unknown')
+            }
+        })
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'error_type': type(e).__name__
+        })
+
 @app.route('/debug/force_upgrade', methods=['POST'])
 @login_required
 def debug_force_upgrade():
@@ -807,34 +960,66 @@ def upload_video():
             file_path = os.path.join(upload_path, filename)
             print(f"Full file path: {file_path}")
             
-            # Save file
+            # Save file locally first
             print("Starting file save operation...")
             file.save(file_path)
-            print("File saved successfully!")
+            print("File saved locally successfully!")
             
-            # Verify file was saved
+            # Verify file was saved locally
             if os.path.exists(file_path):
                 saved_size = os.path.getsize(file_path)
-                print(f"File saved and verified. Size: {saved_size} bytes")
+                print(f"File saved and verified locally. Size: {saved_size} bytes")
                 
                 if saved_size != file_size:
                     print(f"WARNING: Size mismatch! Original: {file_size}, Saved: {saved_size}")
             else:
-                print("ERROR: File was not saved!")
+                print("ERROR: File was not saved locally!")
                 flash('Error saving video file')
                 return redirect(request.url)
+            
+            # Handle cloud storage if needed
+            final_filename = filename
+            cloud_url = None
+            
+            if should_use_cloud_storage():
+                print("Cloud storage required - uploading to Cloudinary...")
+                
+                if app.config.get('CLOUDINARY_CLOUD_NAME'):
+                    # Generate public_id without extension for Cloudinary
+                    public_id = f"videos/{filename.rsplit('.', 1)[0]}"
+                    
+                    result = upload_to_cloudinary(file_path, public_id)
+                    
+                    if result['success']:
+                        cloud_url = result['url']
+                        final_filename = cloud_url  # Store cloud URL as filename
+                        print(f"✅ Cloud upload successful: {cloud_url}")
+                        
+                        # Clean up local file on cloud platforms
+                        try:
+                            os.remove(file_path)
+                            print("🗑️  Local file cleaned up after cloud upload")
+                        except Exception as cleanup_error:
+                            print(f"⚠️  Could not clean up local file: {cleanup_error}")
+                    else:
+                        print(f"❌ Cloud upload failed: {result['error']}")
+                        flash(f"Warning: Could not upload to cloud storage: {result['error']}", 'warning')
+                        # Continue with local storage as fallback
+                else:
+                    print("⚠️  Cloud storage requested but Cloudinary not configured")
+                    flash("Warning: Cloud storage not properly configured", 'warning')
             
             print("Starting database save...")
             
             # Calculate file size
-            file_size_bytes = os.path.getsize(file_path)
+            file_size_bytes = saved_size
             
             # Save to database (videos need admin approval before appearing on platform)
             conn = sqlite3.connect('tournament.db')
             c = conn.cursor()
             c.execute('''INSERT INTO videos (user_id, title, description, filename, file_size, is_approved) 
                         VALUES (?, ?, ?, ?, ?, ?)''',
-                     (session['user_id'], title, description, filename, file_size_bytes, False))
+                     (session['user_id'], title, description, final_filename, file_size_bytes, False))
             
             video_id = c.lastrowid
             print(f"Video saved to database with ID: {video_id}")
