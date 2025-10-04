@@ -2415,7 +2415,9 @@ def admin_handle_report(report_id):
 @admin_required('super')
 def admin_delete_user(user_id):
     """Permanently delete a user account and all associated data"""
+    print(f"Delete user function called for user_id: {user_id}")  # Debug
     confirm_delete = request.form.get('confirm_delete')
+    print(f"Confirmation text received: '{confirm_delete}'")  # Debug
     
     if confirm_delete != 'DELETE':
         flash('Delete confirmation failed. Please type "DELETE" exactly.', 'error')
@@ -2435,7 +2437,7 @@ def admin_delete_user(user_id):
     
     if not user:
         flash('User not found.', 'error')
-        conn.close();
+        conn.close()
         return redirect(url_for('admin_users'))
     
     username = user[0]
@@ -2469,17 +2471,18 @@ def admin_delete_user(user_id):
         c.execute('DELETE FROM videos WHERE user_id = ?', (user_id,))
         c.execute('DELETE FROM users WHERE id = ?', (user_id,))
         
-        conn.commit();
+        conn.commit()
         
         log_admin_action(session['user_id'], 'delete_user', 'user', user_id, 
                         f"Permanently deleted user account: {username}")
         flash(f'User account "{username}" has been permanently deleted.', 'success')
         
     except Exception as e:
-        conn.rollback();
+        conn.rollback()
+        print(f"Error deleting user {user_id}: {str(e)}")  # Add logging
         flash(f'Error deleting user account: {str(e)}', 'error')
     finally:
-        conn.close();
+        conn.close()
     
     return redirect(url_for('admin_users'))
 

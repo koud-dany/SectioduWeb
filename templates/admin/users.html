@@ -312,7 +312,7 @@
                                                         <label class="form-label">Type "DELETE" to confirm:</label>
                                                         <input type="text" class="form-control" name="confirm_delete" 
                                                                required placeholder="Type DELETE here" 
-                                                               onkeyup="this.value === 'DELETE' ? this.parentNode.parentNode.querySelector('.btn-danger').disabled = false : this.parentNode.parentNode.querySelector('.btn-danger').disabled = true">
+                                                               onkeyup="toggleDeleteButton(this, 'deleteUserModal{{ user[0] }}')">
                                                     </div>
                                                 </div>
                                                 <div class="modal-footer">
@@ -1309,5 +1309,27 @@ document.addEventListener('click', function(e) {
         forceCloseModals();
     }
 });
+
+// Function to toggle delete button based on confirmation input
+function toggleDeleteButton(inputElement, modalId) {
+    console.log('Toggle delete button called:', inputElement.value, modalId);
+    const modal = document.getElementById(modalId);
+    const deleteButton = modal.querySelector('.btn-danger[type="submit"]');
+    
+    if (!modal || !deleteButton) {
+        console.error('Modal or delete button not found:', modalId);
+        return;
+    }
+    
+    if (inputElement.value === 'DELETE') {
+        deleteButton.disabled = false;
+        deleteButton.style.opacity = '1';
+        console.log('Delete button enabled');
+    } else {
+        deleteButton.disabled = true;
+        deleteButton.style.opacity = '0.6';
+        console.log('Delete button disabled');
+    }
+}
 </script>
 {% endblock %}
