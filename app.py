@@ -406,50 +406,28 @@ def upload_to_cloudinary(file_path, public_id):
                 'demo_mode': True
             }
         
-        # Real Cloudinary upload (signed upload - no preset required)
+        # Use basic authentication upload (simpler and more reliable)
         cloudinary_url = f"https://api.cloudinary.com/v1_1/{app.config['CLOUDINARY_CLOUD_NAME']}/video/upload"
         
-        # Generate timestamp for signed upload
-        import time
-        timestamp = int(time.time())
-        
-        # Create signature for signed upload
-        import hashlib
-        import hmac
-        
-        # Build signature parameters in alphabetical order (required by Cloudinary)
-        # Only include parameters that will be sent to Cloudinary
-        signature_params = {
-            'public_id': public_id,
-            'resource_type': 'video',
-            'timestamp': str(timestamp)
-        }
-        
-        # Create the signature string with parameters in alphabetical order
-        sorted_params = sorted(signature_params.items())
-        params_string = '&'.join([f'{k}={v}' for k, v in sorted_params])
-        
-        signature = hmac.new(
-            app.config['CLOUDINARY_API_SECRET'].encode('utf-8'),
-            params_string.encode('utf-8'),
-            hashlib.sha1
-        ).hexdigest()
-        
-        print(f"🔐 Signature params: {params_string}")
-        print(f"🔐 Generated signature: {signature}")
+        # Create basic auth string
+        import base64
+        auth_string = f"{app.config['CLOUDINARY_API_KEY']}:{app.config['CLOUDINARY_API_SECRET']}"
+        auth_encoded = base64.b64encode(auth_string.encode()).decode()
         
         with open(file_path, 'rb') as f:
             files = {'file': f}
             data = {
                 'public_id': public_id,
                 'resource_type': 'video',
-                'api_key': app.config['CLOUDINARY_API_KEY'],
-                'timestamp': str(timestamp),
-                'signature': signature
+                'overwrite': 'true'
             }
             
-            print(f"☁️ Uploading to Cloudinary: {public_id}")
-            response = requests.post(cloudinary_url, files=files, data=data, timeout=120)
+            headers = {
+                'Authorization': f'Basic {auth_encoded}'
+            }
+            
+            print(f"☁️ Uploading to Cloudinary with basic auth: {public_id}")
+            response = requests.post(cloudinary_url, files=files, data=data, headers=headers, timeout=120)
             
             print(f"☁️ Cloudinary response status: {response.status_code}")
             
@@ -474,6 +452,7 @@ def upload_to_cloudinary(file_path, public_id):
                     result = response.json()
                     error_msg = result.get('error', {}).get('message', str(result))
                     print(f"❌ Cloudinary upload failed: {error_msg}")
+                    print(f"❌ Full response: {result}")
                 except:
                     error_msg = response.text or f"HTTP {response.status_code}"
                     print(f"❌ Cloudinary upload failed: {error_msg}")
