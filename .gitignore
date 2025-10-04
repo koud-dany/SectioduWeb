@@ -135,8 +135,8 @@ static/uploads/*
 static/thumbnails/*
 !static/thumbnails/.gitkeep
 
-# Stripe API Keys (IMPORTANT: Never commit these!)
-stripe_config.py
+# Mobile Money API Keys (IMPORTANT: Never commit these!)
+mobile_money_config.py
 
 # Environment variables
 .env

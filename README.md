@@ -11,7 +11,7 @@ A modern Flask-based video competition platform where users can upload videos, v
 - **User Profiles**: Comprehensive user profiles with statistics and achievements
 - **Admin Panel**: Administrative interface for managing users and content
 - **Responsive Design**: Modern, mobile-friendly Bootstrap UI
-- **Payment Integration**: Stripe integration for premium features
+- **Payment Integration**: Mobile Money integration for premium features
 
 ## Tech Stack
 
@@ -19,7 +19,7 @@ A modern Flask-based video competition platform where users can upload videos, v
 - **Frontend**: HTML5, CSS3, Bootstrap 5, JavaScript
 - **Database**: SQLite
 - **Authentication**: Flask sessions
-- **Payment**: Stripe API
+- **Payment**: Mobile Money APIs (MTN MoMo, Orange Money, Airtel Money)
 - **File Upload**: Video and image handling
 
 ## Installation
@@ -46,9 +46,9 @@ pip install -r requirements.txt
 python setup.py
 ```
 
-5. Configure Stripe (optional):
-   - Copy `stripe_config.py.example` to `stripe_config.py`
-   - Add your Stripe API keys
+5. Configure Mobile Money (optional):
+   - Edit `mobile_money_config.py` with your API credentials
+   - See `MOBILE_MONEY_SETUP.md` for detailed setup instructions
 
 6. Run the application:
 ```bash
@@ -84,8 +84,9 @@ Visit `http://localhost:5000` to access the application.
    ```
    SECRET_KEY=your-super-secret-key-here
    FLASK_ENV=production
-   STRIPE_PUBLISHABLE_KEY=pk_test_your_publishable_key_here
-   STRIPE_SECRET_KEY=sk_test_your_secret_key_here
+   MTN_MOMO_API_USER=bcf6b5d8-5a06-4f33-af77-7b8c9e2f1a3d
+   MTN_MOMO_API_KEY=test-api-key-for-development-2024
+   MTN_MOMO_SUBSCRIPTION_KEY=4842e41f28e44ed5b43f629dd9785b41
    ```
 
 4. **Deploy**: Click "Deploy" and wait for completion
@@ -93,7 +94,7 @@ Visit `http://localhost:5000` to access the application.
 ### Troubleshooting Render Deployment
 
 - **"gunicorn: command not found"**: Ensure `gunicorn==21.2.0` is in `requirements.txt`
-- **Stripe errors**: Set environment variables for Stripe keys
+- **Mobile Money errors**: Set environment variables for Mobile Money API keys
 - **Database issues**: SQLite works on Render's free tier
 
 ## Project Structure

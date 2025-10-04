@@ -520,33 +520,90 @@ document.querySelectorAll('.vote-stars i').forEach(function(star, index) {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                // Show success notification with link to top rated
-                const notification = document.createElement('div');
-                notification.className = 'alert alert-success alert-dismissible fade show mt-3';
-                notification.innerHTML = `
-                    <strong><i class="fas fa-check-circle"></i> Vote submitted!</strong> 
-                    You rated this video ${data.user_rating} stars. 
-                    <div class="mt-2">
-                        <small><strong>Updated stats:</strong> ${data.average_rating.toFixed(1)} avg rating • ${data.total_votes} total votes</small>
-                    </div>
-                    <div class="mt-2">
-                        <a href="/videos?sort=top_rated" class="btn btn-sm btn-warning">
-                            <i class="fas fa-trophy"></i> View Top Rated Videos
-                        </a>
-                        <button type="button" class="btn-close float-end" data-bs-dismiss="alert"></button>
+                // Show professional toast notification that doesn't affect layout
+                const toast = document.createElement('div');
+                toast.className = 'toast align-items-center text-white bg-success border-0 show';
+                toast.style.cssText = `
+                    position: fixed;
+                    top: 80px;
+                    right: 20px;
+                    z-index: 1060;
+                    min-width: 350px;
+                    max-width: 400px;
+                    border-radius: 10px;
+                    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+                    animation: slideInRight 0.4s ease-out;
+                `;
+                toast.setAttribute('role', 'alert');
+                toast.setAttribute('aria-live', 'assertive');
+                toast.setAttribute('aria-atomic', 'true');
+                
+                toast.innerHTML = `
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="fas fa-check-circle me-2 text-white" style="font-size: 1.1em;"></i>
+                                <strong>Vote Submitted!</strong>
+                            </div>
+                            <div class="mb-2">
+                                You rated this video <strong>${data.user_rating} stars</strong>
+                            </div>
+                            <div class="mb-2">
+                                <small><strong>Updated:</strong> ${data.average_rating.toFixed(1)} avg • ${data.total_votes} votes</small>
+                            </div>
+                            <div class="mt-2">
+                                <a href="/videos?sort=top_rated" class="btn btn-sm btn-light text-success fw-bold">
+                                    <i class="fas fa-trophy me-1"></i> View Top Rated
+                                </a>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" onclick="this.parentElement.parentElement.remove()"></button>
                     </div>
                 `;
                 
-                // Insert notification at the top of the page
-                const container = document.querySelector('.container');
-                container.insertBefore(notification, container.firstChild);
+                // Add CSS animation for smooth entry
+                if (!document.querySelector('#toast-animations')) {
+                    const style = document.createElement('style');
+                    style.id = 'toast-animations';
+                    style.textContent = `
+                        @keyframes slideInRight {
+                            from {
+                                transform: translateX(100%);
+                                opacity: 0;
+                            }
+                            to {
+                                transform: translateX(0);
+                                opacity: 1;
+                            }
+                        }
+                        @keyframes slideOutRight {
+                            from {
+                                transform: translateX(0);
+                                opacity: 1;
+                            }
+                            to {
+                                transform: translateX(100%);
+                                opacity: 0;
+                            }
+                        }
+                    `;
+                    document.head.appendChild(style);
+                }
                 
-                // Auto-remove notification after 8 seconds
+                // Add toast to body (not container)
+                document.body.appendChild(toast);
+                
+                // Auto-remove toast after 6 seconds with animation
                 setTimeout(() => {
-                    if (notification.parentNode) {
-                        notification.remove();
+                    if (toast.parentNode) {
+                        toast.style.animation = 'slideOutRight 0.4s ease-in forwards';
+                        setTimeout(() => {
+                            if (toast.parentNode) {
+                                toast.remove();
+                            }
+                        }, 400);
                     }
-                }, 8000);
+                }, 6000);
                 
                 // Reload to show updated stats
                 setTimeout(() => location.reload(), 2000);

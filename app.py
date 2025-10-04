@@ -3,7 +3,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 import sqlite3
 import os
-import stripe
+
 from datetime import datetime
 from functools import wraps
 import traceback
@@ -281,6 +281,21 @@ def init_db():
         FOREIGN KEY (user_id) REFERENCES users (id),
         FOREIGN KEY (video_id) REFERENCES videos (id),
         UNIQUE(user_id, video_id)
+    )''')
+    
+    # Payment transactions table - Track mobile money payments
+    c.execute('''CREATE TABLE IF NOT EXISTS payment_transactions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        transaction_id TEXT UNIQUE NOT NULL,
+        provider TEXT NOT NULL,
+        phone_number TEXT NOT NULL,
+        amount REAL NOT NULL,
+        currency TEXT NOT NULL,
+        status TEXT DEFAULT 'pending',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users (id)
     )''')
     
     # Create default admin user if not exists
@@ -1412,105 +1427,199 @@ def account_settings():
 @app.route('/upgrade')
 @login_required
 def upgrade():
-    """Upgrade/subscription page"""
-    return render_template('upgrade.html')
+    """Upgrade/subscription page with mobile money payment"""
+    payment_method = app.config.get('PAYMENT_METHOD', 'mobile_money')
+    
+    return render_template('upgrade_mobile.html')
 
-@app.route('/create_payment_intent', methods=['POST'])
+@app.route('/initiate_mobile_payment', methods=['POST'])
 @login_required
-def create_payment_intent():
-    """Create a Stripe payment intent for subscription"""
+def initiate_mobile_payment():
+    """Initiate mobile money payment for subscription"""
     try:
-        import stripe
+        from mobile_money_service import MobileMoneyService
+        from mobile_money_config import get_mobile_money_config
         
-        # Check if Stripe keys are configured
-        stripe_secret = app.config.get('STRIPE_SECRET_KEY')
-        if not stripe_secret or stripe_secret == '':
-            return jsonify({'error': 'Stripe configuration missing. Please check environment variables.'}), 500
+        # Get form data
+        data = request.get_json()
+        provider = data.get('provider')  # mtn_momo, orange_money, airtel_money
+        phone_number = data.get('phone_number')
         
-        stripe.api_key = stripe_secret
+        if not provider or not phone_number:
+            return jsonify({'error': 'Provider and phone number are required'}), 400
         
-        print(f"Creating payment intent for user {session['user_id']}")
-        print(f"Amount: {app.config['PARTICIPANT_FEE']} cents")
+        # Validate phone number format (basic validation)
+        # Allow digits only, plus signs, and common prefixes
+        cleaned_phone = ''.join(filter(str.isdigit, phone_number))
+        if len(cleaned_phone) < 8:  # Minimum phone number length
+            return jsonify({'error': 'Please enter a valid phone number'}), 400
         
-        intent = stripe.PaymentIntent.create(
-            amount=app.config['PARTICIPANT_FEE'],  # $35 in cents
-            currency='usd',
-            metadata={
-                'user_id': session['user_id'],
-                'type': 'subscription'
+        # Initialize mobile money service
+        try:
+            config = get_mobile_money_config()
+        except ImportError:
+            # Use config from environment variables
+            config = {
+                'mtn_momo': {
+                    'api_user': app.config.get('MTN_MOMO_API_USER'),
+                    'api_key': app.config.get('MTN_MOMO_API_KEY'),
+                    'subscription_key': app.config.get('MTN_MOMO_SUBSCRIPTION_KEY'),
+                    'base_url': 'https://sandbox.momodeveloper.mtn.com'
+                },
+                'orange_money': {
+                    'client_id': app.config.get('ORANGE_MONEY_CLIENT_ID'),
+                    'client_secret': app.config.get('ORANGE_MONEY_CLIENT_SECRET'),
+                    'base_url': 'https://api.orange.com/oauth/v3'
+                },
+                'airtel_money': {
+                    'client_id': app.config.get('AIRTEL_MONEY_CLIENT_ID'),
+                    'client_secret': app.config.get('AIRTEL_MONEY_CLIENT_SECRET'),
+                    'base_url': 'https://openapiuat.airtel.africa'
+                },
+                'payment': {
+                    'amount': app.config['PARTICIPANT_FEE'] / 100,  # Convert cents to dollars
+                    'currency': 'USD',
+                    'description': 'Video Tournament Entry Fee'
+                }
             }
-        )
         
-        print(f"Payment intent created: {intent.id}")
+        mobile_service = MobileMoneyService(config)
         
-        return jsonify({
-            'client_secret': intent.client_secret
-        })
-    except stripe.error.InvalidRequestError as e:
-        print(f"Stripe Invalid Request Error: {str(e)}")
-        return jsonify({'error': f'Invalid request: {str(e)}'}), 400
-    except stripe.error.AuthenticationError as e:
-        print(f"Stripe Authentication Error: {str(e)}")
-        return jsonify({'error': 'Stripe authentication failed. Please check API keys.'}), 401
-    except stripe.error.StripeError as e:
-        print(f"Stripe Error: {str(e)}")
-        return jsonify({'error': f'Stripe error: {str(e)}'}), 400
+        # Process payment
+        amount = config['payment']['amount']
+        currency = config['payment']['currency']
+        
+        print(f"Initiating {provider} payment for user {session['user_id']}")
+        print(f"Amount: {amount} {currency}, Phone: {phone_number}")
+        
+        result = mobile_service.process_mobile_payment(provider, phone_number, amount, currency)
+        
+        if result['success']:
+            # Store payment record in database
+            conn = sqlite3.connect('tournament.db')
+            c = conn.cursor()
+            c.execute('''INSERT INTO payment_transactions 
+                        (user_id, transaction_id, provider, phone_number, amount, currency, status, created_at)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)''',
+                     (session['user_id'], result['transaction_id'], provider, phone_number,
+                      amount, currency, result['status'], datetime.now()))
+            conn.commit()
+            conn.close()
+            
+            return jsonify({
+                'success': True,
+                'transaction_id': result['transaction_id'],
+                'message': result['message'],
+                'status': result['status']
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': result['error'],
+                'message': result['message']
+            }), 400
+            
     except Exception as e:
-        print(f"General Error: {str(e)}")
-        return jsonify({'error': f'Server error: {str(e)}'}), 500
+        print(f"Mobile payment error: {str(e)}")
+        return jsonify({'success': False, 'error': f'Server error: {str(e)}'}), 500
+
+@app.route('/check_payment_status/<transaction_id>', methods=['GET'])
+@login_required
+def check_payment_status(transaction_id):
+    """Check mobile money payment status"""
+    try:
+        from mobile_money_service import MobileMoneyService
+        from mobile_money_config import get_mobile_money_config
+        
+        # Get transaction from database
+        conn = sqlite3.connect('tournament.db')
+        c = conn.cursor()
+        c.execute('''SELECT provider, phone_number, amount, currency, status 
+                    FROM payment_transactions 
+                    WHERE transaction_id = ? AND user_id = ?''',
+                 (transaction_id, session['user_id']))
+        transaction = c.fetchone()
+        
+        if not transaction:
+            return jsonify({'success': False, 'error': 'Transaction not found'}), 404
+        
+        provider, phone_number, amount, currency, current_status = transaction
+        
+        # If already successful, no need to check again
+        if current_status == 'successful':
+            return jsonify({
+                'success': True,
+                'status': 'successful',
+                'message': 'Payment already confirmed'
+            })
+        
+        # Initialize mobile money service
+        try:
+            config = get_mobile_money_config()
+        except ImportError:
+            # Use config from environment variables
+            config = {
+                'mtn_momo': {
+                    'api_user': app.config.get('MTN_MOMO_API_USER'),
+                    'api_key': app.config.get('MTN_MOMO_API_KEY'),
+                    'subscription_key': app.config.get('MTN_MOMO_SUBSCRIPTION_KEY'),
+                    'base_url': 'https://sandbox.momodeveloper.mtn.com'
+                }
+            }
+        
+        mobile_service = MobileMoneyService(config)
+        
+        # Check payment status
+        if provider == 'mtn_momo':
+            result = mobile_service.check_mtn_payment_status(transaction_id)
+        else:
+            # For other providers, implement status check methods
+            result = {'success': True, 'status': 'pending'}
+        
+        if result['success']:
+            # Update transaction status in database
+            c.execute('''UPDATE payment_transactions 
+                        SET status = ?, updated_at = ? 
+                        WHERE transaction_id = ?''',
+                     (result['status'], datetime.now(), transaction_id))
+            
+            # If payment is successful, update user status
+            if result['status'] == 'successful':
+                c.execute('UPDATE users SET is_paid = TRUE WHERE id = ?', (session['user_id'],))
+                print(f"User {session['user_id']} payment confirmed via {provider}")
+            
+            conn.commit()
+            conn.close()
+            
+            return jsonify({
+                'success': True,
+                'status': result['status'],
+                'transaction_id': transaction_id,
+                'message': 'Payment successful! You can now upload videos.' if result['status'] == 'successful' else 'Payment is still being processed.'
+            })
+        else:
+            conn.close()
+            return jsonify({
+                'success': False,
+                'error': result['error'],
+                'status': current_status
+            }), 400
+            
+    except Exception as e:
+        print(f"Payment status check error: {str(e)}")
+        return jsonify({'success': False, 'error': f'Server error: {str(e)}'}), 500
 
 @app.route('/confirm_payment', methods=['POST'])
 @login_required
 def confirm_payment():
-    """Confirm payment and update user status"""
-    try:
-        import stripe
-        
-        # Check if Stripe keys are configured
-        stripe_secret = app.config.get('STRIPE_SECRET_KEY')
-        if not stripe_secret or stripe_secret == '':
-            return jsonify({'success': False, 'error': 'Stripe configuration missing.'}), 500
-        
-        stripe.api_key = stripe_secret
-        
-        payment_intent_id = request.json.get('payment_intent_id')
-        if not payment_intent_id:
-            return jsonify({'success': False, 'message': 'Payment intent ID missing'}), 400
-        
-        print(f"Confirming payment intent: {payment_intent_id}")
-        
-        # Verify payment intent
-        intent = stripe.PaymentIntent.retrieve(payment_intent_id)
-        
-        print(f"Payment intent status: {intent.status}")
-        print(f"Payment intent metadata: {intent.metadata}")
-        
-        if intent.status == 'succeeded' and intent.metadata.get('user_id') == str(session['user_id']):
-            # Update user payment status
-            conn = sqlite3.connect('tournament.db')
-            c = conn.cursor()
-            c.execute('UPDATE users SET is_paid = TRUE WHERE id = ?', (session['user_id'],))
-            conn.commit()
-            conn.close();
-            
-            print(f"User {session['user_id']} payment status updated to paid")
-            
-            return jsonify({'success': True, 'message': 'Payment successful! You can now upload videos.'})
-        else:
-            return jsonify({'success': False, 'message': 'Payment verification failed'}), 400
-            
-    except stripe.error.InvalidRequestError as e:
-        print(f"Stripe Invalid Request Error: {str(e)}")
-        return jsonify({'success': False, 'error': f'Invalid request: {str(e)}'}), 400
-    except stripe.error.AuthenticationError as e:
-        print(f"Stripe Authentication Error: {str(e)}")
-        return jsonify({'success': False, 'error': 'Stripe authentication failed.'}), 401
-    except stripe.error.StripeError as e:
-        print(f"Stripe Error: {str(e)}")
-        return jsonify({'success': False, 'error': f'Stripe error: {str(e)}'}), 400
-    except Exception as e:
-        print(f"General Error: {str(e)}")
-        return jsonify({'success': False, 'error': f'Server error: {str(e)}'}), 500
+    """Legacy endpoint for backward compatibility - redirects to mobile money confirmation"""
+    data = request.get_json()
+    transaction_id = data.get('transaction_id') or data.get('payment_intent_id')
+    
+    if transaction_id:
+        return redirect(url_for('check_payment_status', transaction_id=transaction_id))
+    else:
+        return jsonify({'success': False, 'message': 'Transaction ID missing'}), 400
 
 @app.route('/delete_video/<int:video_id>', methods=['POST'])
 @login_required
@@ -1728,6 +1837,10 @@ def admin_users():
         where_clause += " AND is_blocked = 1"
     elif filter_type == 'admin':
         where_clause += " AND is_admin = 1"
+    elif filter_type == 'participants':
+        where_clause += " AND is_paid = 1"
+    elif filter_type == 'regular':
+        where_clause += " AND is_paid = 0"
     
     # Get total count
     c.execute(f"SELECT COUNT(*) FROM users {where_clause}", params)
@@ -1736,7 +1849,7 @@ def admin_users():
     # Get users for current page
     offset = (page - 1) * per_page
     c.execute(f'''SELECT id, username, email, first_name, last_name, is_admin, 
-                         is_blocked, registration_date, last_login, login_count, admin_level
+                         is_blocked, registration_date, last_login, login_count, admin_level, is_paid
                   FROM users {where_clause} 
                   ORDER BY registration_date DESC 
                   LIMIT ? OFFSET ?''', params + [per_page, offset])
@@ -1814,18 +1927,35 @@ def admin_videos():
 def admin_block_user(user_id):
     """Block/unblock user"""
     action_type = request.form.get('action')  # 'block' or 'unblock'
-    reason = request.form.get('reason', '')
+    reason = request.form.get('reason', '').strip()
     duration = request.form.get('duration')  # 'permanent', '1_day', '1_week', '1_month'
+    is_ajax = request.form.get('ajax') == '1'
+    
+    # Validate reason for blocking
+    if action_type == 'block' and not reason:
+        message = 'Please provide a reason for blocking the user'
+        if is_ajax:
+            return jsonify({'success': False, 'message': message})
+        flash(message, 'error')
+        return redirect(url_for('admin_users'))
     
     conn = sqlite3.connect('tournament.db')
     c = conn.cursor()
     
-    c.execute('SELECT username FROM users WHERE id = ?', (user_id,))
+    c.execute('SELECT username, is_blocked FROM users WHERE id = ?', (user_id,))
     user = c.fetchone()
     
-    if user:
-        username = user[0]
-        
+    if not user:
+        message = 'User not found'
+        if is_ajax:
+            return jsonify({'success': False, 'message': message})
+        flash(message, 'error')
+        return redirect(url_for('admin_users'))
+    
+    username = user[0]
+    current_blocked_status = user[1]
+    
+    try:
         if action_type == 'block':
             blocked_until = None
             if duration != 'permanent':
@@ -1842,18 +1972,52 @@ def admin_block_user(user_id):
             
             log_admin_action(session['user_id'], 'block_user', 'user', user_id, 
                            f"Blocked user {username}. Reason: {reason}. Duration: {duration}")
-            flash(f'User {username} has been blocked', 'success')
+            message = f'User {username} has been blocked'
+            new_blocked_status = True
             
         elif action_type == 'unblock':
             c.execute('''UPDATE users SET is_blocked = 0, block_reason = NULL, blocked_until = NULL 
                         WHERE id = ?''', (user_id,))
             
             log_admin_action(session['user_id'], 'unblock_user', 'user', user_id, f"Unblocked user {username}")
-            flash(f'User {username} has been unblocked', 'success')
+            message = f'User {username} has been unblocked'
+            new_blocked_status = False
+        
+        else:
+            message = 'Invalid action'
+            if is_ajax:
+                return jsonify({'success': False, 'message': message})
+            flash(message, 'error')
+            return redirect(url_for('admin_users'))
+        
+        conn.commit()
+        
+        if is_ajax:
+            return jsonify({
+                'success': True, 
+                'message': message,
+                'user': {
+                    'id': user_id,
+                    'username': username,
+                    'is_blocked': new_blocked_status
+                }
+            })
+        else:
+            flash(message, 'success')
+            return redirect(url_for('admin_users'))
+            
+    except Exception as e:
+        conn.rollback()
+        error_message = f'Error updating user status: {str(e)}'
+        app.logger.error(f"Block user error: {error_message}")
+        
+        if is_ajax:
+            return jsonify({'success': False, 'message': error_message})
+        flash(error_message, 'error')
+        return redirect(url_for('admin_users'))
     
-    conn.commit()
-    conn.close();
-    return redirect(url_for('admin_users'))
+    finally:
+        conn.close()
 
 @app.route('/admin/user/<int:user_id>/admin', methods=['POST'])
 @admin_required('super')
@@ -1885,6 +2049,84 @@ def admin_toggle_admin(user_id):
     
     conn.commit()
     conn.close();
+    
+    # Handle AJAX requests
+    if request.form.get('ajax'):
+        # Get updated user data
+        conn = sqlite3.connect('tournament.db')
+        c = conn.cursor()
+        c.execute('''SELECT id, username, email, first_name, last_name, is_admin, 
+                           is_blocked, registration_date, last_login, login_count, admin_level, is_paid
+                     FROM users WHERE id = ?''', (user_id,))
+        updated_user = c.fetchone()
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'message': f'Admin privileges updated for {username}',
+            'user': updated_user
+        })
+    
+    return redirect(url_for('admin_users'))
+
+@app.route('/admin/user/<int:user_id>/toggle_participant', methods=['POST'])
+@admin_required('basic')
+def admin_toggle_participant(user_id):
+    """Toggle user participant status (paid/unpaid)"""
+    action = request.form.get('action')  # 'upgrade', 'downgrade'
+    
+    conn = sqlite3.connect('tournament.db')
+    c = conn.cursor()
+    
+    # Get user info
+    c.execute('SELECT username, is_paid FROM users WHERE id = ?', (user_id,))
+    user = c.fetchone()
+    
+    if user:
+        username = user[0]
+        current_status = user[1]
+        
+        if action == 'upgrade':
+            # Upgrade to participant (set is_paid = 1)
+            c.execute('UPDATE users SET is_paid = 1 WHERE id = ?', (user_id,))
+            log_admin_action(session['user_id'], 'upgrade_participant', 'user', user_id, 
+                           f"Upgraded {username} to participant status")
+            message = f'Upgraded {username} to participant status'
+        
+        elif action == 'downgrade':
+            # Downgrade to regular user (set is_paid = 0)
+            c.execute('UPDATE users SET is_paid = 0 WHERE id = ?', (user_id,))
+            log_admin_action(session['user_id'], 'downgrade_participant', 'user', user_id, 
+                           f"Downgraded {username} to regular user")
+            message = f'Downgraded {username} to regular user'
+        
+        conn.commit()
+        
+        # Handle AJAX requests
+        if request.form.get('ajax'):
+            # Get updated user data
+            c.execute('''SELECT id, username, email, first_name, last_name, is_admin, 
+                               is_blocked, registration_date, last_login, login_count, admin_level, is_paid
+                         FROM users WHERE id = ?''', (user_id,))
+            updated_user = c.fetchone()
+            conn.close()
+            
+            return jsonify({
+                'success': True,
+                'message': message,
+                'user': updated_user
+            })
+        
+        flash(message, 'success')
+    else:
+        if request.form.get('ajax'):
+            return jsonify({
+                'success': False,
+                'message': 'User not found'
+            })
+        flash('User not found', 'error')
+    
+    conn.close()
     return redirect(url_for('admin_users'))
 
 @app.route('/admin/video/<int:video_id>/approve', methods=['POST'])
@@ -2297,48 +2539,63 @@ def admin_settings():
     
     return render_template('admin/settings.html')
 
-@app.route('/debug/stripe_config')
+@app.route('/debug/payment_config')
 @login_required
-def debug_stripe_config():
-    """Debug route to check Stripe configuration (remove in production)"""
+def debug_payment_config():
+    """Debug route to check mobile money payment configuration (remove in production)"""
     if not session.get('user_id'):
         return jsonify({'error': 'Not authenticated'}), 401
     
-    stripe_pub_key = app.config.get('STRIPE_PUBLISHABLE_KEY', '')
-    stripe_secret_key = app.config.get('STRIPE_SECRET_KEY', '')
+    # Mobile Money configuration
+    mtn_api_user = app.config.get('MTN_MOMO_API_USER', '')
+    mtn_api_key = app.config.get('MTN_MOMO_API_KEY', '')
+    mtn_subscription_key = app.config.get('MTN_MOMO_SUBSCRIPTION_KEY', '')
+    orange_client_id = app.config.get('ORANGE_MONEY_CLIENT_ID', '')
+    airtel_client_id = app.config.get('AIRTEL_MONEY_CLIENT_ID', '')
     
     config_info = {
-        'stripe_publishable_key_present': bool(stripe_pub_key),
-        'stripe_secret_key_present': bool(stripe_secret_key),
-        'stripe_publishable_key_length': len(stripe_pub_key),
-        'stripe_secret_key_length': len(stripe_secret_key),
-        'stripe_publishable_key_preview': stripe_pub_key[:12] + '...' if stripe_pub_key else 'None',
-        'stripe_secret_key_preview': stripe_secret_key[:12] + '...' if stripe_secret_key else 'None',
+        'payment_method': app.config.get('PAYMENT_METHOD', 'mobile_money'),
         'participant_fee': app.config.get('PARTICIPANT_FEE'),
+        'mobile_money_providers': {
+            'mtn_momo': {
+                'api_user_present': bool(mtn_api_user),
+                'api_key_present': bool(mtn_api_key),
+                'subscription_key_present': bool(mtn_subscription_key),
+                'api_user_preview': mtn_api_user[:8] + '...' if mtn_api_user else 'None'
+            },
+            'orange_money': {
+                'client_id_present': bool(orange_client_id),
+                'client_id_preview': orange_client_id[:8] + '...' if orange_client_id else 'None'
+            },
+            'airtel_money': {
+                'client_id_present': bool(airtel_client_id),
+                'client_id_preview': airtel_client_id[:8] + '...' if airtel_client_id else 'None'
+            }
+        },
         'environment_variables': {
-            'STRIPE_PUBLISHABLE_KEY_env': bool(os.environ.get('STRIPE_PUBLISHABLE_KEY')),
-            'STRIPE_SECRET_KEY_env': bool(os.environ.get('STRIPE_SECRET_KEY')),
+            'MTN_MOMO_API_USER_env': bool(os.environ.get('MTN_MOMO_API_USER')),
+            'MTN_MOMO_API_KEY_env': bool(os.environ.get('MTN_MOMO_API_KEY')),
+            'MTN_MOMO_SUBSCRIPTION_KEY_env': bool(os.environ.get('MTN_MOMO_SUBSCRIPTION_KEY')),
+            'ORANGE_MONEY_CLIENT_ID_env': bool(os.environ.get('ORANGE_MONEY_CLIENT_ID')),
+            'AIRTEL_MONEY_CLIENT_ID_env': bool(os.environ.get('AIRTEL_MONEY_CLIENT_ID')),
             'SECRET_KEY_env': bool(os.environ.get('SECRET_KEY')),
         },
-        'environment_variables_preview': {
-            'STRIPE_PUBLISHABLE_KEY_env': (os.environ.get('STRIPE_PUBLISHABLE_KEY', '')[:12] + '...') if os.environ.get('STRIPE_PUBLISHABLE_KEY') else 'None',
-            'STRIPE_SECRET_KEY_env': (os.environ.get('STRIPE_SECRET_KEY', '')[:12] + '...') if os.environ.get('STRIPE_SECRET_KEY') else 'None',
-        },
-        'stripe_config_file_available': False,  # Will be False on Render since it's in .gitignore
+        'mobile_money_config_file_available': False
     }
     
-    # Try to check if stripe_config.py is available
+    # Try to check if mobile_money_config.py is available
     try:
-        from stripe_config import get_stripe_keys
-        config_info['stripe_config_file_available'] = True
-        local_keys = get_stripe_keys()
-        config_info['stripe_config_file_keys'] = {
-            'publishable_present': bool(local_keys.get('publishable_key')),
-            'secret_present': bool(local_keys.get('secret_key')),
+        from mobile_money_config import get_mobile_money_config
+        config_info['mobile_money_config_file_available'] = True
+        local_config = get_mobile_money_config()
+        config_info['mobile_money_config_file_keys'] = {
+            'mtn_configured': bool(local_config['mtn_momo']['api_user']),
+            'orange_configured': bool(local_config['orange_money']['client_id']),
+            'airtel_configured': bool(local_config['airtel_money']['client_id']),
         }
     except ImportError:
-        config_info['stripe_config_file_available'] = False
-        config_info['stripe_config_file_keys'] = 'ImportError - file not available'
+        config_info['mobile_money_config_file_available'] = False
+        config_info['mobile_money_config_file_keys'] = 'ImportError - file not available'
     
     return jsonify(config_info)
 

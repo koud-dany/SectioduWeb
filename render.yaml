@@ -12,9 +12,19 @@ services:
         value: production
       - key: SECRET_KEY
         sync: false
-      - key: STRIPE_PUBLISHABLE_KEY
+      - key: MTN_MOMO_API_USER
         sync: false
-      - key: STRIPE_SECRET_KEY
+      - key: MTN_MOMO_API_KEY
+        sync: false
+      - key: MTN_MOMO_SUBSCRIPTION_KEY
+        sync: false
+      - key: ORANGE_MONEY_CLIENT_ID
+        sync: false
+      - key: ORANGE_MONEY_CLIENT_SECRET
+        sync: false
+      - key: AIRTEL_MONEY_CLIENT_ID
+        sync: false
+      - key: AIRTEL_MONEY_CLIENT_SECRET
         sync: false
       - key: DATABASE_URL
         value: sqlite:///tournament.db

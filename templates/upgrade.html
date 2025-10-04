@@ -3,137 +3,571 @@
 {% block title %}Join Video Tournament - SectionduWeb{% endblock %}
 
 {% block content %}
-<div class="container-fluid py-5" style="max-width: 1000px; margin: 0 auto;">
-    <!-- Header -->
-    <div class="text-center mb-5">
-        <h1 class="display-4 fw-bold text-primary mb-3">
-            <i class="fas fa-trophy text-warning me-3"></i>
-            Join Video Tournament
-        </h1>
-        <p class="lead text-muted">Pay the one-time entry fee to participate in our exciting video tournament</p>
-    </div>
+<style>
+/* Professional Upgrade Page Styles */
+.upgrade-hero {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+    position: relative;
+    overflow: hidden;
+    padding: 3rem 0 4rem;
+    color: white;
+}
+
+.upgrade-hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="%23ffffff" opacity="0.1"/><circle cx="75" cy="25" r="1" fill="%23ffffff" opacity="0.1"/><circle cx="25" cy="75" r="1" fill="%23ffffff" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="%23ffffff" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+}
+
+.upgrade-hero .container {
+    position: relative;
+    z-index: 2;
+}
+
+.hero-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    text-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    margin-bottom: 1rem;
+}
+
+.hero-subtitle {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    font-weight: 300;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+}
+
+.floating-trophy {
+    font-size: 2.5rem;
+    animation: float 3s ease-in-out infinite;
+    filter: drop-shadow(0 10px 20px rgba(255,215,0,0.3));
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-20px); }
+}
+
+.pricing-section {
+    padding: 3rem 0;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+}
+
+.pricing-card {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.1);
+    border: none;
+    overflow: hidden;
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.pricing-card:hover {
+    transform: translateY(-15px);
+    box-shadow: 0 40px 80px rgba(0,0,0,0.15);
+}
+
+.pricing-card.featured {
+    transform: scale(1.02);
+    border: 2px solid #ffd700;
+    box-shadow: 0 20px 50px rgba(255,215,0,0.2);
+}
+
+.pricing-card.featured:hover {
+    transform: scale(1.05) translateY(-8px);
+}
+
+.card-header-professional {
+    padding: 2rem 1.5rem 1.5rem;
+    text-align: center;
+    position: relative;
+}
+
+.free-header {
+    background: linear-gradient(135deg, #e9ecef, #f8f9fa);
+    color: #495057;
+}
+
+.premium-header {
+    background: linear-gradient(135deg, #ffd700, #ffb347);
+    color: #212529;
+}
+
+.price-display {
+    font-size: 2.5rem;
+    font-weight: 800;
+    line-height: 1;
+    margin: 0.8rem 0;
+}
+
+.price-period {
+    font-size: 0.9rem;
+    opacity: 0.7;
+    font-weight: 400;
+}
+
+.feature-list {
+    padding: 1.5rem;
+}
+
+.feature-item {
+    display: flex;
+    align-items: center;
+    padding: 0.6rem 0;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
+}
+
+.feature-item:last-child {
+    border-bottom: none;
+}
+
+.feature-item:hover {
+    background: rgba(102,126,234,0.05);
+    padding-left: 0.8rem;
+    border-radius: 8px;
+}
+
+.feature-icon {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 0.8rem;
+    font-size: 0.75rem;
+    flex-shrink: 0;
+}
+
+.feature-icon.included {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+}
+
+.feature-icon.excluded {
+    background: #e9ecef;
+    color: #6c757d;
+}
+
+.cta-button {
+    margin: 1.5rem;
+    padding: 0.8rem 2rem;
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: 1rem;
+    border: none;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.cta-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+    transition: left 0.5s;
+}
+
+.cta-button:hover::before {
+    left: 100%;
+}
+
+.btn-free {
+    background: linear-gradient(135deg, #6c757d, #495057);
+    color: white;
+}
+
+.btn-premium {
+    background: linear-gradient(135deg, #212529, #495057);
+    color: white;
+    box-shadow: 0 10px 30px rgba(33,37,41,0.3);
+}
+
+.btn-premium:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 15px 40px rgba(33,37,41,0.4);
+    color: white;
+}
+
+.featured-badge {
+    position: absolute;
+    top: -15px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, #ffd700, #ffb347);
+    color: #212529;
+    padding: 0.75rem 2rem;
+    border-radius: 50px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    box-shadow: 0 5px 20px rgba(255,215,0,0.3);
+    z-index: 10;
+}
+
+.benefits-section {
+    padding: 3rem 0;
+    background: white;
+}
+
+.benefit-card {
+    text-align: center;
+    padding: 2rem 1.5rem;
+    border-radius: 16px;
+    background: white;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+    transition: all 0.4s ease;
+    height: 100%;
+}
+
+.benefit-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 15px 40px rgba(0,0,0,0.12);
+}
+
+.benefit-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.2rem;
+    font-size: 1.5rem;
+    transition: all 0.4s ease;
+}
+
+.benefit-card:hover .benefit-icon {
+    transform: scale(1.1) rotate(10deg);
+}
+
+.icon-trophy {
+    background: linear-gradient(135deg, #ffd700, #ffb347);
+    color: #212529;
+}
+
+.icon-users {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+}
+
+.icon-star {
+    background: linear-gradient(135deg, #dc3545, #fd7e14);
+    color: white;
+}
+
+.page-transition {
+    opacity: 0;
+    transform: translateY(30px);
+    animation: fadeInUp 0.8s ease-out forwards;
+}
+
+@keyframes fadeInUp {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-delay-1 { animation-delay: 0.2s; }
+.animate-delay-2 { animation-delay: 0.4s; }
+.animate-delay-3 { animation-delay: 0.6s; }
+
+@media (max-width: 768px) {
+    .hero-title {
+        font-size: 2rem;
+    }
     
-    <!-- Tournament Entry -->
-    <div class="row justify-content-center mb-5">
-        <!-- Free Features -->
-        <div class="col-lg-5">
-            <div class="card h-100 border-0 shadow">
-                <div class="card-header bg-light text-center py-4">
-                    <h4 class="fw-bold">Free Account</h4>
-                    <h2 class="text-success">$0<span class="fs-6 text-muted"> - No Payment Required</span></h2>
-                </div>
-                <div class="card-body">
-                    <ul class="list-unstyled">
-                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Watch all tournament videos</li>
-                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Comment on videos</li>
-                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Like/dislike videos</li>
-                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Vote on tournament entries</li>
-                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>View leaderboards</li>
-                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Create profile</li>
-                        <li class="mb-2"><i class="fas fa-times text-muted me-2"></i>Upload videos to tournament</li>
-                    </ul>
-                </div>
-                <div class="card-footer bg-light text-center">
-                    <button class="btn btn-outline-secondary rounded-pill px-4" disabled>
-                        <i class="fas fa-user me-2"></i>Current Status
+    .hero-subtitle {
+        font-size: 1rem;
+    }
+    
+    .pricing-card.featured {
+        transform: none;
+        margin-top: 1.5rem;
+    }
+    
+    .floating-trophy {
+        font-size: 2rem;
+    }
+    
+    .price-display {
+        font-size: 2rem;
+    }
+    
+    .benefit-card {
+        padding: 1.5rem 1rem;
+    }
+    
+    .benefit-icon {
+        width: 50px;
+        height: 50px;
+        font-size: 1.2rem;
+    }
+    
+    .upgrade-hero {
+        padding: 2rem 0 3rem;
+    }
+    
+    .pricing-section {
+        padding: 2rem 0;
+    }
+    
+    .benefits-section {
+        padding: 2rem 0;
+    }
+    
+    .container.py-4 {
+        padding-top: 2rem !important;
+        padding-bottom: 2rem !important;
+    }
+}
+</style>
+
+<!-- Hero Section -->
+<div class="upgrade-hero">
+    <div class="container">
+        <div class="text-center">
+            <div class="floating-trophy mb-4">
+                🏆
+            </div>
+            <h1 class="hero-title page-transition">
+                Join the Tournament
+            </h1>
+            <p class="hero-subtitle page-transition animate-delay-1">
+                Unlock your creative potential and compete with the best
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- Pricing Section -->
+<div class="pricing-section">
+    <div class="container">
+        <div class="row justify-content-center g-4">
+            <!-- Free Account Card -->
+            <div class="col-lg-5 page-transition animate-delay-1">
+                <div class="pricing-card">
+                    <div class="card-header-professional free-header">
+                        <h3 class="fw-bold mb-3">Free Explorer</h3>
+                        <div class="price-display">
+                            $0
+                            <span class="price-period">forever</span>
+                        </div>
+                        <p class="mb-0 opacity-75">Perfect for discovering content</p>
+                    </div>
+                    
+                    <div class="feature-list">
+                        <div class="feature-item">
+                            <div class="feature-icon included">
+                                <i class="fas fa-check"></i>
+                            </div>
+                            <span>Watch all tournament videos</span>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon included">
+                                <i class="fas fa-check"></i>
+                            </div>
+                            <span>Comment and engage with community</span>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon included">
+                                <i class="fas fa-check"></i>
+                            </div>
+                            <span>Like and vote on videos</span>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon included">
+                                <i class="fas fa-check"></i>
+                            </div>
+                            <span>View leaderboards and rankings</span>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon included">
+                                <i class="fas fa-check"></i>
+                            </div>
+                            <span>Create and customize profile</span>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon excluded">
+                                <i class="fas fa-times"></i>
+                            </div>
+                            <span class="text-muted">Upload and compete with videos</span>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon excluded">
+                                <i class="fas fa-times"></i>
+                            </div>
+                            <span class="text-muted">Win prizes and recognition</span>
+                        </div>
+                    </div>
+                    
+                    <button class="cta-button btn-free w-100" disabled>
+                        <i class="fas fa-user me-2"></i>
+                        Current Plan
                     </button>
                 </div>
             </div>
-        </div>
-        
-        <!-- Tournament Participant -->
-        <div class="col-lg-5">
-            <div class="card h-100 border-warning shadow-lg position-relative">
-                <div class="position-absolute top-0 start-50 translate-middle">
-                    <span class="badge bg-warning text-dark px-3 py-2 rounded-pill fw-bold">
-                        <i class="fas fa-trophy me-1"></i>Tournament Entry
-                    </span>
-                </div>
-                <div class="card-header bg-gradient text-white text-center py-4" style="background: linear-gradient(135deg, #ffd700, #ffb347);">
-                    <h4 class="fw-bold text-dark">Tournament Participant</h4>
-                    <h2 class="text-dark">$35<span class="fs-6 opacity-75"> - One-time Payment</span></h2>
-                </div>
-                <div class="card-body">
-                    <div class="text-center mb-3">
-                        <p class="text-muted">Everything in Free Account, PLUS:</p>
+            
+            <!-- Premium Tournament Card -->
+            <div class="col-lg-5 page-transition animate-delay-2">
+                <div class="pricing-card featured">
+                    <div class="featured-badge">
+                        <i class="fas fa-crown me-1"></i>
+                        Most Popular
                     </div>
-                    <ul class="list-unstyled">
-                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i><strong>Upload videos to tournament</strong></li>
-                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Compete for prizes and recognition</li>
-                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>HD video quality uploads</li>
-                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Enhanced profile features</li>
-                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Tournament performance analytics</li>
-                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Priority listing in leaderboards</li>
-                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Unlimited video submissions</li>
-                    </ul>
-                </div>
-                <div class="card-footer text-center" style="background: linear-gradient(135deg, #ffd700, #ffb347);">
-                    <button class="btn btn-dark rounded-pill px-5 fw-bold py-2" id="upgrade-btn" onclick="initializePayment()">
-                        <i class="fas fa-trophy me-2"></i>Join Tournament Now
+                    
+                    <div class="card-header-professional premium-header">
+                        <h3 class="fw-bold mb-3">Tournament Champion</h3>
+                        <div class="price-display">
+                            $35
+                            <span class="price-period">one-time</span>
+                        </div>
+                        <p class="mb-0 opacity-75">Unlock your creative potential</p>
+                    </div>
+                    
+                    <div class="feature-list">
+                        <div class="feature-item">
+                            <div class="feature-icon included">
+                                <i class="fas fa-check"></i>
+                            </div>
+                            <span><strong>Everything in Free Explorer</strong></span>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon included">
+                                <i class="fas fa-check"></i>
+                            </div>
+                            <span><strong>Upload unlimited videos</strong></span>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon included">
+                                <i class="fas fa-check"></i>
+                            </div>
+                            <span>Compete for prizes and recognition</span>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon included">
+                                <i class="fas fa-check"></i>
+                            </div>
+                            <span>HD video quality uploads</span>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon included">
+                                <i class="fas fa-check"></i>
+                            </div>
+                            <span>Enhanced profile with achievements</span>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon included">
+                                <i class="fas fa-check"></i>
+                            </div>
+                            <span>Performance analytics dashboard</span>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon included">
+                                <i class="fas fa-check"></i>
+                            </div>
+                            <span>Priority in leaderboards</span>
+                        </div>
+                    </div>
+                    
+                    <button class="cta-button btn-premium w-100" id="upgrade-btn" onclick="initializePayment()">
+                        <i class="fas fa-rocket me-2"></i>
+                        Join Tournament Now
                     </button>
                     
-                    <!-- Stripe Payment Form (hidden by default) -->
-                    <div id="payment-form" style="display: none;" class="mt-3">
-                        <div id="card-element" class="form-control mb-3">
-                            <!-- Stripe Elements will create form elements here -->
+                    <!-- Mobile Money Payment Form (hidden by default) -->
+                    <div id="payment-form" style="display: none;" class="p-3">
+                        <div id="payment-messages" class="mb-3"></div>
+                        <div class="payment-loading text-center" style="display: none;">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Processing...</span>
+                            </div>
+                            <p class="mt-2 text-muted">Processing your payment...</p>
                         </div>
-                        <button id="submit-payment" class="btn btn-success rounded-pill px-4">
-                            <i class="fas fa-credit-card me-2"></i>Pay $35
-                        </button>
-                        <button id="cancel-payment" class="btn btn-outline-secondary rounded-pill px-4 ms-2" onclick="cancelPayment()">
-                            Cancel
-                        </button>
-                        <div id="payment-errors" role="alert" class="text-danger mt-2"></div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    
-    <!-- Tournament Information -->
-    <div class="card shadow-sm border-0 mb-5">
-        <div class="card-header bg-gradient text-white" style="background: linear-gradient(135deg, #667eea, #764ba2);">
-            <h4 class="mb-0 text-center">
-                <i class="fas fa-info-circle me-2"></i>
+</div>
+<!-- Benefits Section -->
+<div class="benefits-section">
+    <div class="container">
+        <div class="text-center mb-4 page-transition animate-delay-3">
+            <h2 class="h3 fw-bold mb-3" style="color: #212529;">
                 Why Join the Tournament?
-            </h4>
+            </h2>
+            <p class="text-muted mb-0">
+                Transform your passion into recognition and rewards
+            </p>
         </div>
-        <div class="card-body">
-            <div class="row g-4">
-                <div class="col-md-4 text-center">
-                    <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
-                        <i class="fas fa-trophy text-primary fa-2x"></i>
+        
+        <div class="row g-4">
+            <div class="col-lg-4 page-transition animate-delay-1">
+                <div class="benefit-card">
+                    <div class="benefit-icon icon-trophy">
+                        <i class="fas fa-trophy"></i>
                     </div>
-                    <h5>Compete for Prizes</h5>
-                    <p class="text-muted">Show your creative skills and compete with other participants for amazing prizes and recognition.</p>
+                    <h5 class="fw-bold mb-2">Compete for Prizes</h5>
+                    <p class="text-muted mb-0 small">
+                        Show your creative skills and compete with talented participants from around the world for amazing prizes and recognition.
+                    </p>
                 </div>
-                <div class="col-md-4 text-center">
-                    <div class="bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
-                        <i class="fas fa-users text-success fa-2x"></i>
+            </div>
+            
+            <div class="col-lg-4 page-transition animate-delay-2">
+                <div class="benefit-card">
+                    <div class="benefit-icon icon-users">
+                        <i class="fas fa-users"></i>
                     </div>
-                    <h5>Build Your Audience</h5>
-                    <p class="text-muted">Get your videos seen by thousands of viewers and build a following in our active community.</p>
+                    <h5 class="fw-bold mb-2">Build Your Audience</h5>
+                    <p class="text-muted mb-0 small">
+                        Get your videos discovered by thousands of engaged viewers and build a loyal following in our creative community.
+                    </p>
                 </div>
-                <div class="col-md-4 text-center">
-                    <div class="bg-warning bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
-                        <i class="fas fa-star text-warning fa-2x"></i>
+            </div>
+            
+            <div class="col-lg-4 page-transition animate-delay-3">
+                <div class="benefit-card">
+                    <div class="benefit-icon icon-star">
+                        <i class="fas fa-star"></i>
                     </div>
-                    <h5>Gain Recognition</h5>
-                    <p class="text-muted">Top performers are featured on our leaderboards and get special recognition badges.</p>
+                    <h5 class="fw-bold mb-2">Gain Recognition</h5>
+                    <p class="text-muted mb-0 small">
+                        Top performers are featured on leaderboards, receive achievement badges, and get exclusive premium opportunities.
+                    </p>
                 </div>
             </div>
         </div>
     </div>
+</div>
+<!-- FAQ Section -->
+<div class="container py-4">
+    <div class="text-center mb-4">
+        <h3 class="fw-bold mb-3" style="color: #212529;">
+            <i class="fas fa-question-circle text-primary me-2"></i>
+            Frequently Asked Questions
+        </h3>
+        <p class="text-muted">Everything you need to know about joining the tournament</p>
+    </div>
     
-    <!-- FAQ -->
-    <div class="card shadow-sm border-0">
-        <div class="card-header bg-light">
-            <h4 class="mb-0">
-                <i class="fas fa-question-circle text-info me-2"></i>
-                Frequently Asked Questions
-            </h4>
-        </div>
-        <div class="card-body">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0" style="border-radius: 16px; overflow: hidden;">
+        <div class="card-body p-4">
             <div class="accordion" id="faqAccordion">
                 <div class="accordion-item border-0 mb-3">
                     <h2 class="accordion-header">
@@ -174,13 +608,107 @@
                     </div>
                 </div>
             </div>
+            </div>
         </div>
     </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
-<!-- Stripe JavaScript -->
+<script>
+// Professional animations and mobile money payment integration
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize page animations
+    initializeAnimations();
+    
+    // Mobile money payment integration
+    setupMobilePayment();
+});
+
+function initializeAnimations() {
+    // Trigger entrance animations
+    setTimeout(() => {
+        const elements = document.querySelectorAll('.page-transition');
+        elements.forEach((element, index) => {
+            setTimeout(() => {
+                element.style.opacity = '1';
+                element.style.transform = 'translateY(0)';
+            }, index * 100);
+        });
+    }, 300);
+    
+    // Add scroll-triggered animations for benefits
+    const observerOptions = {
+        threshold: 0.3,
+        rootMargin: '0px 0px -50px 0px'
+    };
+    
+    const observer = new IntersectionObserver(function(entries) {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.opacity = '1';
+                entry.target.style.transform = 'translateY(0)';
+            }
+        });
+    }, observerOptions);
+    
+    // Observe benefit cards
+    const benefitCards = document.querySelectorAll('.benefit-card');
+    benefitCards.forEach(card => {
+        card.parentElement.style.opacity = '0';
+        card.parentElement.style.transform = 'translateY(50px)';
+        card.parentElement.style.transition = 'all 0.8s cubic-bezier(0.4, 0, 0.2, 1)';
+        observer.observe(card.parentElement);
+    });
+}
+
+function setupMobilePayment() {
+    // Mobile money payment will be handled here
+    // This replaces the old Stripe integration
+    console.log('Mobile money payment system initialized');
+}
+
+// Main payment initialization function
+function initializePayment() {
+    // Show payment form
+    const paymentForm = document.getElementById('payment-form');
+    const upgradeBtn = document.getElementById('upgrade-btn');
+    
+    if (paymentForm && upgradeBtn) {
+        paymentForm.style.display = 'block';
+        upgradeBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Loading Payment Options...';
+        upgradeBtn.disabled = true;
+        
+        // Redirect to mobile money payment page
+        setTimeout(() => {
+            window.location.href = '/upgrade_mobile';
+        }, 1000);
+    }
+}
+
+function cancelPayment() {
+    const paymentForm = document.getElementById('payment-form');
+    const upgradeBtn = document.getElementById('upgrade-btn');
+    
+    if (paymentForm && upgradeBtn) {
+        paymentForm.style.display = 'none';
+        upgradeBtn.innerHTML = '<i class="fas fa-rocket me-2"></i>Join Tournament Now';
+        upgradeBtn.disabled = false;
+    }
+}
+
+// Smooth scrolling for any anchor links
+document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        document.querySelector(this.getAttribute('href')).scrollIntoView({
+            behavior: 'smooth'
+        });
+    });
+});
+</script>
+
+<!-- Legacy Stripe code (kept for reference but disabled) -->
 <script src="https://js.stripe.com/v3/"></script>
 <script>
 // Initialize Stripe - Get key from Flask config
