@@ -406,28 +406,47 @@ def upload_to_cloudinary(file_path, public_id):
                 'demo_mode': True
             }
         
-        # Use basic authentication upload (simpler and more reliable)
+        # Use signed upload (proper method for Cloudinary)
         cloudinary_url = f"https://api.cloudinary.com/v1_1/{app.config['CLOUDINARY_CLOUD_NAME']}/video/upload"
         
-        # Create basic auth string
-        import base64
-        auth_string = f"{app.config['CLOUDINARY_API_KEY']}:{app.config['CLOUDINARY_API_SECRET']}"
-        auth_encoded = base64.b64encode(auth_string.encode()).decode()
+        # Generate timestamp for signed upload
+        import time
+        timestamp = int(time.time())
+        
+        # Create signature for signed upload (include all parameters that will be sent)
+        import hashlib
+        import hmac
+        
+        # Parameters for signature (alphabetical order, only non-file parameters)
+        params_to_sign = {
+            'public_id': public_id,
+            'timestamp': str(timestamp)
+        }
+        
+        # Create signature string (alphabetical order)
+        sorted_params = sorted(params_to_sign.items())
+        params_string = '&'.join([f'{k}={v}' for k, v in sorted_params])
+        
+        signature = hmac.new(
+            app.config['CLOUDINARY_API_SECRET'].encode('utf-8'),
+            params_string.encode('utf-8'),
+            hashlib.sha1
+        ).hexdigest()
+        
+        print(f"🔐 Signature params: {params_string}")
+        print(f"🔐 Generated signature: {signature}")
         
         with open(file_path, 'rb') as f:
             files = {'file': f}
             data = {
                 'public_id': public_id,
-                'resource_type': 'video',
-                'overwrite': 'true'
+                'api_key': app.config['CLOUDINARY_API_KEY'],
+                'timestamp': str(timestamp),
+                'signature': signature
             }
             
-            headers = {
-                'Authorization': f'Basic {auth_encoded}'
-            }
-            
-            print(f"☁️ Uploading to Cloudinary with basic auth: {public_id}")
-            response = requests.post(cloudinary_url, files=files, data=data, headers=headers, timeout=120)
+            print(f"☁️ Uploading to Cloudinary with signed upload: {public_id}")
+            response = requests.post(cloudinary_url, files=files, data=data, timeout=120)
             
             print(f"☁️ Cloudinary response status: {response.status_code}")
             
