@@ -11,6 +11,16 @@ from config import Config
 import urllib.parse
 import requests
 
+# Import Cloudinary with error handling
+try:
+    import cloudinary
+    import cloudinary.uploader
+    CLOUDINARY_AVAILABLE = True
+    print("✅ Cloudinary SDK imported successfully")
+except ImportError as e:
+    CLOUDINARY_AVAILABLE = False
+    print(f"⚠️  Cloudinary SDK not available: {e}")
+
 # Debug: Print deployment info at startup
 try:
     from deployment_info import get_deployment_info
@@ -407,8 +417,12 @@ def upload_to_cloudinary(file_path, public_id):
             }
         
         # Use official Cloudinary Python SDK
-        import cloudinary
-        import cloudinary.uploader
+        if not CLOUDINARY_AVAILABLE:
+            print("❌ Cloudinary SDK not available - falling back to local storage")
+            return {
+                'success': False,
+                'error': 'Cloudinary SDK not installed'
+            }
         
         # Configure Cloudinary
         cloudinary.config(
@@ -455,14 +469,12 @@ def should_use_cloud_storage():
     if os.environ.get('RENDER') is not None:
         return True
     
-    # Use cloud storage if explicitly enabled
+    # Use cloud storage if explicitly enabled via environment variable
     if app.config.get('USE_CLOUD_STORAGE', False):
         return True
-    
-    # Use cloud storage if Cloudinary is configured (even in demo mode)
-    if app.config.get('CLOUDINARY_CLOUD_NAME'):
-        return True
         
+    # For local development, use local storage by default
+    # (even if Cloudinary is configured)
     return False
 
 def get_video_url(filename):
@@ -1038,7 +1050,7 @@ def upload_video():
             c = conn.cursor()
             c.execute('''INSERT INTO videos (user_id, title, description, filename, file_size, is_approved) 
                         VALUES (?, ?, ?, ?, ?, ?)''',
-                     (session['user_id'], title, description, final_filename, file_size_bytes, False))
+                     (session['user_id'], title, description, final_filename, file_size_bytes, True))
             
             video_id = c.lastrowid
             print(f"Video saved to database with ID: {video_id}")
