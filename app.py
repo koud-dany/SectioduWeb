@@ -1050,7 +1050,7 @@ def upload_video():
             c = conn.cursor()
             c.execute('''INSERT INTO videos (user_id, title, description, filename, file_size, is_approved) 
                         VALUES (?, ?, ?, ?, ?, ?)''',
-                     (session['user_id'], title, description, final_filename, file_size_bytes, True))
+                     (session['user_id'], title, description, final_filename, file_size_bytes, False))
             
             video_id = c.lastrowid
             print(f"Video saved to database with ID: {video_id}")
