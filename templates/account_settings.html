@@ -10,24 +10,24 @@
             <div class="card shadow-sm border-0 mb-4">
                 <div class="card-header bg-primary text-white border-0">
                     <h6 class="mb-0">
-                        <i class="fas fa-cog me-2"></i>Settings
+                        <i class="fas fa-cog me-2"></i><span data-i18n="profile.settings">{{ translations.profile.settings if translations.profile else 'Settings' }}</span>
                     </h6>
                 </div>
                 <div class="list-group list-group-flush">
                     <a href="#general" class="list-group-item list-group-item-action active" data-bs-toggle="pill">
-                        <i class="fas fa-user me-2"></i>General
+                        <i class="fas fa-user me-2"></i><span data-i18n="profile.general">{{ translations.profile.general if translations.profile else 'General' }}</span>
                     </a>
                     <a href="#security" class="list-group-item list-group-item-action" data-bs-toggle="pill">
-                        <i class="fas fa-shield-alt me-2"></i>Security
+                        <i class="fas fa-shield-alt me-2"></i><span data-i18n="profile.security">{{ translations.profile.security if translations.profile else 'Security' }}</span>
                     </a>
                     <a href="#privacy" class="list-group-item list-group-item-action" data-bs-toggle="pill">
-                        <i class="fas fa-eye me-2"></i>Privacy
+                        <i class="fas fa-eye me-2"></i><span data-i18n="profile.privacy">{{ translations.profile.privacy if translations.profile else 'Privacy' }}</span>
                     </a>
                     <a href="#data" class="list-group-item list-group-item-action" data-bs-toggle="pill">
-                        <i class="fas fa-download me-2"></i>Data
+                        <i class="fas fa-download me-2"></i><span data-i18n="profile.data">{{ translations.profile.data if translations.profile else 'Data' }}</span>
                     </a>
                     <a href="#danger" class="list-group-item list-group-item-action text-danger" data-bs-toggle="pill">
-                        <i class="fas fa-exclamation-triangle me-2"></i>Danger Zone
+                        <i class="fas fa-exclamation-triangle me-2"></i><span data-i18n="profile.dangerZone">{{ translations.profile.dangerZone if translations.profile else 'Danger Zone' }}</span>
                     </a>
                 </div>
             </div>
@@ -41,19 +41,19 @@
                     <div class="card shadow-sm border-0 mb-4">
                         <div class="card-header bg-light border-0">
                             <h5 class="mb-0">
-                                <i class="fas fa-user text-primary me-2"></i>General Settings
+                                <i class="fas fa-user text-primary me-2"></i><span data-i18n="profile.generalSettings">{{ translations.profile.generalSettings if translations.profile else 'General Settings' }}</span>
                             </h5>
                         </div>
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-md-6">
-                                    <h6>Account Information</h6>
-                                    <p class="text-muted mb-1"><strong>Username:</strong> {{ user[0] }}</p>
-                                    <p class="text-muted mb-1"><strong>Email:</strong> {{ user[1] }}</p>
-                                    <p class="text-muted mb-3"><strong>Member since:</strong> {{ user[8].split()[0] if user[8] else 'Recently' }}</p>
+                                    <h6 data-i18n="profile.accountInfo">{{ translations.profile.accountInfo if translations.profile else 'Account Information' }}</h6>
+                                    <p class="text-muted mb-1"><strong data-i18n="auth.username">{{ translations.auth.username if translations.auth else 'Username' }}</strong>: {{ user[0] }}</p>
+                                    <p class="text-muted mb-1"><strong data-i18n="auth.email">{{ translations.auth.email if translations.auth else 'Email' }}</strong>: {{ user[1] }}</p>
+                                    <p class="text-muted mb-3"><strong data-i18n="profile.memberSince">{{ translations.profile.memberSince if translations.profile else 'Member since' }}</strong>: {{ user[8].split()[0] if user[8] else 'Recently' }}</p>
                                     
                                     <a href="{{ url_for('edit_profile') }}" class="btn btn-primary">
-                                        <i class="fas fa-edit me-2"></i>Edit Profile
+                                        <i class="fas fa-edit me-2"></i><span data-i18n="profile.editProfile">{{ translations.profile.editProfile if translations.profile else 'Edit Profile' }}</span>
                                     </a>
                                 </div>
                                 <div class="col-md-6 text-center">
@@ -68,7 +68,7 @@
                                         <i class="fas fa-user text-white" style="font-size: 2rem;"></i>
                                     </div>
                                     {% endif %}
-                                    <p class="text-muted">Profile Picture</p>
+                                    <p class="text-muted" data-i18n="profile.profilePicture">{{ translations.profile.profilePicture if translations.profile else 'Profile Picture' }}</p>
                                 </div>
                             </div>
                         </div>
@@ -80,38 +80,38 @@
                     <div class="card shadow-sm border-0 mb-4">
                         <div class="card-header bg-light border-0">
                             <h5 class="mb-0">
-                                <i class="fas fa-shield-alt text-warning me-2"></i>Security Settings
+                                <i class="fas fa-shield-alt text-warning me-2"></i><span data-i18n="profile.securitySettings">{{ translations.profile.securitySettings if translations.profile else 'Security Settings' }}</span>
                             </h5>
                         </div>
                         <div class="card-body">
-                            <h6>Change Password</h6>
+                            <h6 data-i18n="profile.changePassword">{{ translations.profile.changePassword if translations.profile else 'Change Password' }}</h6>
                             <form method="POST" class="mb-4">
                                 <input type="hidden" name="action" value="change_password">
                                 <div class="row">
                                     <div class="col-md-6">
                                         <div class="mb-3">
-                                            <label for="current_password" class="form-label">Current Password</label>
+                                            <label for="current_password" class="form-label" data-i18n="profile.currentPassword">{{ translations.profile.currentPassword if translations.profile else 'Current Password' }}</label>
                                             <input type="password" class="form-control" id="current_password" name="current_password" required>
                                         </div>
                                         <div class="mb-3">
-                                            <label for="new_password" class="form-label">New Password</label>
+                                            <label for="new_password" class="form-label" data-i18n="profile.newPassword">{{ translations.profile.newPassword if translations.profile else 'New Password' }}</label>
                                             <input type="password" class="form-control" id="new_password" name="new_password" required>
                                         </div>
                                         <div class="mb-3">
-                                            <label for="confirm_password" class="form-label">Confirm New Password</label>
+                                            <label for="confirm_password" class="form-label" data-i18n="profile.confirmNewPassword">{{ translations.profile.confirmNewPassword if translations.profile else 'Confirm New Password' }}</label>
                                             <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
                                         </div>
                                         <button type="submit" class="btn btn-warning">
-                                            <i class="fas fa-key me-2"></i>Change Password
+                                            <i class="fas fa-key me-2"></i><span data-i18n="profile.changePassword">{{ translations.profile.changePassword if translations.profile else 'Change Password' }}</span>
                                         </button>
                                     </div>
                                     <div class="col-md-6">
                                         <div class="alert alert-info">
-                                            <h6><i class="fas fa-info-circle me-2"></i>Password Requirements</h6>
+                                            <h6><i class="fas fa-info-circle me-2"></i><span data-i18n="profile.passwordRequirements">{{ translations.profile.passwordRequirements if translations.profile else 'Password Requirements' }}</span></h6>
                                             <ul class="mb-0 small">
-                                                <li>At least 6 characters long</li>
-                                                <li>Use a mix of letters and numbers</li>
-                                                <li>Avoid common passwords</li>
+                                                <li data-i18n="profile.atLeast6Chars">{{ translations.profile.atLeast6Chars if translations.profile else 'At least 6 characters long' }}</li>
+                                                <li data-i18n="profile.mixLettersNumbers">{{ translations.profile.mixLettersNumbers if translations.profile else 'Use a mix of letters and numbers' }}</li>
+                                                <li data-i18n="profile.avoidCommon">{{ translations.profile.avoidCommon if translations.profile else 'Avoid common passwords' }}</li>
                                             </ul>
                                         </div>
                                     </div>
@@ -126,35 +126,35 @@
                     <div class="card shadow-sm border-0 mb-4">
                         <div class="card-header bg-light border-0">
                             <h5 class="mb-0">
-                                <i class="fas fa-eye text-info me-2"></i>Privacy Settings
+                                <i class="fas fa-eye text-info me-2"></i><span data-i18n="profile.privacySettings">{{ translations.profile.privacySettings if translations.profile else 'Privacy Settings' }}</span>
                             </h5>
                         </div>
                         <div class="card-body">
-                            <h6>Profile Visibility</h6>
+                            <h6 data-i18n="profile.profileVisibility">{{ translations.profile.profileVisibility if translations.profile else 'Profile Visibility' }}</h6>
                             <div class="form-check mb-3">
                                 <input class="form-check-input" type="checkbox" id="public_profile" checked>
-                                <label class="form-check-label" for="public_profile">
-                                    Make my profile visible to everyone
+                                <label class="form-check-label" for="public_profile" data-i18n="profile.makeProfileVisible">
+                                    {{ translations.profile.makeProfileVisible if translations.profile else 'Make my profile visible to everyone' }}
                                 </label>
                             </div>
                             
-                            <h6>Activity Visibility</h6>
+                            <h6 data-i18n="profile.activityVisibility">{{ translations.profile.activityVisibility if translations.profile else 'Activity Visibility' }}</h6>
                             <div class="form-check mb-3">
                                 <input class="form-check-input" type="checkbox" id="show_activity" checked>
-                                <label class="form-check-label" for="show_activity">
-                                    Show my recent activity
+                                <label class="form-check-label" for="show_activity" data-i18n="profile.showRecentActivity">
+                                    {{ translations.profile.showRecentActivity if translations.profile else 'Show my recent activity' }}
                                 </label>
                             </div>
                             
                             <div class="form-check mb-4">
                                 <input class="form-check-input" type="checkbox" id="show_videos" checked>
-                                <label class="form-check-label" for="show_videos">
-                                    Show my videos on profile
+                                <label class="form-check-label" for="show_videos" data-i18n="profile.showVideosOnProfile">
+                                    {{ translations.profile.showVideosOnProfile if translations.profile else 'Show my videos on profile' }}
                                 </label>
                             </div>
                             
                             <button type="button" class="btn btn-info" onclick="savePrivacySettings()">
-                                <i class="fas fa-save me-2"></i>Save Privacy Settings
+                                <i class="fas fa-save me-2"></i><span data-i18n="profile.savePrivacySettings">{{ translations.profile.savePrivacySettings if translations.profile else 'Save Privacy Settings' }}</span>
                             </button>
                         </div>
                     </div>
@@ -165,34 +165,34 @@
                     <div class="card shadow-sm border-0 mb-4">
                         <div class="card-header bg-light border-0">
                             <h5 class="mb-0">
-                                <i class="fas fa-download text-success me-2"></i>Data Management
+                                <i class="fas fa-download text-success me-2"></i><span data-i18n="profile.dataManagement">{{ translations.profile.dataManagement if translations.profile else 'Data Management' }}</span>
                             </h5>
                         </div>
                         <div class="card-body">
-                            <h6>Download Your Data</h6>
-                            <p class="text-muted mb-3">Download a copy of all your data including videos, comments, and profile information.</p>
+                            <h6 data-i18n="profile.downloadYourData">{{ translations.profile.downloadYourData if translations.profile else 'Download Your Data' }}</h6>
+                            <p class="text-muted mb-3" data-i18n="profile.downloadDataDesc">{{ translations.profile.downloadDataDesc if translations.profile else 'Download a copy of all your data including videos, comments, and profile information.' }}</p>
                             <button type="button" class="btn btn-success mb-4" onclick="downloadData()">
-                                <i class="fas fa-download me-2"></i>Request Data Download
+                                <i class="fas fa-download me-2"></i><span data-i18n="profile.requestDataDownload">{{ translations.profile.requestDataDownload if translations.profile else 'Request Data Download' }}</span>
                             </button>
                             
-                            <h6>Data Usage</h6>
+                            <h6 data-i18n="profile.dataUsage">{{ translations.profile.dataUsage if translations.profile else 'Data Usage' }}</h6>
                             <div class="row text-center">
                                 <div class="col-md-4">
                                     <div class="border rounded p-3">
-                                        <h5 class="text-primary">Storage Used</h5>
+                                        <h5 class="text-primary" data-i18n="profile.storageUsed">{{ translations.profile.storageUsed if translations.profile else 'Storage Used' }}</h5>
                                         <p class="text-muted">~25 MB</p>
                                     </div>
                                 </div>
                                 <div class="col-md-4">
                                     <div class="border rounded p-3">
-                                        <h5 class="text-success">Videos</h5>
-                                        <p class="text-muted">{{ user_videos_count|default(0) }} files</p>
+                                        <h5 class="text-success" data-i18n="profile.videos">{{ translations.profile.videos if translations.profile else 'Videos' }}</h5>
+                                        <p class="text-muted">{{ user_videos_count|default(0) }} <span data-i18n="profile.files">{{ translations.profile.files if translations.profile else 'files' }}</span></p>
                                     </div>
                                 </div>
                                 <div class="col-md-4">
                                     <div class="border rounded p-3">
-                                        <h5 class="text-info">Comments</h5>
-                                        <p class="text-muted">{{ user_comments_count|default(0) }} posts</p>
+                                        <h5 class="text-info" data-i18n="comments.comments">{{ translations.comments.comments if translations.comments else 'Comments' }}</h5>
+                                        <p class="text-muted">{{ user_comments_count|default(0) }} <span data-i18n="profile.posts">{{ translations.profile.posts if translations.profile else 'posts' }}</span></p>
                                     </div>
                                 </div>
                             </div>

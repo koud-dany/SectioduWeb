@@ -344,10 +344,10 @@
                 🏆
             </div>
             <h1 class="hero-title page-transition">
-                Join the Tournament
+                <span data-i18n="payment.joinTournament">{{ translations.payment.joinTournament if translations.payment else 'Join the Tournament' }}</span>
             </h1>
             <p class="hero-subtitle page-transition animate-delay-1">
-                Unlock your creative potential and compete with the best
+                <span data-i18n="payment.unlockPotential">{{ translations.payment.unlockPotential if translations.payment else 'Unlock your creative potential and compete with the best' }}</span>
             </p>
         </div>
     </div>
@@ -361,12 +361,12 @@
             <div class="col-lg-5 page-transition animate-delay-1">
                 <div class="pricing-card">
                     <div class="card-header-professional free-header">
-                        <h3 class="fw-bold mb-3">Free Explorer</h3>
+                        <h3 class="fw-bold mb-3" data-i18n="payment.freeExplorer">{{ translations.payment.freeExplorer if translations.payment else 'Free Explorer' }}</h3>
                         <div class="price-display">
                             $0
-                            <span class="price-period">forever</span>
+                            <span class="price-period" data-i18n="payment.forever">{{ translations.payment.forever if translations.payment else 'forever' }}</span>
                         </div>
-                        <p class="mb-0 opacity-75">Perfect for discovering content</p>
+                        <p class="mb-0 opacity-75" data-i18n="payment.perfectForDiscovering">{{ translations.payment.perfectForDiscovering if translations.payment else 'Perfect for discovering content' }}</p>
                     </div>
                     
                     <div class="feature-list">
@@ -374,49 +374,49 @@
                             <div class="feature-icon included">
                                 <i class="fas fa-check"></i>
                             </div>
-                            <span>Watch all tournament videos</span>
+                            <span data-i18n="payment.watchAllVideos">{{ translations.payment.watchAllVideos if translations.payment else 'Watch all tournament videos' }}</span>
                         </div>
                         <div class="feature-item">
                             <div class="feature-icon included">
                                 <i class="fas fa-check"></i>
                             </div>
-                            <span>Comment and engage with community</span>
+                            <span data-i18n="payment.commentEngage">{{ translations.payment.commentEngage if translations.payment else 'Comment and engage with community' }}</span>
                         </div>
                         <div class="feature-item">
                             <div class="feature-icon included">
                                 <i class="fas fa-check"></i>
                             </div>
-                            <span>Like and vote on videos</span>
+                            <span data-i18n="payment.likeVote">{{ translations.payment.likeVote if translations.payment else 'Like and vote on videos' }}</span>
                         </div>
                         <div class="feature-item">
                             <div class="feature-icon included">
                                 <i class="fas fa-check"></i>
                             </div>
-                            <span>View leaderboards and rankings</span>
+                            <span data-i18n="payment.viewLeaderboards">{{ translations.payment.viewLeaderboards if translations.payment else 'View leaderboards and rankings' }}</span>
                         </div>
                         <div class="feature-item">
                             <div class="feature-icon included">
                                 <i class="fas fa-check"></i>
                             </div>
-                            <span>Create and customize profile</span>
+                            <span data-i18n="payment.createProfile">{{ translations.payment.createProfile if translations.payment else 'Create and customize profile' }}</span>
                         </div>
                         <div class="feature-item">
                             <div class="feature-icon excluded">
                                 <i class="fas fa-times"></i>
                             </div>
-                            <span class="text-muted">Upload and compete with videos</span>
+                            <span class="text-muted" data-i18n="payment.uploadCompete">{{ translations.payment.uploadCompete if translations.payment else 'Upload and compete with videos' }}</span>
                         </div>
                         <div class="feature-item">
                             <div class="feature-icon excluded">
                                 <i class="fas fa-times"></i>
                             </div>
-                            <span class="text-muted">Win prizes and recognition</span>
+                            <span class="text-muted" data-i18n="payment.winPrizes">{{ translations.payment.winPrizes if translations.payment else 'Win prizes and recognition' }}</span>
                         </div>
                     </div>
                     
                     <button class="cta-button btn-free w-100" disabled>
                         <i class="fas fa-user me-2"></i>
-                        Current Plan
+                        <span data-i18n="payment.currentPlan">{{ translations.payment.currentPlan if translations.payment else 'Current Plan' }}</span>
                     </button>
                 </div>
             </div>
@@ -426,16 +426,16 @@
                 <div class="pricing-card featured">
                     <div class="featured-badge">
                         <i class="fas fa-crown me-1"></i>
-                        Most Popular
+                        <span data-i18n="payment.mostPopular">{{ translations.payment.mostPopular if translations.payment else 'Most Popular' }}</span>
                     </div>
                     
                     <div class="card-header-professional premium-header">
-                        <h3 class="fw-bold mb-3">Tournament Champion</h3>
+                        <h3 class="fw-bold mb-3" data-i18n="payment.tournamentChampion">{{ translations.payment.tournamentChampion if translations.payment else 'Tournament Champion' }}</h3>
                         <div class="price-display">
                             $35
-                            <span class="price-period">one-time</span>
+                            <span class="price-period" data-i18n="payment.oneTime">{{ translations.payment.oneTime if translations.payment else 'one-time' }}</span>
                         </div>
-                        <p class="mb-0 opacity-75">Unlock your creative potential</p>
+                        <p class="mb-0 opacity-75" data-i18n="payment.unlockCreative">{{ translations.payment.unlockCreative if translations.payment else 'Unlock your creative potential' }}</p>
                     </div>
                     
                     <div class="feature-list">
@@ -443,49 +443,49 @@
                             <div class="feature-icon included">
                                 <i class="fas fa-check"></i>
                             </div>
-                            <span><strong>Everything in Free Explorer</strong></span>
+                            <span><strong data-i18n="payment.everythingInFree">{{ translations.payment.everythingInFree if translations.payment else 'Everything in Free Explorer' }}</strong></span>
                         </div>
                         <div class="feature-item">
                             <div class="feature-icon included">
                                 <i class="fas fa-check"></i>
                             </div>
-                            <span><strong>Upload unlimited videos</strong></span>
+                            <span><strong data-i18n="payment.uploadUnlimited">{{ translations.payment.uploadUnlimited if translations.payment else 'Upload unlimited videos' }}</strong></span>
                         </div>
                         <div class="feature-item">
                             <div class="feature-icon included">
                                 <i class="fas fa-check"></i>
                             </div>
-                            <span>Compete for prizes and recognition</span>
+                            <span data-i18n="payment.competePrizes">{{ translations.payment.competePrizes if translations.payment else 'Compete for prizes and recognition' }}</span>
                         </div>
                         <div class="feature-item">
                             <div class="feature-icon included">
                                 <i class="fas fa-check"></i>
                             </div>
-                            <span>HD video quality uploads</span>
+                            <span data-i18n="payment.hdQuality">{{ translations.payment.hdQuality if translations.payment else 'HD video quality uploads' }}</span>
                         </div>
                         <div class="feature-item">
                             <div class="feature-icon included">
                                 <i class="fas fa-check"></i>
                             </div>
-                            <span>Enhanced profile with achievements</span>
+                            <span data-i18n="payment.enhancedProfile">{{ translations.payment.enhancedProfile if translations.payment else 'Enhanced profile with achievements' }}</span>
                         </div>
                         <div class="feature-item">
                             <div class="feature-icon included">
                                 <i class="fas fa-check"></i>
                             </div>
-                            <span>Performance analytics dashboard</span>
+                            <span data-i18n="payment.analytics">{{ translations.payment.analytics if translations.payment else 'Performance analytics dashboard' }}</span>
                         </div>
                         <div class="feature-item">
                             <div class="feature-icon included">
                                 <i class="fas fa-check"></i>
                             </div>
-                            <span>Priority in leaderboards</span>
+                            <span data-i18n="payment.priorityLeaderboard">{{ translations.payment.priorityLeaderboard if translations.payment else 'Priority in leaderboards' }}</span>
                         </div>
                     </div>
                     
                     <button class="cta-button btn-premium w-100" id="upgrade-btn" onclick="initializePayment()">
                         <i class="fas fa-rocket me-2"></i>
-                        Join Tournament Now
+                        <span data-i18n="payment.joinNow">{{ translations.payment.joinNow if translations.payment else 'Join Tournament Now' }}</span>
                     </button>
                     
                     <!-- Mobile Money Payment Form (hidden by default) -->
@@ -493,9 +493,9 @@
                         <div id="payment-messages" class="mb-3"></div>
                         <div class="payment-loading text-center" style="display: none;">
                             <div class="spinner-border text-primary" role="status">
-                                <span class="visually-hidden">Processing...</span>
+                                <span class="visually-hidden" data-i18n="payment.processing">{{ translations.payment.processing if translations.payment else 'Processing...' }}</span>
                             </div>
-                            <p class="mt-2 text-muted">Processing your payment...</p>
+                            <p class="mt-2 text-muted" data-i18n="payment.processingPayment">{{ translations.payment.processingPayment if translations.payment else 'Processing your payment...' }}</p>
                         </div>
                     </div>
                 </div>

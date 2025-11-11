@@ -564,14 +564,28 @@ body {
 
 <div class="payment-container">
     <div class="container" style="max-width: 550px;">
+        <!-- Tournament Closed Alert -->
+        {% if not tournament_open %}
+        <div class="alert alert-danger alert-dismissible fade show" role="alert" style="border-radius: 16px; box-shadow: 0 10px 30px rgba(220, 38, 38, 0.2); margin-bottom: 1.5rem;">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-lock fa-2x me-3"></i>
+                <div>
+                    <h5 class="alert-heading mb-1"><span data-i18n="payment.tournamentClosed">{{ translations.payment.tournamentClosed if translations.payment else 'Tournament Closed' }}</span></h5>
+                    <p class="mb-0"><span data-i18n="payment.registrationUnavailable">{{ translations.payment.registrationUnavailable if translations.payment else 'New participant registrations are currently unavailable. Please check back later.' }}</span></p>
+                </div>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endif %}
+        
         <div class="text-center mb-2">
             <div class="floating-trophy mb-2" style="font-size: 1.8rem; animation: float 3s ease-in-out infinite;">
                 🏆
             </div>
             <h1 class="h4 fw-bold mb-1 title-gradient">
-                Join Tournament
+                <span data-i18n="payment.joinTournament">{{ translations.payment.joinTournament if translations.payment else 'Join Tournament' }}</span>
             </h1>
-            <p class="text-white opacity-90 mb-0" style="font-size: 0.95rem;">Unlock your creative potential with a one-time payment</p>
+            <p class="text-white opacity-90 mb-0" style="font-size: 0.95rem;"><span data-i18n="payment.unlockPotential">{{ translations.payment.unlockPotential if translations.payment else 'Unlock your creative potential with a one-time payment' }}</span></p>
         </div>
         <!-- Payment Card -->
         <div class="payment-card fade-transition" id="payment-card" style="max-width: 450px;">
@@ -580,9 +594,9 @@ body {
                     <div class="mb-1" style="font-size: 2.2rem; animation: pulse 2s infinite;">
                         <i class="fas fa-video text-white"></i>
                     </div>
-                    <h2 class="mb-1 fw-bold h6" style="font-family: 'Inter', sans-serif; letter-spacing: -0.5px;">Tournament Entry</h2>
+                    <h2 class="mb-1 fw-bold h6" style="font-family: 'Inter', sans-serif; letter-spacing: -0.5px;"><span data-i18n="payment.tournamentEntry">{{ translations.payment.tournamentEntry if translations.payment else 'Tournament Entry' }}</span></h2>
                     <div class="h3 mb-1 fw-900" style="font-size: 1.8rem; text-shadow: 0 4px 20px rgba(0,0,0,0.3);">$35</div>
-                    <p class="opacity-90 mb-0 fw-500" style="font-size: 0.85rem;">One-time payment • Lifetime access</p>
+                    <p class="opacity-90 mb-0 fw-500" style="font-size: 0.85rem;"><span data-i18n="payment.oneTimeLifetime">{{ translations.payment.oneTimeLifetime if translations.payment else 'One-time payment • Lifetime access' }}</span></p>
                 </div>
             </div>
             
@@ -593,19 +607,19 @@ body {
                         <div class="col-4">
                             <div class="text-primary">
                                 <i class="fas fa-upload mb-1" style="font-size: 1.1rem;"></i>
-                                <p class="small mb-0" style="font-size: 0.75rem;">Upload Videos</p>
+                                <p class="small mb-0" style="font-size: 0.75rem;"><span data-i18n="payment.uploadVideos">{{ translations.payment.uploadVideos if translations.payment else 'Upload Videos' }}</span></p>
                             </div>
                         </div>
                         <div class="col-4">
                             <div class="text-success">
                                 <i class="fas fa-trophy mb-1" style="font-size: 1.1rem;"></i>
-                                <p class="small mb-0" style="font-size: 0.75rem;">Compete</p>
+                                <p class="small mb-0" style="font-size: 0.75rem;"><span data-i18n="payment.compete">{{ translations.payment.compete if translations.payment else 'Compete' }}</span></p>
                             </div>
                         </div>
                         <div class="col-4">
                             <div class="text-warning">
                                 <i class="fas fa-star mb-1" style="font-size: 1.1rem;"></i>
-                                <p class="small mb-0" style="font-size: 0.75rem;">Win Prizes</p>
+                                <p class="small mb-0" style="font-size: 0.75rem;"><span data-i18n="payment.winPrizesShort">{{ translations.payment.winPrizesShort if translations.payment else 'Win Prizes' }}</span></p>
                             </div>
                         </div>
                     </div>
@@ -613,7 +627,7 @@ body {
 
                 <!-- Mobile Money Providers -->
                 <h6 class="text-center mb-2 fw-bold" style="color: #2d3748; font-family: 'Inter', sans-serif; font-size: 0.9rem;">
-                    <i class="fas fa-mobile-alt me-2 text-primary"></i>Select Payment Method
+                    <i class="fas fa-mobile-alt me-2 text-primary"></i><span data-i18n="payment.selectPaymentMethod">{{ translations.payment.selectPaymentMethod if translations.payment else 'Select Payment Method' }}</span>
                 </h6>
                 
                 <div class="row g-2 mb-2">
@@ -640,16 +654,16 @@ body {
                 <!-- Phone Number Input -->
                 <div class="mb-2">
                     <label for="phone_number" class="form-label fw-bold mb-1" style="color: #2d3748; font-family: 'Inter', sans-serif; font-size: 0.85rem;">
-                        <i class="fas fa-phone me-2 text-primary"></i>Enter Your Phone Number
+                        <i class="fas fa-phone me-2 text-primary"></i><span data-i18n="payment.enterPhoneNumber">{{ translations.payment.enterPhoneNumber if translations.payment else 'Enter Your Phone Number' }}</span>
                     </label>
-                    <input type="tel" class="phone-input w-100" id="phone_number" placeholder="Enter mobile number (e.g., +237 6XX XXX XXX)" style="padding: 1rem 1.5rem; font-size: 1rem;" required>
+                    <input type="tel" class="phone-input w-100" id="phone_number" placeholder="{{ translations.payment.phonePlaceholder if translations.payment else 'Enter mobile number (e.g., +237 6XX XXX XXX)' }}" data-i18n-placeholder="payment.phonePlaceholder" style="padding: 1rem 1.5rem; font-size: 1rem;" required>
                 </div>
                 
                 <!-- Payment Button -->
                 <div class="text-center mt-2">
                     <button id="submit-payment" class="pay-btn" onclick="initiatePayment()" style="padding: 1rem 3rem; font-size: 1rem;">
                         <span class="btn-text">
-                            <i class="fas fa-rocket me-2"></i>Join Tournament - Pay $35
+                            <i class="fas fa-rocket me-2"></i><span data-i18n="payment.joinTournamentPay">{{ translations.payment.joinTournamentPay if translations.payment else 'Join Tournament - Pay $35' }}</span>
                         </span>
                         <div class="loading-animation">
                             <div class="spinner"></div>
@@ -675,14 +689,14 @@ body {
                     <div class="text-success mb-3">
                         <i class="fas fa-check-circle fa-4x"></i>
                     </div>
-                    <h4 class="text-success mb-2">Payment Successful!</h4>
-                    <p class="text-muted mb-3">Welcome to the tournament! You can now upload your videos.</p>
+                    <h4 class="text-success mb-2"><span data-i18n="payment.paymentSuccessful">{{ translations.payment.paymentSuccessful if translations.payment else 'Payment Successful!' }}</span></h4>
+                    <p class="text-muted mb-3"><span data-i18n="payment.welcomeTournament">{{ translations.payment.welcomeTournament if translations.payment else 'Welcome to the tournament! You can now upload your videos.' }}</span></p>
                     <div class="d-flex gap-2 justify-content-center">
                         <button class="btn btn-success" onclick="redirectToUpload()">
-                            <i class="fas fa-upload me-2"></i>Upload Video
+                            <i class="fas fa-upload me-2"></i><span data-i18n="nav.uploadVideo">{{ translations.nav.uploadVideo if translations.nav else 'Upload Video' }}</span>
                         </button>
                         <button class="btn btn-outline-secondary" onclick="goToDashboard()">
-                            <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                            <i class="fas fa-tachometer-alt me-2"></i><span data-i18n="nav.dashboard">{{ translations.nav.dashboard if translations.nav else 'Dashboard' }}</span>
                         </button>
                     </div>
                 </div>
@@ -701,9 +715,9 @@ body {
                         🏆
                     </div>
                     <h2 class="h4 fw-bold mb-2 text-white" style="font-family: 'Inter', sans-serif; letter-spacing: -0.5px; text-shadow: 0 2px 15px rgba(0,0,0,0.3);">
-                        Why Join the Tournament?
+                        <span data-i18n="payment.whyJoinTournament">{{ translations.payment.whyJoinTournament if translations.payment else 'Why Join the Tournament?' }}</span>
                     </h2>
-                    <p class="text-white opacity-90 mb-0" style="font-size: 1rem; font-weight: 300;">Transform your creativity into success</p>
+                    <p class="text-white opacity-90 mb-0" style="font-size: 1rem; font-weight: 300;"><span data-i18n="payment.transformCreativity">{{ translations.payment.transformCreativity if translations.payment else 'Transform your creativity into success' }}</span></p>
                 </div>
                 
                 <!-- Feature Cards -->
@@ -713,8 +727,8 @@ body {
                             <div class="feature-icon rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width: 50px; height: 50px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; box-shadow: 0 6px 20px rgba(102,126,234,0.3);">
                                 <i class="fas fa-trophy" style="font-size: 1.2rem;"></i>
                             </div>
-                            <h6 class="fw-bold mb-2" style="color: #2d3748; font-family: 'Inter', sans-serif; font-size: 1.1rem;">Compete for Prizes</h6>
-                            <p class="text-muted mb-0" style="font-size: 0.88rem; line-height: 1.5; font-weight: 400;">Show your creative skills and compete with talented participants for amazing prizes and recognition.</p>
+                            <h6 class="fw-bold mb-2" style="color: #2d3748; font-family: 'Inter', sans-serif; font-size: 1.1rem;"><span data-i18n="payment.competePrizesTitle">{{ translations.payment.competePrizesTitle if translations.payment else 'Compete for Prizes' }}</span></h6>
+                            <p class="text-muted mb-0" style="font-size: 0.88rem; line-height: 1.5; font-weight: 400;"><span data-i18n="payment.competePrizesDesc">{{ translations.payment.competePrizesDesc if translations.payment else 'Show your creative skills and compete with talented participants for amazing prizes and recognition.' }}</span></p>
                         </div>
                     </div>
                     <div class="col-lg-4">
@@ -722,8 +736,8 @@ body {
                             <div class="feature-icon rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width: 50px; height: 50px; background: linear-gradient(135deg, #28a745, #20c997); color: white; box-shadow: 0 6px 20px rgba(40,167,69,0.3);">
                                 <i class="fas fa-users" style="font-size: 1.2rem;"></i>
                             </div>
-                            <h6 class="fw-bold mb-2" style="color: #2d3748; font-family: 'Inter', sans-serif; font-size: 1.1rem;">Build Your Audience</h6>
-                            <p class="text-muted mb-0" style="font-size: 0.88rem; line-height: 1.5; font-weight: 400;">Get your videos discovered by thousands of engaged viewers and build a loyal following.</p>
+                            <h6 class="fw-bold mb-2" style="color: #2d3748; font-family: 'Inter', sans-serif; font-size: 1.1rem;"><span data-i18n="payment.buildAudienceTitle">{{ translations.payment.buildAudienceTitle if translations.payment else 'Build Your Audience' }}</span></h6>
+                            <p class="text-muted mb-0" style="font-size: 0.88rem; line-height: 1.5; font-weight: 400;"><span data-i18n="payment.buildAudienceDesc">{{ translations.payment.buildAudienceDesc if translations.payment else 'Get your videos discovered by thousands of engaged viewers and build a loyal following.' }}</span></p>
                         </div>
                     </div>
                     <div class="col-lg-4">
@@ -731,8 +745,8 @@ body {
                             <div class="feature-icon rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width: 50px; height: 50px; background: linear-gradient(135deg, #ffc107, #fd7e14); color: white; box-shadow: 0 6px 20px rgba(255,193,7,0.3);">
                                 <i class="fas fa-star" style="font-size: 1.2rem;"></i>
                             </div>
-                            <h6 class="fw-bold mb-2" style="color: #2d3748; font-family: 'Inter', sans-serif; font-size: 1.1rem;">Gain Recognition</h6>
-                            <p class="text-muted mb-0" style="font-size: 0.88rem; line-height: 1.5; font-weight: 400;">Top performers are featured on leaderboards and receive achievement badges and opportunities.</p>
+                            <h6 class="fw-bold mb-2" style="color: #2d3748; font-family: 'Inter', sans-serif; font-size: 1.1rem;"><span data-i18n="payment.gainRecognitionTitle">{{ translations.payment.gainRecognitionTitle if translations.payment else 'Gain Recognition' }}</span></h6>
+                            <p class="text-muted mb-0" style="font-size: 0.88rem; line-height: 1.5; font-weight: 400;"><span data-i18n="payment.gainRecognitionDesc">{{ translations.payment.gainRecognitionDesc if translations.payment else 'Top performers are featured on leaderboards and receive achievement badges and opportunities.' }}</span></p>
                         </div>
                     </div>
                 </div>
@@ -742,8 +756,8 @@ body {
                     <div class="d-inline-flex align-items-center justify-content-center p-2 rounded-3" style="background: rgba(255,255,255,0.15); backdrop-filter: blur(10px);">
                         <div class="me-2" style="font-size: 1.5rem;">🚀</div>
                         <div class="text-white">
-                            <h6 class="mb-0 fw-bold" style="font-family: 'Inter', sans-serif; font-size: 0.9rem;">Ready to showcase your talent?</h6>
-                            <p class="mb-0 opacity-90" style="font-size: 0.8rem;">Join thousands of creators competing for amazing prizes!</p>
+                            <h6 class="mb-0 fw-bold" style="font-family: 'Inter', sans-serif; font-size: 0.9rem;"><span data-i18n="payment.readyShowcase">{{ translations.payment.readyShowcase if translations.payment else 'Ready to showcase your talent?' }}</span></h6>
+                            <p class="mb-0 opacity-90" style="font-size: 0.8rem;"><span data-i18n="payment.joinThousands">{{ translations.payment.joinThousands if translations.payment else 'Join thousands of creators competing for amazing prizes!' }}</span></p>
                         </div>
                     </div>
                 </div>
@@ -862,19 +876,19 @@ async function initiatePayment() {
     
     // Validation
     if (!selectedProvider) {
-        showMessage('Please select a mobile money provider', 'error');
+        showMessage(t('payment.selectProvider') || 'Please select a mobile money provider', 'error');
         return;
     }
     
     if (!phoneNumber) {
-        showMessage('Please enter your mobile money phone number', 'error');
+        showMessage(t('payment.enterPhone') || 'Please enter your mobile money phone number', 'error');
         return;
     }
     
     // Basic phone number validation
     const cleanedPhone = phoneNumber.replace(/[^\d]/g, '');
     if (cleanedPhone.length < 8) {
-        showMessage('Please enter a valid phone number (minimum 8 digits)', 'error');
+        showMessage(t('payment.validPhone') || 'Please enter a valid phone number (minimum 8 digits)', 'error');
         return;
     }
     
@@ -902,7 +916,7 @@ async function initiatePayment() {
             currentTransactionId = result.transaction_id;
             
             // Show processing message with animation
-            showMessage('Payment initiated successfully! Processing...', 'success');
+            showMessage(t('payment.paymentInitiated') || 'Payment initiated successfully! Processing...', 'success');
             
             // Start transaction animation
             startTransactionAnimation();
@@ -923,7 +937,7 @@ async function initiatePayment() {
             resetButton();
         }
     } catch (error) {
-        showMessage('Network error. Please try again.', 'error');
+        showMessage(t('payment.networkError') || 'Network error. Please try again.', 'error');
         console.error('Payment error:', error);
         resetButton();
     }
@@ -1024,7 +1038,7 @@ function startTransactionAnimation() {
         <div class="alert alert-info alert-custom" id="transaction-status">
             <div class="d-flex align-items-center">
                 <div class="spinner-border spinner-border-sm me-3" role="status">
-                    <span class="visually-hidden">Loading...</span>
+                    <span class="visually-hidden">${t('common.loading') || 'Loading...'}</span>
                 </div>
                 <div>
                     <i class="fas fa-mobile-alt me-2"></i>

@@ -9,9 +9,9 @@
         <div class="col-12 text-center">
             <div class="d-inline-flex align-items-center bg-primary bg-opacity-10 rounded-pill px-4 py-2 mb-3">
                 <i class="fas fa-user-edit text-primary me-2 fs-4"></i>
-                <h2 class="mb-0 text-primary">Edit Profile</h2>
+                <h2 class="mb-0 text-primary" data-i18n="profile.editProfile">{{ translations.profile.editProfile if translations.profile else 'Edit Profile' }}</h2>
             </div>
-            <p class="text-muted">Customize your profile to make it uniquely yours</p>
+            <p class="text-muted" data-i18n="profile.customizeProfile">{{ translations.profile.customizeProfile if translations.profile else 'Customize your profile to make it uniquely yours' }}</p>
         </div>
     </div>
 
@@ -22,7 +22,7 @@
                 <div class="card shadow-sm border-0">
                     <div class="card-header bg-gradient bg-primary text-white py-3">
                         <h5 class="mb-0">
-                            <i class="fas fa-image me-2"></i>Profile Picture
+                            <i class="fas fa-image me-2"></i><span data-i18n="profile.profilePicture">{{ translations.profile.profilePicture if translations.profile else 'Profile Picture' }}</span>
                         </h5>
                     </div>
                     <div class="card-body p-4 text-center">
@@ -52,10 +52,10 @@
                         
                         <input type="file" class="form-control d-none" id="avatar" name="avatar" accept="image/*" onchange="previewAvatar(this)">
                         <label for="avatar" class="btn btn-outline-primary rounded-pill px-4">
-                            <i class="fas fa-upload me-2"></i>Choose New Picture
+                            <i class="fas fa-upload me-2"></i><span data-i18n="profile.chooseNewPicture">{{ translations.profile.chooseNewPicture if translations.profile else 'Choose New Picture' }}</span>
                         </label>
                         <br>
-                        <small class="text-muted mt-2 d-block">Recommended: Square image, at least 200x200px</small>
+                        <small class="text-muted mt-2 d-block" data-i18n="profile.recommendedSize">{{ translations.profile.recommendedSize if translations.profile else 'Recommended: Square image, at least 200x200px' }}</small>
                     </div>
                 </div>
             </div>
@@ -65,42 +65,42 @@
                 <div class="card shadow-sm border-0">
                     <div class="card-header bg-gradient bg-success text-white py-3">
                         <h5 class="mb-0">
-                            <i class="fas fa-user me-2"></i>Personal Information
+                            <i class="fas fa-user me-2"></i><span data-i18n="profile.personalInfo">{{ translations.profile.personalInfo if translations.profile else 'Personal Information' }}</span>
                         </h5>
                     </div>
                     <div class="card-body p-4">
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label for="first_name" class="form-label fw-semibold">
-                                    <i class="fas fa-user text-success me-1"></i>First Name
+                                    <i class="fas fa-user text-success me-1"></i><span data-i18n="profile.firstName">{{ translations.profile.firstName if translations.profile else 'First Name' }}</span>
                                 </label>
                                 <input type="text" class="form-control form-control-lg rounded-pill" 
                                        id="first_name" name="first_name" 
                                        value="{{ user[2] if user and user[2] else '' }}"
-                                       placeholder="Enter your first name">
+                                       placeholder="{{ translations.profile.enterFirstName if translations.profile else 'Enter your first name' }}">
                             </div>
                             <div class="col-md-6">
                                 <label for="last_name" class="form-label fw-semibold">
-                                    <i class="fas fa-user text-success me-1"></i>Last Name
+                                    <i class="fas fa-user text-success me-1"></i><span data-i18n="profile.lastName">{{ translations.profile.lastName if translations.profile else 'Last Name' }}</span>
                                 </label>
                                 <input type="text" class="form-control form-control-lg rounded-pill" 
                                        id="last_name" name="last_name" 
                                        value="{{ user[3] if user and user[3] else '' }}"
-                                       placeholder="Enter your last name">
+                                       placeholder="{{ translations.profile.enterLastName if translations.profile else 'Enter your last name' }}">
                             </div>
                         </div>
                         
                         <div class="row g-3 mt-1">
                             <div class="col-12">
                                 <label for="bio" class="form-label fw-semibold">
-                                    <i class="fas fa-quote-left text-info me-1"></i>Bio
+                                    <i class="fas fa-quote-left text-info me-1"></i><span data-i18n="profile.bio">{{ translations.profile.bio if translations.profile else 'Bio' }}</span>
                                 </label>
                                 <textarea class="form-control form-control-lg" 
                                           id="bio" name="bio" rows="4" 
-                                          placeholder="Tell the world about yourself... What makes you unique?"
+                                          placeholder="{{ translations.profile.bioPlaceholder if translations.profile else 'Tell the world about yourself... What makes you unique?' }}"
                                           maxlength="500">{{ user[4] if user and user[4] else '' }}</textarea>
                                 <div class="d-flex justify-content-between mt-1">
-                                    <small class="text-muted">Share your story, interests, or what your channel is about</small>
+                                    <small class="text-muted" data-i18n="profile.bioHint">{{ translations.profile.bioHint if translations.profile else 'Share your story, interests, or what your channel is about' }}</small>
                                     <small class="text-muted"><span id="bioCount">{{ user[4]|length if user and user[4] else 0 }}</span>/500</small>
                                 </div>
                             </div>
@@ -114,23 +114,23 @@
                 <div class="card shadow-sm border-0">
                     <div class="card-header bg-gradient bg-warning text-dark py-3">
                         <h5 class="mb-0">
-                            <i class="fas fa-globe me-2"></i>Contact & Social
+                            <i class="fas fa-globe me-2"></i><span data-i18n="profile.contactSocial">{{ translations.profile.contactSocial if translations.profile else 'Contact & Social' }}</span>
                         </h5>
                     </div>
                     <div class="card-body p-4">
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label for="location" class="form-label fw-semibold">
-                                    <i class="fas fa-map-marker-alt text-danger me-1"></i>Location
+                                    <i class="fas fa-map-marker-alt text-danger me-1"></i><span data-i18n="profile.location">{{ translations.profile.location if translations.profile else 'Location' }}</span>
                                 </label>
                                 <input type="text" class="form-control form-control-lg rounded-pill" 
                                        id="location" name="location" 
                                        value="{{ user[5] if user and user[5] else '' }}"
-                                       placeholder="Your city, country">
+                                       placeholder="{{ translations.profile.yourCityCountry if translations.profile else 'Your city, country' }}">
                             </div>
                             <div class="col-md-6">
                                 <label for="website" class="form-label fw-semibold">
-                                    <i class="fas fa-link text-primary me-1"></i>Website
+                                    <i class="fas fa-link text-primary me-1"></i><span data-i18n="profile.website">{{ translations.profile.website if translations.profile else 'Website' }}</span>
                                 </label>
                                 <input type="url" class="form-control form-control-lg rounded-pill" 
                                        id="website" name="website" 
@@ -147,22 +147,22 @@
                 <div class="card shadow-sm border-0 bg-light">
                     <div class="card-header bg-secondary text-white py-3">
                         <h5 class="mb-0">
-                            <i class="fas fa-info-circle me-2"></i>Account Information
+                            <i class="fas fa-info-circle me-2"></i><span data-i18n="profile.accountInfo">{{ translations.profile.accountInfo if translations.profile else 'Account Information' }}</span>
                         </h5>
                     </div>
                     <div class="card-body p-4">
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <label class="form-label fw-semibold text-muted">Username</label>
+                                <label class="form-label fw-semibold text-muted" data-i18n="auth.username">{{ translations.auth.username if translations.auth else 'Username' }}</label>
                                 <input type="text" class="form-control form-control-lg rounded-pill" 
                                        value="{{ user[0] if user else session.username }}" readonly>
-                                <small class="text-muted">Username cannot be changed</small>
+                                <small class="text-muted" data-i18n="profile.usernameCannotChange">{{ translations.profile.usernameCannotChange if translations.profile else 'Username cannot be changed' }}</small>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label fw-semibold text-muted">Email</label>
+                                <label class="form-label fw-semibold text-muted" data-i18n="auth.email">{{ translations.auth.email if translations.auth else 'Email' }}</label>
                                 <input type="email" class="form-control form-control-lg rounded-pill" 
                                        value="{{ user[1] if user else '' }}" readonly>
-                                <small class="text-muted">Contact support to change email</small>
+                                <small class="text-muted" data-i18n="profile.contactSupport">{{ translations.profile.contactSupport if translations.profile else 'Contact support to change email' }}</small>
                             </div>
                         </div>
                     </div>
@@ -173,10 +173,10 @@
             <div class="col-12">
                 <div class="d-flex justify-content-center gap-3 mt-4">
                     <a href="{{ url_for('profile') }}" class="btn btn-outline-secondary btn-lg rounded-pill px-5">
-                        <i class="fas fa-times me-2"></i>Cancel
+                        <i class="fas fa-times me-2"></i><span data-i18n="common.cancel">{{ translations.common.cancel if translations.common else 'Cancel' }}</span>
                     </a>
                     <button type="submit" class="btn btn-primary btn-lg rounded-pill px-5" id="saveBtn">
-                        <i class="fas fa-save me-2"></i>Save Changes
+                        <i class="fas fa-save me-2"></i><span data-i18n="profile.saveChanges">{{ translations.profile.saveChanges if translations.profile else 'Save Changes' }}</span>
                     </button>
                 </div>
             </div>

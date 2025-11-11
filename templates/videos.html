@@ -6,26 +6,55 @@
 <div class="container py-5">
     <div class="row">
         <div class="col-12">
-            <h2><i class="fas fa-video"></i> All Videos</h2>
-            <p class="text-muted">Browse and vote on videos from all participants</p>
+            <h2><i class="fas fa-video"></i> <span data-i18n="videos.allVideos">{{ translations.videos.allVideos if translations.videos else 'All Videos' }}</span></h2>
+            <p class="text-muted" data-i18n="videos.browseAndVote">{{ translations.videos.browseAndVote if translations.videos else 'Browse and vote on videos from all participants' }}</p>
             
             <!-- Sorting Filter Buttons -->
             <div class="mb-4">
                 <div class="btn-group" role="group" aria-label="Video sorting options">
                     <a href="{{ url_for('videos', sort='recent') }}" 
                        class="btn {{ 'btn-primary' if current_sort == 'recent' else 'btn-outline-primary' }}">
-                        <i class="fas fa-clock"></i> Recent
+                        <i class="fas fa-clock"></i> <span data-i18n="videos.recent">{{ translations.videos.recent if translations.videos else 'Recent' }}</span>
                     </a>
                     <a href="{{ url_for('videos', sort='top_rated') }}" 
                        class="btn {{ 'btn-warning' if current_sort == 'top_rated' else 'btn-outline-warning' }}">
-                        <i class="fas fa-trophy"></i> Top Rated
+                        <i class="fas fa-trophy"></i> <span data-i18n="videos.topRated">{{ translations.videos.topRated if translations.videos else 'Top Rated' }}</span>
                     </a>
                     <a href="{{ url_for('videos', sort='most_voted') }}" 
                        class="btn {{ 'btn-success' if current_sort == 'most_voted' else 'btn-outline-success' }}">
-                        <i class="fas fa-thumbs-up"></i> Most Voted
+                        <i class="fas fa-thumbs-up"></i> <span data-i18n="videos.mostVoted">{{ translations.videos.mostVoted if translations.videos else 'Most Voted' }}</span>
                     </a>
                 </div>
             </div>
+            
+            <!-- Phone Voting Notice for Non-Registered Users -->
+            {% if not session.user_id %}
+            <div class="alert alert-info border-0 mb-4" style="background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); border-left: 4px solid #2196f3 !important;">
+                <div class="d-flex align-items-center">
+                    <div class="me-3">
+                        <i class="fas fa-phone-alt fa-2x text-primary phone-icon" style="animation: phoneRing 3s ease-in-out infinite;"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <h6 class="alert-heading mb-2">
+                            <i class="fas fa-vote-yea me-2"></i><span data-i18n="videos.voteByPhone">{{ translations.videos.voteByPhone if translations.videos else 'Vote by Phone Call' }}</span>
+                        </h6>
+                        <p class="mb-2" data-i18n="videos.wantToVote">{{ translations.videos.wantToVote if translations.videos else 'Want to vote for your favorite videos? Call our organizers directly at:' }}</p>
+                        <div class="phone-number-compact" onclick="copyPhoneNumber()" style="cursor: pointer; display: inline-block; padding: 6px 14px; background: rgba(33, 150, 243, 0.1); border: 1px solid rgba(33, 150, 243, 0.3); border-radius: 15px; transition: all 0.3s ease;">
+                            <a href="tel:+2425537224" class="text-decoration-none" style="font-size: 1rem; font-weight: 600; color: #1976d2; letter-spacing: 0.5px;">+242 55 37 22 4</a>
+                            <small class="ms-2 text-muted">
+                                <i class="fas fa-copy"></i> <span data-i18n="videos.clickToCopy">{{ translations.videos.clickToCopy if translations.videos else 'Click to copy' }}</span>
+                            </small>
+                        </div>
+                        <div class="mt-2">
+                            <small class="text-muted">
+                                <i class="fas fa-clock me-1"></i><span data-i18n="videos.available">{{ translations.videos.available if translations.videos else 'Available' }}</span>: 8:00 AM - 10:00 PM
+                                <span class="ms-3"><i class="fas fa-info-circle me-1"></i><span data-i18n="videos.noAccountRequired">{{ translations.videos.noAccountRequired if translations.videos else 'No account required!' }}</span></span>
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
         </div>
     </div>
     
@@ -98,7 +127,7 @@
                             <span class="ms-2 fw-bold">{{ "%.1f"|format(video[4] if video[4] is not none else 0.0) }}</span>
                         </div>
                         <small class="text-muted">
-                            <i class="fas fa-thumbs-up"></i> {{ video[3] }} votes
+                            <i class="fas fa-thumbs-up"></i> {{ video[3] }} <span data-i18n="videos.votes">{{ translations.videos.votes if translations.videos else 'votes' }}</span>
                         </small>
                     </div>
                     
@@ -106,31 +135,31 @@
                     <div class="mb-3">
                         {% if video[4] >= 4.5 %}
                         <span class="badge bg-danger">
-                            <i class="fas fa-fire"></i> Hot!
+                            <i class="fas fa-fire"></i> <span data-i18n="videos.hot">{{ translations.videos.hot if translations.videos else 'Hot!' }}</span>
                         </span>
                         {% elif video[4] >= 4.0 %}
                         <span class="badge bg-success">
-                            <i class="fas fa-star"></i> Excellent
+                            <i class="fas fa-star"></i> <span data-i18n="videos.excellent">{{ translations.videos.excellent if translations.videos else 'Excellent' }}</span>
                         </span>
                         {% elif video[4] >= 3.5 %}
                         <span class="badge bg-info">
-                            <i class="fas fa-thumbs-up"></i> Good
+                            <i class="fas fa-thumbs-up"></i> <span data-i18n="videos.good">{{ translations.videos.good if translations.videos else 'Good' }}</span>
                         </span>
                         {% elif video[3] > 0 %}
                         <span class="badge bg-secondary">
-                            <i class="fas fa-chart-line"></i> Rated
+                            <i class="fas fa-chart-line"></i> <span data-i18n="videos.rated">{{ translations.videos.rated if translations.videos else 'Rated' }}</span>
                         </span>
                         {% endif %}
                         
                         {% if current_sort == 'most_voted' and video[3] >= 5 %}
                         <span class="badge bg-primary">
-                            <i class="fas fa-users"></i> Popular
+                            <i class="fas fa-users"></i> <span data-i18n="videos.popular">{{ translations.videos.popular if translations.videos else 'Popular' }}</span>
                         </span>
                         {% endif %}
                     </div>
                     <div class="d-flex gap-2">
                         <a href="{{ url_for('video_detail', video_id=video[0]) }}" class="btn btn-primary btn-sm flex-grow-1">
-                            <i class="fas fa-play"></i> Watch & Vote
+                            <i class="fas fa-play"></i> <span data-i18n="videos.watchAndVote">{{ translations.videos.watchAndVote if translations.videos else 'Watch & Vote' }}</span>
                         </a>
                         
                         <!-- Admin Quick Actions -->
@@ -141,18 +170,18 @@
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-3">
                                 <li><button class="dropdown-item text-warning" onclick="toggleVideoFeature('{{ video[0] }}')">
-                                    <i class="fas fa-star me-2"></i>Feature Video
+                                    <i class="fas fa-star me-2"></i><span data-i18n="videos.featureVideo">{{ translations.videos.featureVideo if translations.videos else 'Feature Video' }}</span>
                                 </button></li>
                                 <li><button class="dropdown-item text-info" onclick="toggleVideoPin('{{ video[0] }}')">
-                                    <i class="fas fa-thumbtack me-2"></i>Pin Video
+                                    <i class="fas fa-thumbtack me-2"></i><span data-i18n="videos.pinVideo">{{ translations.videos.pinVideo if translations.videos else 'Pin Video' }}</span>
                                 </button></li>
                                 <li><button class="dropdown-item text-secondary" onclick="toggleVideoVisibility('{{ video[0] }}')">
-                                    <i class="fas fa-eye-slash me-2"></i>Hide Video
+                                    <i class="fas fa-eye-slash me-2"></i><span data-i18n="videos.hideVideo">{{ translations.videos.hideVideo if translations.videos else 'Hide Video' }}</span>
                                 </button></li>
                                 {% if session.admin_level == 'super' %}
                                 <li><hr class="dropdown-divider"></li>
                                 <li><button class="dropdown-item text-danger" onclick="deleteVideoQuick('{{ video[0] }}')">
-                                    <i class="fas fa-trash me-2"></i>Delete Video
+                                    <i class="fas fa-trash me-2"></i><span data-i18n="videos.deleteVideo">{{ translations.videos.deleteVideo if translations.videos else 'Delete Video' }}</span>
                                 </button></li>
                                 {% endif %}
                             </ul>
@@ -167,8 +196,8 @@
     {% else %}
     <div class="text-center py-5">
         <i class="fas fa-video fa-5x text-muted mb-4"></i>
-        <h3 class="text-muted">No videos uploaded yet</h3>
-        <p class="text-muted">Be the first participant to upload a video!</p>
+        <h3 class="text-muted" data-i18n="videos.noVideosYet">{{ translations.videos.noVideosYet if translations.videos else 'No videos uploaded yet' }}</h3>
+        <p class="text-muted" data-i18n="videos.beTheFirst">{{ translations.videos.beTheFirst if translations.videos else 'Be the first participant to upload a video!' }}</p>
         {% if session.user_id %}
         <a href="{{ url_for('upload_video') }}" class="btn btn-primary btn-lg">
             <i class="fas fa-plus"></i> Upload First Video
@@ -177,4 +206,116 @@
     </div>
     {% endif %}
 </div>
+
+<script>
+// Phone Voting Functionality for Videos Page
+function copyPhoneNumber() {
+    const phoneNumber = "+2425537224";
+    
+    // Copy to clipboard
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(phoneNumber).then(() => {
+            showVideosPhoneNotification('Phone number copied! Call to vote for any video.');
+        });
+    } else {
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = phoneNumber;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        showVideosPhoneNotification('Phone number copied! Call to vote for any video.');
+    }
+    
+    // Add visual feedback to the clicked element
+    const phoneCompact = document.querySelector('.phone-number-compact');
+    if (phoneCompact) {
+        phoneCompact.style.transform = 'scale(0.95)';
+        phoneCompact.style.background = 'rgba(40, 167, 69, 0.2)';
+        phoneCompact.style.borderColor = 'rgba(40, 167, 69, 0.6)';
+        setTimeout(() => {
+            phoneCompact.style.transform = 'scale(1)';
+            phoneCompact.style.background = 'rgba(33, 150, 243, 0.1)';
+            phoneCompact.style.borderColor = 'rgba(33, 150, 243, 0.3)';
+        }, 200);
+    }
+}
+
+function showVideosPhoneNotification(message) {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.innerHTML = `
+        <i class="fas fa-check-circle me-2"></i>
+        ${message}
+    `;
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: linear-gradient(135deg, #2196f3, #1976d2);
+        color: white;
+        padding: 12px 20px;
+        border-radius: 25px;
+        font-weight: 600;
+        z-index: 10000;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        animation: slideInFromRight 0.5s ease-out;
+        font-size: 0.9rem;
+        max-width: 300px;
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Remove notification after 3 seconds
+    setTimeout(() => {
+        notification.style.animation = 'slideOutToRight 0.5s ease-out';
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 500);
+    }, 3000);
+}
+
+// Add CSS animations for videos page phone voting
+const videosPhoneStyle = document.createElement('style');
+videosPhoneStyle.textContent = `
+    @keyframes slideInFromRight {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+    
+    @keyframes slideOutToRight {
+        from {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        to {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+    }
+    
+    @keyframes phoneRing {
+        0%, 100% { transform: rotate(0deg); }
+        25% { transform: rotate(-5deg); }
+        75% { transform: rotate(5deg); }
+    }
+    
+    .phone-number-compact:hover {
+        background: rgba(33, 150, 243, 0.2) !important;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(33, 150, 243, 0.3);
+    }
+`;
+document.head.appendChild(videosPhoneStyle);
+</script>
+
 {% endblock %}

@@ -76,6 +76,107 @@
     font-size: 0.9rem;
     line-height: 1.5;
 }
+
+/* Animation for toast notifications */
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOutRight {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+}
+
+/* Star Rating Styles */
+.star-rating {
+    display: flex;
+    gap: 0.25rem;
+    font-size: 1.5rem;
+}
+
+.star-rating .star {
+    color: #ddd;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    transform: scale(1);
+}
+
+.star-rating .star:hover {
+    transform: scale(1.1);
+    color: #ffc107;
+}
+
+.star-rating .star.active {
+    color: #ffc107;
+}
+
+.star-rating .star.filled {
+    color: #ffc107;
+}
+
+.rating-container {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 12px;
+    padding: 1rem;
+    border: 1px solid #e0e6ed;
+}
+
+.rating-text {
+    font-weight: 500;
+    color: #495057;
+}
+
+.current-rating .average-stars {
+    font-size: 1.1rem;
+}
+
+.current-rating .average-stars i {
+    margin-right: 2px;
+}
+
+/* Rating animation effects */
+@keyframes starPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
+
+.star-rating .star.animate {
+    animation: starPulse 0.3s ease;
+}
+
+/* Rating success animation */
+@keyframes ratingSuccess {
+    0% {
+        background: #f8f9fa;
+        border-color: #e0e6ed;
+    }
+    50% {
+        background: #d4edda;
+        border-color: #28a745;
+    }
+    100% {
+        background: #f8f9fa;
+        border-color: #e0e6ed;
+    }
+}
+
+.rating-container.success {
+    animation: ratingSuccess 1s ease;
+}
 </style>
 
 <div class="container-fluid py-4" style="max-width: 1280px; margin: 0 auto;">
@@ -124,15 +225,8 @@
                         </div>
                         <div class="d-flex align-items-center gap-2">
                             <div class="d-flex align-items-center">
-                                {% for i in range(5) %}
-                                    {% if i < video[7]|round %}
-                                    <i class="fas fa-star text-warning" style="font-size: 0.9rem;"></i>
-                                    {% else %}
-                                    <i class="far fa-star text-muted" style="font-size: 0.9rem;"></i>
-                                    {% endif %}
-                                {% endfor %}
-                                <span class="ms-2 fw-semibold">{{ "%.1f"|format(video[7] if video[7] is not none else 0.0) }}</span>
-                                <span class="text-muted ms-1">({{ video[6] }} votes)</span>
+                                <i class="fas fa-thumbs-up text-primary me-2" style="font-size: 1.1rem;"></i>
+                                <span class="fw-bold text-primary">{{ video[6] if video[6] is not none else 0 }} votes</span>
                             </div>
                         </div>
                     </div>
@@ -174,18 +268,144 @@
                             <p class="mb-2 lh-base">{{ video[3][:200] }}{% if video[3]|length > 200 %}...{% endif %}</p>
                             {% if video[3]|length > 200 %}
                             <button class="btn btn-link p-0 text-decoration-none fw-semibold" onclick="expandDescription()">
-                                Show more
+                                <span data-i18n="common.showMore">{{ translations.common.showMore if translations.common else 'Show more' }}</span>
                             </button>
                             {% endif %}
                         </div>
                         <div class="description-full d-none">
                             <p class="mb-2 lh-base">{{ video[3] }}</p>
                             <button class="btn btn-link p-0 text-decoration-none fw-semibold" onclick="collapseDescription()">
-                                Show less
+                                <span data-i18n="common.showLess">{{ translations.common.showLess if translations.common else 'Show less' }}</span>
                             </button>
                         </div>
                     </div>
                     {% endif %}
+                </div>
+            </div>
+            
+            <!-- Star Rating Section -->
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-body p-4">
+                    <h5 class="card-title mb-3">
+                        <i class="fas fa-star text-warning me-2"></i><span data-i18n="video.rateThisVideo">{{ translations.video.rateThisVideo if translations.video else 'Rate this Video' }}</span>
+                    </h5>
+                    
+                    {% if session.user_id %}
+                        <div class="rating-container">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="star-rating me-3" data-video-id="{{ video[0] }}">
+                                    <i class="fas fa-star star" data-rating="1"></i>
+                                    <i class="fas fa-star star" data-rating="2"></i>
+                                    <i class="fas fa-star star" data-rating="3"></i>
+                                    <i class="fas fa-star star" data-rating="4"></i>
+                                    <i class="fas fa-star star" data-rating="5"></i>
+                                </div>
+                                <div class="rating-text">
+                                    <span id="rating-message">Click a star to rate</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Current Rating Display -->
+                            {% if video[7] and video[7] > 0 %}
+                            <div class="current-rating mb-3">
+                                <div class="d-flex align-items-center">
+                                    <div class="average-stars me-3">
+                                        {% set avg_rating = video[7] %}
+                                        {% for i in range(1, 6) %}
+                                            {% if i <= avg_rating %}
+                                                <i class="fas fa-star text-warning"></i>
+                                            {% elif i - 0.5 <= avg_rating %}
+                                                <i class="fas fa-star-half-alt text-warning"></i>
+                                            {% else %}
+                                                <i class="far fa-star text-muted"></i>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                    <span class="text-muted">
+                                        {{ "%.1f"|format(video[7]) }} out of 5 
+                                        <small>({{ video[6] if video[6] else 0 }} ratings)</small>
+                                    </span>
+                                </div>
+                            </div>
+                            {% else %}
+                            <div class="current-rating mb-3">
+                                <div class="d-flex align-items-center">
+                                    <div class="average-stars me-3">
+                                        <i class="far fa-star text-muted"></i>
+                                        <i class="far fa-star text-muted"></i>
+                                        <i class="far fa-star text-muted"></i>
+                                        <i class="far fa-star text-muted"></i>
+                                        <i class="far fa-star text-muted"></i>
+                                    </div>
+                                    <span class="text-muted" data-i18n="video.noRatingsYet">{{ translations.video.noRatingsYet if translations.video else 'No ratings yet - be the first!' }}</span>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-3">
+                            <i class="fas fa-sign-in-alt fa-2x text-muted mb-2"></i>
+                            <p class="text-muted mb-3" data-i18n="rating.signInToRate">{{ translations.rating.signInToRate if translations.rating else 'Please sign in to rate this video' }}</p>
+                            <a href="{{ url_for('login') }}" class="btn btn-primary">
+                                <i class="fas fa-sign-in-alt me-2"></i><span data-i18n="auth.signIn">{{ translations.auth.signIn if translations.auth else 'Sign In' }}</span>
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- PHONE VOTING SECTION - Compact Hero Style -->
+            <div class="card shadow-lg border-0 mt-4 mb-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 15px; overflow: hidden;">
+                <div class="card-body p-4">
+                    <div class="row align-items-center g-3">
+                        <!-- Left: Icon & Title -->
+                        <div class="col-lg-4">
+                            <div class="d-flex align-items-center gap-3 text-white">
+                                <div class="phone-icon-wrapper" style="background: rgba(255,255,255,0.2); border-radius: 50%; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                    <i class="fas fa-phone-alt" style="font-size: 1.5rem; color: #FFD700; animation: pulse 2s infinite;"></i>
+                                </div>
+                                <div>
+                                    <h5 class="mb-1 fw-bold" data-i18n="video.voteByPhoneTitle">{{ translations.video.voteByPhoneTitle if translations.video else 'Vote by Phone!' }}</h5>
+                                    <small class="text-white-50" data-i18n="video.noAccountRequiredShort">{{ translations.video.noAccountRequiredShort if translations.video else 'No account needed' }}</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Center: Phone Number (Clickable) -->
+                        <div class="col-lg-4">
+                            <a href="tel:+2425537224" onclick="copyVideoPhoneNumberAuto(event)" class="text-decoration-none d-block">
+                                <div style="background: rgba(255,255,255,0.95); padding: 1rem 1.5rem; border-radius: 12px; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(0,0,0,0.2); text-align: center;">
+                                    <div class="d-flex align-items-center justify-content-center gap-2">
+                                        <i class="fas fa-phone" style="color: #667eea; font-size: 1.2rem;"></i>
+                                        <div>
+                                            <div class="text-dark fw-bold" style="font-size: 1.2rem; letter-spacing: 1px; line-height: 1.2;">+242 55 37 22 4</div>
+                                            <small class="text-muted" style="font-size: 0.7rem;">
+                                                <i class="fas fa-copy me-1"></i><span data-i18n="video.tapToCallAndCopy">{{ translations.video.tapToCallAndCopy if translations.video else 'Tap & auto-copy' }}</span>
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                        
+                        <!-- Right: Video Info & Hours -->
+                        <div class="col-lg-4">
+                            <div class="text-white">
+                                <div class="mb-2" style="background: rgba(255,255,255,0.15); padding: 0.5rem; border-radius: 8px; backdrop-filter: blur(5px);">
+                                    <small class="fw-semibold">
+                                        <i class="fas fa-video me-1"></i>
+                                        <span data-i18n="video.mentionVideoShort">{{ translations.video.mentionVideoShort if translations.video else 'Mention' }}</span>: "{{ video[2][:25] }}{% if video[2]|length > 25 %}...{% endif %}"
+                                    </small>
+                                </div>
+                                <div style="background: rgba(255,255,255,0.15); padding: 0.5rem; border-radius: 8px; backdrop-filter: blur(5px);">
+                                    <small class="fw-semibold">
+                                        <i class="fas fa-clock me-1"></i>
+                                        8:00 AM - 10:00 PM
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
             
@@ -194,7 +414,7 @@
                 <div class="card-header bg-gradient bg-primary text-white border-0 py-3">
                     <h5 class="mb-0">
                         <i class="fas fa-comments me-2"></i>
-                        Comments 
+                        <span data-i18n="comments.comments">{{ translations.comments.comments if translations.comments else 'Comments' }}</span> 
                         <span class="badge bg-light text-dark ms-2">{{ comments|length }}</span>
                     </h5>
                 </div>
@@ -218,7 +438,7 @@
                             </div>
                             <div class="flex-grow-1">
                                 <textarea class="form-control border-0 border-bottom rounded-0" id="main-comment-input" 
-                                          rows="1" placeholder="Add a comment..." required
+                                          rows="1" placeholder="{{ translations.comments.addComment if translations.comments else 'Add a comment...' }}" required
                                           style="resize: none; box-shadow: none;"></textarea>
                                 <div class="d-flex justify-content-between align-items-center mt-2 d-none" id="comment-actions">
                                     <small class="text-muted">
@@ -328,8 +548,8 @@
                         {% if not comments %}
                         <div class="text-center py-5" id="no-comments">
                             <i class="fas fa-comment-slash text-muted display-4 mb-3"></i>
-                            <h6 class="text-muted">No comments yet</h6>
-                            <p class="text-muted">Be the first to share your thoughts about this video!</p>
+                            <h6 class="text-muted" data-i18n="comments.noCommentsYet">{{ translations.comments.noCommentsYet if translations.comments else 'No comments yet' }}</h6>
+                            <p class="text-muted" data-i18n="comments.beTheFirst">{{ translations.comments.beTheFirst if translations.comments else 'Be the first to share your thoughts about this video!' }}</p>
                         </div>
                         {% endif %}
                     </div>
@@ -338,32 +558,84 @@
             
             <!-- Enhanced Voting Section -->
             {% if session.user_id %}
-            <div class="card shadow-sm border-0 bg-warning bg-opacity-10 border-warning border-opacity-25 mb-4">
+            <div class="card shadow-sm border-0 bg-primary bg-opacity-10 border-primary border-opacity-25 mb-4">
                 <div class="card-body p-4 text-center">
-                    <h5 class="card-title text-warning mb-3">
-                        <i class="fas fa-trophy me-2"></i>Rate This Video
+                    <h5 class="card-title text-primary mb-3">
+                        <i class="fas fa-thumbs-up me-2"></i><span data-i18n="video.castYourVote">{{ translations.video.castYourVote if translations.video else 'Cast Your Vote' }}</span>
                     </h5>
-                    <p class="text-muted mb-3">Help others discover great content by rating this video</p>
-                    <div class="vote-stars d-flex justify-content-center gap-2 mb-3" data-video-id="{{ video[0] }}">
-                        {% for i in range(5) %}
-                        <i class="far fa-star vote-star" data-rating="{{ i + 1 }}" 
-                           style="cursor: pointer; color: #ffc107; font-size: 2rem; transition: all 0.2s;"></i>
-                        {% endfor %}
-                    </div>
-                    <small class="text-muted">
-                        <i class="fas fa-mouse-pointer me-1"></i>Click on stars to rate (1-5 stars)
+                    <p class="text-muted mb-3"><span data-i18n="video.supportVideo">{{ translations.video.supportVideo if translations.video else 'Support this video by casting your vote!' }}</span> <strong>(<span data-i18n="video.votingFeeRequired">{{ translations.video.votingFeeRequired if translations.video else '$2 voting fee required' }}</span>)</strong></p>
+                    <button id="voteBtn" class="btn btn-primary btn-lg px-5 py-3" data-video-id="{{ video[0] }}">
+                        <i class="fas fa-vote-yea me-2"></i><span data-i18n="video.voteForThisVideo">{{ translations.video.voteForThisVideo if translations.video else 'Vote for This Video' }}</span>
+                    </button>
+                    <small class="text-muted d-block mt-2">
+                        <i class="fas fa-info-circle me-1"></i><span data-i18n="video.votingFeeNote">{{ translations.video.votingFeeNote if translations.video else '$2 fee required per video vote' }}</span>
                     </small>
                 </div>
             </div>
             {% else %}
-            <div class="alert alert-info border-0 rounded-3">
+            <div class="alert alert-info border-0 rounded-3 mb-3">
                 <h6 class="alert-heading">
-                    <i class="fas fa-sign-in-alt me-2"></i>Join the Community
+                    <i class="fas fa-sign-in-alt me-2"></i><span data-i18n="video.joinCommunity">{{ translations.video.joinCommunity if translations.video else 'Join the Community' }}</span>
                 </h6>
-                <p class="mb-2">Sign in to rate videos and share your thoughts!</p>
+                <p class="mb-2" data-i18n="video.signInToVote">{{ translations.video.signInToVote if translations.video else 'Sign in to vote for videos and join the tournament!' }}</p>
                 <a href="{{ url_for('login') }}" class="btn btn-primary btn-sm">
-                    <i class="fas fa-user-plus me-1"></i>Sign In
+                    <i class="fas fa-user-plus me-1"></i><span data-i18n="auth.signIn">{{ translations.auth.signIn if translations.auth else 'Sign In' }}</span>
                 </a>
+            </div>
+            
+            <!-- Phone Voting Option for Non-Registered Users -->
+            <div class="card phone-voting-card shadow-lg border-0 mb-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 15px; overflow: hidden;">
+                <div class="card-body p-4 text-center position-relative">
+                    <!-- Background Animation -->
+                    <div class="phone-bg-animation" style="position: absolute; top: -50px; left: -50px; width: 100px; height: 100px; background: rgba(255,255,255,0.1); border-radius: 50%; opacity: 0;"></div>
+                    
+                    <div class="phone-voting-content position-relative z-index-1">
+                        <h5 class="card-title mb-3" style="font-weight: 700;">
+                            <i class="fas fa-phone-alt me-2 phone-icon" style="color: #FFD700; animation: pulse 2s infinite;"></i>
+                            <span data-i18n="video.voteByPhone">{{ translations.video.voteByPhone if translations.video else 'Vote by Phone Call' }}</span>
+                        </h5>
+                        <p class="mb-3" style="color: rgba(255,255,255,0.9); font-size: 0.95rem;">
+                            <span data-i18n="video.noAccountNeeded">{{ translations.video.noAccountNeeded if translations.video else 'No account needed! Call our organizers directly to cast your vote for this video.' }}</span>
+                        </p>
+                        
+                        <div class="phone-number-container mb-4">
+                            <div class="phone-number-display" onclick="copyVideoPhoneNumber()" style="cursor: pointer; transition: all 0.3s ease; padding: 12px 16px; border-radius: 10px; background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.3); backdrop-filter: blur(10px);">
+                                <a href="tel:+2425537224" class="phone-number mb-2 text-decoration-none" style="font-size: 1.3rem; font-weight: 700; color: #ffffff; text-shadow: 0 2px 6px rgba(0,0,0,0.4); letter-spacing: 1px; font-family: 'Segoe UI', sans-serif; display: block;">
+                                    +242 55 37 22 4
+                                </a>
+                                <div class="copy-hint" style="font-size: 0.7rem; color: rgba(255,255,255,0.8);">
+                                    <i class="fas fa-copy me-1"></i><span data-i18n="video.tapToCopy">{{ translations.video.tapToCopy if translations.video else 'Tap to copy or call directly' }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="voting-instructions">
+                            <div class="row text-center">
+                                <div class="col-12 mb-2">
+                                    <small style="color: rgba(255,255,255,0.8); font-size: 0.85rem;">
+                                        <i class="fas fa-clock me-1"></i>
+                                        <strong><span data-i18n="video.available">{{ translations.video.available if translations.video else 'Available' }}</span>: 8:00 AM - 10:00 PM</strong>
+                                    </small>
+                                </div>
+                                <div class="col-12">
+                                    <small style="color: rgba(255,255,255,0.7); font-size: 0.8rem;">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        <span data-i18n="video.mentionVideo">{{ translations.video.mentionVideo if translations.video else 'Mention video' }}</span>: "{{ video[2][:30] }}{% if video[2]|length > 30 %}...{% endif %}"
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="phone-action-buttons mt-3">
+                            <a href="tel:+2425537224" class="btn btn-outline-light btn-sm me-2" style="border-radius: 20px; border: 2px solid rgba(255,255,255,0.5);">
+                                <i class="fas fa-phone me-1"></i><span data-i18n="video.callNow">{{ translations.video.callNow if translations.video else 'Call Now' }}</span>
+                            </a>
+                            <button onclick="shareVideoForVoting()" class="btn btn-outline-warning btn-sm" style="border-radius: 20px; border: 2px solid rgba(255,215,0,0.5); color: #FFD700;">
+                                <i class="fas fa-share me-1"></i><span data-i18n="video.shareVideo">{{ translations.video.shareVideo if translations.video else 'Share Video' }}</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
             {% endif %}
         </div>
@@ -371,11 +643,11 @@
         <!-- Enhanced YouTube-Style Sidebar -->
         <div class="col-lg-4 col-xl-3" style="padding-left: clamp(12px, 2vw, 24px); padding-right: clamp(12px, 2vw, 24px);">
             <div class="sticky-top sidebar-scroll" style="top: 80px; z-index: 1020;">
-                <!-- Top Rated Videos - Enhanced Card -->
+                <!-- Top Videos - Enhanced Card -->
                 <div class="card shadow-sm border-0 mb-4">
-                    <div class="card-header bg-gradient bg-warning text-dark border-0 py-3">
+                    <div class="card-header bg-gradient bg-primary text-white border-0 py-3">
                         <h6 class="mb-0 fw-bold">
-                            <i class="fas fa-trophy me-2"></i>Top Rated Videos
+                            <i class="fas fa-trophy me-2"></i><span data-i18n="leaderboard.topVideos">{{ translations.leaderboard.topVideos if translations.leaderboard else 'Top Videos' }}</span>
                         </h6>
                     </div>
                     <div class="card-body p-3">
@@ -387,7 +659,7 @@
                         <div class="d-flex bg-primary bg-opacity-10 rounded p-2 border border-primary border-opacity-50" style="transition: all 0.2s;">
                             <!-- Current Video Badge -->
                             <div class="position-absolute top-0 end-0 bg-primary text-white px-2 py-1 rounded-bottom-start" style="font-size: 0.7rem; font-weight: bold;">
-                                NOW PLAYING
+                                <span data-i18n="video.nowPlaying">{{ translations.video.nowPlaying if translations.video else 'NOW PLAYING' }}</span>
                             </div>
                         {% else %}
                         <a href="{{ url_for('video_detail', video_id=top_video[0]) }}" class="text-decoration-none">
@@ -398,9 +670,9 @@
                                     <video class="w-100 h-100" style="object-fit: cover;" muted preload="metadata">
                                         <source src="{{ get_video_url(top_video[2]) }}" type="video/mp4">
                                     </video>
-                                    <!-- Rating Badge -->
-                                    <div class="position-absolute bottom-0 end-0 bg-dark text-white px-1 rounded-start" style="font-size: 0.7rem;">
-                                        <i class="fas fa-star text-warning"></i> {{ "%.1f"|format(top_video[4] if top_video[4] is not none else 0.0) }}
+                                    <!-- Vote Badge -->
+                                    <div class="position-absolute bottom-0 end-0 bg-primary text-white px-1 rounded-start" style="font-size: 0.7rem;">
+                                        <i class="fas fa-thumbs-up"></i> {{ top_video[3] if top_video[3] is not none else 0 }}
                                     </div>
                                     <!-- Rank Badge -->
                                     {% if loop.index <= 3 %}
@@ -435,8 +707,8 @@
                                         </small>
                                     </div>
                                     <div class="d-flex justify-content-between">
-                                        <small class="text-muted">{{ top_video[3] }} votes</small>
-                                        <small class="text-muted">Uploaded</small>
+                                        <small class="text-muted">{{ top_video[3] }} <span data-i18n="video.votes">{{ translations.video.votes if translations.video else 'votes' }}</span></small>
+                                        <small class="text-muted" data-i18n="video.uploaded">{{ translations.video.uploaded if translations.video else 'Uploaded' }}</small>
                                     </div>
                                 </div>
                             </div>
@@ -450,8 +722,8 @@
                         {% else %}
                         <div class="text-center py-4">
                             <i class="fas fa-video-slash text-muted display-6 mb-3"></i>
-                            <p class="text-muted">No rated videos yet</p>
-                            <small class="text-muted">Videos will appear here once they receive ratings!</small>
+                            <p class="text-muted" data-i18n="video.noVideosWithVotes">{{ translations.video.noVideosWithVotes if translations.video else 'No videos with votes yet' }}</p>
+                            <small class="text-muted" data-i18n="video.videosAppearHere">{{ translations.video.videosAppearHere if translations.video else 'Videos will appear here once they receive votes!' }}</small>
                         </div>
                         {% endif %}
                     </div>
@@ -461,25 +733,25 @@
                 <div class="card shadow-sm border-0">
                     <div class="card-header bg-light border-0 py-3">
                         <h6 class="mb-0 text-muted">
-                            <i class="fas fa-compass me-2"></i>Navigation
+                            <i class="fas fa-compass me-2"></i><span data-i18n="common.navigation">{{ translations.common.navigation if translations.common else 'Navigation' }}</span>
                         </h6>
                     </div>
                     <div class="card-body p-3">
                         <div class="d-grid gap-2">
                             <a href="{{ url_for('videos') }}" class="btn btn-outline-primary rounded-pill">
-                                <i class="fas fa-arrow-left me-2"></i>Back to Videos
+                                <i class="fas fa-arrow-left me-2"></i><span data-i18n="video.backToVideos">{{ translations.video.backToVideos if translations.video else 'Back to Videos' }}</span>
                             </a>
-                            <a href="{{ url_for('videos', sort='top_rated') }}" class="btn btn-outline-warning rounded-pill">
-                                <i class="fas fa-trophy me-2"></i>View All Top Rated
+                            <a href="{{ url_for('videos', sort='votes') }}" class="btn btn-outline-primary rounded-pill">
+                                <i class="fas fa-trophy me-2"></i><span data-i18n="video.viewTopVideos">{{ translations.video.viewTopVideos if translations.video else 'View Top Videos' }}</span>
                             </a>
                             {% if session.user_id == video[1] %}
                             <a href="{{ url_for('dashboard') }}" class="btn btn-outline-success rounded-pill">
-                                <i class="fas fa-tachometer-alt me-2"></i>My Dashboard
+                                <i class="fas fa-tachometer-alt me-2"></i><span data-i18n="dashboard.myDashboard">{{ translations.dashboard.myDashboard if translations.dashboard else 'My Dashboard' }}</span>
                             </a>
                             {% endif %}
                             {% if session.user_id %}
                             <a href="{{ url_for('upload_video') }}" class="btn btn-primary rounded-pill">
-                                <i class="fas fa-cloud-upload-alt me-2"></i>Upload Video
+                                <i class="fas fa-cloud-upload-alt me-2"></i><span data-i18n="nav.uploadVideo">{{ translations.nav.uploadVideo if translations.nav else 'Upload Video' }}</span>
                             </a>
                             {% endif %}
                         </div>
@@ -493,133 +765,325 @@
 
 {% block scripts %}
 <script>
-// Star rating functionality
-document.querySelectorAll('.vote-stars i').forEach(function(star, index) {
-    star.addEventListener('mouseover', function() {
-        const stars = this.parentElement.querySelectorAll('i');
-        stars.forEach(function(s, i) {
-            if (i <= index) {
-                s.className = 'fas fa-star';
-            } else {
-                s.className = 'far fa-star';
-            }
-        });
-    });
-    
-    star.addEventListener('click', function() {
-        const rating = this.dataset.rating;
-        const videoId = this.parentElement.dataset.videoId;
-        
-        fetch('/vote', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: `video_id=${videoId}&rating=${rating}`
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Show professional toast notification that doesn't affect layout
-                const toast = document.createElement('div');
-                toast.className = 'toast align-items-center text-white bg-success border-0 show';
-                toast.style.cssText = `
-                    position: fixed;
-                    top: 80px;
-                    right: 20px;
-                    z-index: 1060;
-                    min-width: 350px;
-                    max-width: 400px;
-                    border-radius: 10px;
-                    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-                    animation: slideInRight 0.4s ease-out;
-                `;
-                toast.setAttribute('role', 'alert');
-                toast.setAttribute('aria-live', 'assertive');
-                toast.setAttribute('aria-atomic', 'true');
+// Simple vote functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const voteBtn = document.getElementById('voteBtn');
+    if (voteBtn) {
+        voteBtn.addEventListener('click', function() {
+            const videoId = this.dataset.videoId;
+            
+            // Disable button during request
+            this.disabled = true;
+            this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
+            
+            fetch('/vote', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `video_id=${videoId}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Re-enable button
+                this.disabled = false;
+                this.innerHTML = '<i class="fas fa-vote-yea me-2"></i>Vote for This Video';
                 
-                toast.innerHTML = `
-                    <div class="d-flex">
-                        <div class="toast-body">
-                            <div class="d-flex align-items-center mb-2">
-                                <i class="fas fa-check-circle me-2 text-white" style="font-size: 1.1em;"></i>
-                                <strong>Vote Submitted!</strong>
-                            </div>
-                            <div class="mb-2">
-                                You rated this video <strong>${data.user_rating} stars</strong>
-                            </div>
-                            <div class="mb-2">
-                                <small><strong>Updated:</strong> ${data.average_rating.toFixed(1)} avg • ${data.total_votes} votes</small>
-                            </div>
-                            <div class="mt-2">
-                                <a href="/videos?sort=top_rated" class="btn btn-sm btn-light text-success fw-bold">
-                                    <i class="fas fa-trophy me-1"></i> View Top Rated
-                                </a>
-                            </div>
-                        </div>
-                        <button type="button" class="btn-close btn-close-white me-2 m-auto" onclick="this.parentElement.parentElement.remove()"></button>
-                    </div>
-                `;
-                
-                // Add CSS animation for smooth entry
-                if (!document.querySelector('#toast-animations')) {
-                    const style = document.createElement('style');
-                    style.id = 'toast-animations';
-                    style.textContent = `
-                        @keyframes slideInRight {
-                            from {
-                                transform: translateX(100%);
-                                opacity: 0;
-                            }
-                            to {
-                                transform: translateX(0);
-                                opacity: 1;
-                            }
-                        }
-                        @keyframes slideOutRight {
-                            from {
-                                transform: translateX(0);
-                                opacity: 1;
-                            }
-                            to {
-                                transform: translateX(100%);
-                                opacity: 0;
-                            }
-                        }
+                if (data.success) {
+                    // Show success toast
+                    const toast = document.createElement('div');
+                    toast.className = 'toast align-items-center text-white bg-success border-0 show';
+                    toast.style.cssText = `
+                        position: fixed;
+                        top: 80px;
+                        right: 20px;
+                        z-index: 1060;
+                        min-width: 350px;
+                        max-width: 400px;
+                        border-radius: 10px;
+                        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+                        animation: slideInRight 0.4s ease-out;
                     `;
-                    document.head.appendChild(style);
+                    
+                    toast.innerHTML = `
+                        <div class="d-flex">
+                            <div class="toast-body">
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="fas fa-check-circle me-2 text-white" style="font-size: 1.1em;"></i>
+                                    <strong>Vote Cast Successfully!</strong>
+                                </div>
+                                <div class="mb-2">
+                                    This video now has <strong>${data.total_votes} votes</strong>
+                                </div>
+                                <div class="mt-2">
+                                    <a href="/videos?sort=votes" class="btn btn-sm btn-light text-success fw-bold">
+                                        <i class="fas fa-trophy me-1"></i> View Top Videos
+                                    </a>
+                                </div>
+                            </div>
+                            <button type="button" class="btn-close btn-close-white me-2 m-auto" onclick="this.parentElement.parentElement.remove()"></button>
+                        </div>
+                    `;
+                    
+                    document.body.appendChild(toast);
+                    
+                    // Auto-remove toast after 5 seconds
+                    setTimeout(() => {
+                        if (toast.parentNode) {
+                            toast.remove();
+                        }
+                    }, 5000);
+                    
+                    // Reload page to show updated vote count
+                    setTimeout(() => location.reload(), 2000);
+                    
+                } else if (data.requires_voting_fee) {
+                    // Redirect to payment page for this specific video
+                    window.location.href = data.redirect_url || `/pay_voting_fee/${data.video_id || videoId}`;
+                } else if (data.already_voted) {
+                    // Show already voted message
+                    alert('You have already voted on this video!');
+                } else {
+                    // Show error message
+                    alert(data.message || 'An error occurred while voting');
                 }
-                
-                // Add toast to body (not container)
-                document.body.appendChild(toast);
-                
-                // Auto-remove toast after 6 seconds with animation
-                setTimeout(() => {
-                    if (toast.parentNode) {
-                        toast.style.animation = 'slideOutRight 0.4s ease-in forwards';
-                        setTimeout(() => {
-                            if (toast.parentNode) {
-                                toast.remove();
-                            }
-                        }, 400);
-                    }
-                }, 6000);
-                
-                // Reload to show updated stats
-                setTimeout(() => location.reload(), 2000);
-            } else {
-                alert(data.message);
-            }
+            })
+            .catch(error => {
+                // Re-enable button on error
+                this.disabled = false;
+                this.innerHTML = '<i class="fas fa-vote-yea me-2"></i>Vote for This Video';
+                alert('Network error. Please try again.');
+            });
         });
-    });
+    }
 });
 
-document.querySelector('.vote-stars').addEventListener('mouseleave', function() {
-    const stars = this.querySelectorAll('i');
-    stars.forEach(function(star) {
-        star.className = 'far fa-star vote-star';
-        star.style.fontSize = '2rem';
-    });
+// Star Rating System
+document.addEventListener('DOMContentLoaded', function() {
+    const starRating = document.querySelector('.star-rating');
+    const ratingMessage = document.getElementById('rating-message');
+    const ratingContainer = document.querySelector('.rating-container');
+    
+    if (starRating) {
+        const stars = starRating.querySelectorAll('.star');
+        const videoId = starRating.dataset.videoId;
+        let currentRating = 0;
+        let hasRated = false;
+        
+        // Initialize rating interface
+        initializeRatingInterface(videoId);
+        
+        // Star hover effects - always allow interaction
+        stars.forEach((star, index) => {
+            star.addEventListener('mouseenter', function() {
+                highlightStars(index + 1);
+                updateRatingMessage(index + 1);
+            });
+            
+            star.addEventListener('mouseleave', function() {
+                // Restore current rating display
+                highlightStars(currentRating);
+                if (currentRating === 0) {
+                    ratingMessage.textContent = t('video.clickToRate') || 'Click a star to rate';
+                } else {
+                    ratingMessage.innerHTML = `<i class="fas fa-star text-warning me-1"></i>${t('video.yourRating') || 'Your rating'}: ${currentRating} ${t('rating.stars') || 'stars'} (${t('video.clickToChange') || 'click to change'})`;
+                }
+            });
+            
+            star.addEventListener('click', function() {
+                const rating = index + 1;
+                submitRating(videoId, rating);
+                
+                // Add animation to clicked star
+                star.classList.add('animate');
+                setTimeout(() => star.classList.remove('animate'), 300);
+            });
+        });
+        
+        function highlightStars(rating) {
+            stars.forEach((star, index) => {
+                if (index < rating) {
+                    star.classList.add('filled');
+                    star.classList.add('active');
+                } else {
+                    star.classList.remove('filled');
+                    star.classList.remove('active');
+                }
+            });
+        }
+        
+        function updateRatingMessage(rating) {
+            const messages = {
+                1: t('rating.poor') || 'Poor - 1 star',
+                2: t('rating.fair') || 'Fair - 2 stars',
+                3: t('rating.good') || 'Good - 3 stars',
+                4: t('rating.veryGood') || 'Very Good - 4 stars',
+                5: t('rating.excellent') || 'Excellent - 5 stars'
+            };
+            ratingMessage.textContent = messages[rating] || t('video.clickToRate') || 'Click a star to rate';
+        }
+        
+        function initializeRatingInterface(videoId) {
+            // Set initial state
+            currentRating = 0;
+            hasRated = false;
+            ratingMessage.textContent = t('video.clickToRate') || 'Click a star to rate';
+            highlightStars(0);
+            
+            // Check if user already rated this video
+            fetch(`/get_user_rating/${videoId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.rating) {
+                        // User has already rated - but can update rating
+                        currentRating = data.rating;
+                        highlightStars(currentRating);
+                        ratingMessage.innerHTML = `<i class="fas fa-star text-warning me-1"></i>${t('video.yourRating') || 'Your rating'}: ${currentRating} ${t('rating.stars') || 'stars'} (${t('video.clickToChange') || 'click to change'})`;
+                        
+                        // Keep stars interactive so user can update rating
+                        stars.forEach(star => {
+                            star.classList.add('active');
+                        });
+                    } else {
+                        // No existing rating - user can rate
+                        ratingMessage.textContent = t('video.clickToRate') || 'Click a star to rate';
+                    }
+                })
+                .catch(error => {
+                    console.log('No existing rating found - user can rate');
+                    ratingMessage.textContent = t('video.clickToRate') || 'Click a star to rate';
+                });
+        }
+        
+        function submitRating(videoId, rating) {
+            // Disable interaction during submission
+            stars.forEach(star => star.style.pointerEvents = 'none');
+            ratingMessage.innerHTML = `<i class="fas fa-spinner fa-spin me-2"></i>${t('rating.submittingRating') || 'Submitting rating...'}`;
+            
+            fetch('/submit_rating', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    video_id: videoId,
+                    rating: rating
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const oldRating = currentRating;
+                    currentRating = rating;
+                    highlightStars(rating);
+                    
+                    // Show appropriate message based on whether it's an update or new rating
+                    if (data.is_update) {
+                        ratingMessage.innerHTML = `<i class="fas fa-check-circle text-success me-1"></i>${t('rating.ratingUpdated') || 'Rating updated from'} ${data.old_rating} ${t('rating.to') || 'to'} ${rating} ${t('rating.stars') || 'stars'}! (${t('video.clickToChange') || 'click to change again'})`;
+                    } else {
+                        ratingMessage.innerHTML = `<i class="fas fa-check-circle text-success me-1"></i>${t('rating.ratingSubmitted') || 'Thank you! You rated this video'} ${rating} ${t('rating.stars') || 'stars'} (${t('video.clickToChange') || 'click to change'})`;
+                    }
+                    
+                    // Add success animation
+                    ratingContainer.classList.add('success');
+                    setTimeout(() => ratingContainer.classList.remove('success'), 1000);
+                    
+                    // Update page stats if available
+                    if (data.new_average) {
+                        updateRatingDisplay(data.new_average, data.total_votes || 0);
+                    }
+                    
+                    // Show success toast
+                    showRatingToast(data.message, 'success');
+                    
+                    // Keep stars interactive for future updates
+                    stars.forEach(star => {
+                        star.style.pointerEvents = 'auto';
+                        star.style.cursor = 'pointer';
+                        star.classList.add('active');
+                    });
+                    
+                } else {
+                    ratingMessage.innerHTML = `<i class="fas fa-times-circle text-danger me-1"></i>${data.message || (t('messages.error') || 'Rating failed')}`;
+                    showRatingToast(data.message || (t('messages.error') || 'Rating failed. Please try again.'), 'error');
+                    
+                    // Re-enable interaction
+                    stars.forEach(star => star.style.pointerEvents = 'auto');
+                }
+            })
+            .catch(error => {
+                console.error('Rating error:', error);
+                ratingMessage.innerHTML = `<i class="fas fa-times-circle text-danger me-1"></i>${t('rating.networkError') || 'Network error. Please try again.'}`;
+                showRatingToast(t('rating.networkError') || 'Network error. Please try again.', 'error');
+                
+                // Re-enable interaction
+                stars.forEach(star => star.style.pointerEvents = 'auto');
+            });
+        }
+        
+        function updateRatingDisplay(newAverage, totalRatings) {
+            // Update the current rating display if it exists
+            const currentRatingEl = document.querySelector('.current-rating');
+            if (currentRatingEl) {
+                const avgStars = currentRatingEl.querySelector('.average-stars');
+                const ratingText = currentRatingEl.querySelector('.text-muted');
+                
+                if (avgStars && ratingText) {
+                    // Update star display
+                    avgStars.innerHTML = '';
+                    for (let i = 1; i <= 5; i++) {
+                        const star = document.createElement('i');
+                        if (i <= newAverage) {
+                            star.className = 'fas fa-star text-warning';
+                        } else if (i - 0.5 <= newAverage) {
+                            star.className = 'fas fa-star-half-alt text-warning';
+                        } else {
+                            star.className = 'far fa-star text-muted';
+                        }
+                        avgStars.appendChild(star);
+                    }
+                    
+                    // Update rating text
+                    ratingText.innerHTML = `${newAverage.toFixed(1)} ${t('video.outOf5') || 'out of 5'} <small>(${totalRatings} ${t('video.ratings') || 'ratings'})</small>`;
+                }
+            }
+        }
+        
+        function showRatingToast(message, type) {
+            const toast = document.createElement('div');
+            toast.className = `toast align-items-center text-white ${type === 'success' ? 'bg-success' : 'bg-danger'} border-0 show`;
+            toast.style.cssText = `
+                position: fixed;
+                top: 100px;
+                right: 20px;
+                z-index: 1060;
+                min-width: 300px;
+                border-radius: 10px;
+                box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+                animation: slideInRight 0.4s ease-out;
+            `;
+            
+            toast.innerHTML = `
+                <div class="d-flex">
+                    <div class="toast-body">
+                        <i class="fas ${type === 'success' ? 'fa-star' : 'fa-exclamation-triangle'} me-2"></i>
+                        ${message}
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" onclick="this.parentElement.parentElement.remove()"></button>
+                </div>
+            `;
+            
+            document.body.appendChild(toast);
+            
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                if (toast.parentElement) {
+                    toast.style.animation = 'slideOutRight 0.4s ease-in';
+                    setTimeout(() => toast.remove(), 400);
+                }
+            }, 5000);
+        }
+    }
 });
 
 // YouTube-style Comments System
@@ -1253,6 +1717,195 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    // Star Rating System
+    // Function to initialize the rating system
+    function initRatingSystem() {
+        const stars = document.querySelectorAll('.star-rating .star');
+        const ratingContainer = document.querySelector('.rating-container');
+        const ratingMessage = document.getElementById('rating-message');
+        const videoId = document.querySelector('.star-rating').dataset.videoId;
+
+        // Get user's current rating
+        fetch(`/get_user_rating/${videoId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.rating) {
+                    updateStarDisplay(data.rating);
+                    ratingMessage.textContent = `Your rating: ${data.rating} stars`;
+                }
+            })
+            .catch(error => console.error('Error:', error));
+
+        // Star hover effects
+        stars.forEach(star => {
+            star.addEventListener('mouseover', function() {
+                const rating = this.dataset.rating;
+                updateStarDisplay(rating, true);
+            });
+
+            star.addEventListener('mouseout', function() {
+                const currentRating = document.querySelector('.star.active');
+                if (currentRating) {
+                    updateStarDisplay(currentRating.dataset.rating);
+                } else {
+                    resetStars();
+                }
+            });
+
+            // Star click handler
+            star.addEventListener('click', function() {
+                const rating = parseInt(this.dataset.rating);
+                submitRating(videoId, rating);
+            });
+        });
+    }
+
+    // Function to submit rating
+    function submitRating(videoId, rating) {
+        // Add loading state
+        const stars = document.querySelectorAll('.star-rating .star');
+        stars.forEach(star => star.style.pointerEvents = 'none');
+        const ratingMessage = document.getElementById('rating-message');
+        ratingMessage.textContent = 'Submitting rating...';
+
+        fetch('/submit_rating', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                video_id: videoId,
+                rating: rating
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Update the display
+                updateStarDisplay(rating);
+                
+                // Show success message
+                const ratingMessage = document.getElementById('rating-message');
+                ratingMessage.textContent = data.message;
+                
+                // Update average rating display if it exists
+                const avgStars = document.querySelector('.current-rating .average-stars');
+                if (avgStars && data.new_average) {
+                    updateAverageRatingDisplay(data.new_average);
+                }
+                
+                // Animate the rating container
+                const container = document.querySelector('.rating-container');
+                container.classList.add('success');
+                setTimeout(() => container.classList.remove('success'), 1000);
+                
+                // Show notification
+                showNotification(data.message, 'success');
+            } else {
+                showNotification(data.message, 'danger');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Error submitting rating', 'danger');
+        });
+    }
+
+    // Function to update star display
+    function updateStarDisplay(rating, isHover = false) {
+        const stars = document.querySelectorAll('.star-rating .star');
+        stars.forEach(star => {
+            const starRating = parseInt(star.dataset.rating);
+            if (starRating <= rating) {
+                star.classList.add(isHover ? 'filled' : 'active');
+                star.classList.remove(isHover ? 'active' : 'filled');
+            } else {
+                star.classList.remove('active', 'filled');
+            }
+        });
+    }
+
+    // Function to update average rating display
+    function updateAverageRatingDisplay(avgRating) {
+        const avgStarsContainer = document.querySelector('.current-rating .average-stars');
+        if (avgStarsContainer) {
+            avgStarsContainer.innerHTML = '';
+            for (let i = 1; i <= 5; i++) {
+                const star = document.createElement('i');
+                if (i <= avgRating) {
+                    star.className = 'fas fa-star text-warning';
+                } else if (i - 0.5 <= avgRating) {
+                    star.className = 'fas fa-star-half-alt text-warning';
+                } else {
+                    star.className = 'far fa-star text-muted';
+                }
+                avgStarsContainer.appendChild(star);
+            }
+            
+            // Update the text display
+            const ratingText = avgStarsContainer.nextElementSibling;
+            if (ratingText) {
+                const totalRatings = ratingText.querySelector('small')?.textContent.match(/\d+/)?.[0] || '0';
+                ratingText.innerHTML = `${avgRating.toFixed(1)} out of 5 <small>(${totalRatings} ratings)</small>`;
+            }
+        }
+    }
+
+    // Function to reset stars
+    function resetStars() {
+        const stars = document.querySelectorAll('.star-rating .star');
+        stars.forEach(star => star.classList.remove('active', 'filled'));
+        const ratingMessage = document.getElementById('rating-message');
+        if (ratingMessage) ratingMessage.textContent = 'Click a star to rate';
+    }
+
+    // Initialize when document is ready
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize rating system
+        const stars = document.querySelectorAll('.star-rating .star');
+        const ratingContainer = document.querySelector('.rating-container');
+        const ratingMessage = document.getElementById('rating-message');
+        const videoId = document.querySelector('.star-rating')?.dataset.videoId;
+
+        if (videoId && stars.length > 0) {
+            // Get user's current rating
+            fetch(`/get_user_rating/${videoId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.rating) {
+                        updateStarDisplay(data.rating);
+                        ratingMessage.textContent = `Your rating: ${data.rating} stars`;
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+
+            // Star hover effects
+            stars.forEach(star => {
+                star.addEventListener('mouseover', function() {
+                    const rating = this.dataset.rating;
+                    updateStarDisplay(rating, true);
+                });
+
+                star.addEventListener('mouseout', function() {
+                    const currentRating = document.querySelector('.star.active');
+                    if (currentRating) {
+                        updateStarDisplay(currentRating.dataset.rating);
+                    } else {
+                        resetStars();
+                    }
+                });
+
+                // Star click handler
+                star.addEventListener('click', function() {
+                    const rating = parseInt(this.dataset.rating);
+                    if (rating) {
+                        submitRating(videoId, rating);
+                    }
+                });
+            });
+        }
+    });
+
     // Function to show notification
     function showNotification(message, type = 'info') {
         // Create notification element
@@ -1287,5 +1940,213 @@ function collapseDescription() {
     document.querySelector('.description-content').classList.remove('d-none');
     document.querySelector('.description-full').classList.add('d-none');
 }
+
+// Phone Voting Functionality for Video Detail Page
+function copyVideoPhoneNumber() {
+    const phoneNumber = "+2425537224";
+    const videoTitle = "{{ video[2]|replace('\"', '\\\"') }}";
+    
+    // Copy to clipboard
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(phoneNumber).then(() => {
+            showVideoPhoneNotification('Phone number copied! Call to vote for this video.');
+        });
+    } else {
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = phoneNumber;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        showVideoPhoneNotification('Phone number copied! Call to vote for this video.');
+    }
+    
+    // Add visual feedback to the clicked element
+    const phoneDisplay = document.querySelector('.phone-number-display');
+    if (phoneDisplay) {
+        phoneDisplay.style.transform = 'scale(0.95)';
+        phoneDisplay.style.background = 'rgba(40, 167, 69, 0.15)';
+        phoneDisplay.style.borderColor = 'rgba(40, 167, 69, 0.6)';
+        setTimeout(() => {
+            phoneDisplay.style.transform = 'scale(1)';
+            phoneDisplay.style.background = 'rgba(255,255,255,0.15)';
+            phoneDisplay.style.borderColor = 'rgba(255,255,255,0.3)';
+        }, 300);
+    }
+}
+
+function shareVideoForVoting() {
+    const videoTitle = "{{ video[2]|replace('\"', '\\\"') }}";
+    const videoUrl = window.location.href;
+    const phoneNumber = "+2425537224";
+    
+    const shareText = `Vote for this video: "${videoTitle}" by calling ${phoneNumber} or visit: ${videoUrl}`;
+    
+    if (navigator.share) {
+        navigator.share({
+            title: `Vote for: ${videoTitle}`,
+            text: shareText,
+            url: videoUrl
+        }).catch(console.error);
+    } else {
+        // Fallback: copy to clipboard
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(shareText).then(() => {
+                showVideoPhoneNotification('Share link copied to clipboard!');
+            });
+        }
+    }
+}
+
+// Auto-copy phone number when clicking to call (Video page specific)
+function copyVideoPhoneNumberAuto(event) {
+    const phoneNumber = "+2425537224";
+    
+    // Copy to clipboard automatically
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(phoneNumber).then(() => {
+            showVideoPhoneNotification(t('video.phoneNumberCopied') || 'Phone number copied! Redirecting to call...');
+        }).catch(() => {
+            // Silent fail on copy, but still allow the call
+        });
+    } else {
+        // Fallback for older browsers
+        try {
+            const textArea = document.createElement('textarea');
+            textArea.value = phoneNumber;
+            textArea.style.position = 'fixed';
+            textArea.style.opacity = '0';
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+            showVideoPhoneNotification(t('video.phoneNumberCopied') || 'Phone number copied! Redirecting to call...');
+        } catch (err) {
+            // Silent fail on copy, but still allow the call
+        }
+    }
+    
+    // Add visual feedback
+    const phoneHero = event.currentTarget;
+    if (phoneHero) {
+        const card = phoneHero.querySelector('div');
+        if (card) {
+            card.style.transform = 'scale(0.95)';
+            card.style.boxShadow = '0 2px 10px rgba(102, 126, 234, 0.5)';
+            setTimeout(() => {
+                card.style.transform = 'scale(1)';
+                card.style.boxShadow = '0 4px 15px rgba(0,0,0,0.2)';
+            }, 200);
+        }
+    }
+    
+    // Allow the link to proceed to tel:
+    return true;
+}
+
+function showVideoPhoneNotification(message) {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.innerHTML = `
+        <i class="fas fa-check-circle me-2"></i>
+        ${message}
+    `;
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        padding: 12px 20px;
+        border-radius: 25px;
+        font-weight: 600;
+        z-index: 10000;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        animation: slideInFromRight 0.5s ease-out;
+        font-size: 0.9rem;
+        max-width: 320px;
+        border: 2px solid rgba(255,215,0,0.3);
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Remove notification after 4 seconds
+    setTimeout(() => {
+        notification.style.animation = 'slideOutToRight 0.5s ease-out';
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 500);
+    }, 4000);
+}
+
+// Add CSS animations for phone voting on video pages
+const videoPhoneStyle = document.createElement('style');
+videoPhoneStyle.textContent = `
+    @keyframes slideInFromRight {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+    
+    @keyframes slideOutToRight {
+        from {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        to {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+    }
+    
+    @keyframes pulse {
+        0%, 100% {
+            transform: scale(1);
+        }
+        50% {
+            transform: scale(1.05);
+        }
+    }
+    
+    @keyframes phoneGlow {
+        0%, 100% {
+            box-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
+        }
+        50% {
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.8), 0 0 30px rgba(255, 215, 0, 0.6);
+        }
+    }
+    
+    .phone-bg-animation {
+        animation: pulse 4s ease-in-out infinite;
+    }
+    
+    .phone-voting-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
+    }
+    
+    .phone-voting-card:hover .phone-number-display {
+        animation: phoneGlow 2s ease-in-out infinite;
+    }
+    
+    .phone-action-buttons .btn {
+        transition: all 0.3s ease;
+    }
+    
+    .phone-action-buttons .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+`;
+document.head.appendChild(videoPhoneStyle);
 </script>
 {% endblock %}

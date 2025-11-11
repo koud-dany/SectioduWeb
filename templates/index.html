@@ -1,5 +1,13 @@
 {% extends "base.html" %}
 
+<!-- Force cache refresh -->
+<script>
+// Force page reload if cached
+if (performance.navigation.type === 2) {
+    location.reload(true);
+}
+</script>
+
 {% block content %}
 <section class="hero-section" style="background: linear-gradient(135deg, #0066cc 0%, #004499 50%, #003366 100%); color: white; padding: 30px 0 50px 0; position: relative; overflow: hidden; margin-top: -8px;">
     <!-- Background Pattern -->
@@ -10,30 +18,59 @@
             <div class="col-lg-6">
                 <div class="hero-content">
                     <h1 class="display-5 fw-bold mb-3 hero-title" style="text-shadow: 0 4px 8px rgba(0,0,0,0.3); opacity: 0; transform: translateY(50px);">
-                        Welcome to 
+                        <span data-i18n="home.welcomeTo">{{ translations.home.welcomeTo if translations.home else 'Welcome to' }}</span> 
                         <div class="hero-brand mt-2" style="font-size: 0.9em; letter-spacing: -1px;">
                             <span class="brand-section" style="color: #ffffff; font-weight: 800; background: linear-gradient(135deg, #87CEEB, #ffffff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));">Section</span><span class="brand-du" style="color: #ffffff; font-weight: 600; text-shadow: 0 2px 4px rgba(0,0,0,0.4);">du</span><span class="brand-web" style="color: #ffffff; font-weight: 800; background: linear-gradient(135deg, #FFB6C1, #ffffff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));">Web</span>
                         </div>
                     </h1>
-                    <p class="lead mb-3 hero-subtitle" style="font-size: 1.1rem; opacity: 0; text-shadow: 0 2px 4px rgba(0,0,0,0.3); transform: translateY(30px);">
-                        Join the ultimate video competition! Upload your best content, vote on others, and compete for the top spot in our premium platform.
+                    <p class="lead mb-3 hero-subtitle" style="font-size: 1.1rem; opacity: 0; text-shadow: 0 2px 4px rgba(0,0,0,0.3); transform: translateY(30px);" data-i18n="home.heroSubtitle">
+                        {{ translations.home.heroSubtitle if translations.home else 'Join the ultimate video competition! Upload your best content, vote on others, and compete for the top spot in our premium platform.' }}
                     </p>
                     {% if not session.user_id %}
                     <div class="d-flex flex-column flex-md-row gap-2 hero-buttons" style="opacity: 0; transform: translateY(20px);">
                         <a href="{{ url_for('register') }}" class="btn btn-light px-4 py-2 shadow-lg" style="border-radius: 25px; font-weight: 600; transition: all 0.3s ease; border: 2px solid transparent;">
-                            <i class="fas fa-trophy me-2 text-warning"></i>Sign Up - $25
+                            <i class="fas fa-trophy me-2 text-warning"></i><span data-i18n="home.signUpFee">{{ translations.home.signUpFee if translations.home else 'Sign Up - $25' }}</span>
                         </a>
                         <a href="{{ url_for('login') }}" class="btn btn-outline-light px-4 py-2 shadow" style="border-radius: 25px; font-weight: 600; transition: all 0.3s ease; border: 2px solid white;">
-                            <i class="fas fa-sign-in-alt me-2"></i>Login
+                            <i class="fas fa-sign-in-alt me-2"></i><span data-i18n="home.login">{{ translations.home.login if translations.home else 'Login' }}</span>
                         </a>
+                    </div>
+                    
+                    <!-- Phone Voting Option for Non-Registered Users -->
+                    <div class="phone-voting-section mt-4" style="opacity: 0; transform: translateY(40px);">
+                        <div class="card phone-voting-card" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 15px; backdrop-filter: blur(10px); padding: 20px; text-align: center;">
+                            <div class="phone-voting-content">
+                                <h5 class="text-white mb-3" style="font-weight: 600;">
+                                    <i class="fas fa-phone-alt me-2 phone-icon" style="color: #FFD700;"></i>
+                                    <span data-i18n="home.voteWithoutAccount">{{ translations.home.voteWithoutAccount if translations.home else 'Vote Without Account' }}</span>
+                                </h5>
+                                <p class="text-white-50 mb-3" style="font-size: 0.9rem;" data-i18n="home.voteWithoutAccountDesc">
+                                    {{ translations.home.voteWithoutAccountDesc if translations.home else "Don't have an account? Cast your vote by calling our organizers directly!" }}
+                                </p>
+                                <div class="phone-number-display" onclick="copyPhoneNumber()" style="cursor: pointer; transition: all 0.3s ease; padding: 8px 12px; border-radius: 8px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3);">
+                                    <a href="tel:+2425537224" class="phone-number text-decoration-none" style="font-size: 1.1rem; font-weight: 600; color: #ffffff; text-shadow: 0 1px 3px rgba(0,0,0,0.4); letter-spacing: 0.5px; display: block;">
+                                        +242 55 37 22 4
+                                    </a>
+                                    <div class="copy-hint mt-1" style="font-size: 0.65rem; color: rgba(255,255,255,0.7);">
+                                        <i class="fas fa-copy me-1"></i><span data-i18n="home.tapToCallOrCopy">{{ translations.home.tapToCallOrCopy if translations.home else 'Tap to call or copy' }}</span>
+                                    </div>
+                                </div>
+                                <div class="voting-instructions mt-3">
+                                    <small class="text-white-50" style="font-size: 0.8rem;">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        <span data-i18n="home.callBetweenHours">{{ translations.home.callBetweenHours if translations.home else 'Call between 8 AM - 10 PM to place your vote' }}</span>
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     {% else %}
                     <div class="d-flex flex-column flex-md-row gap-2 hero-buttons" style="opacity: 0; transform: translateY(20px);">
                         <a href="{{ url_for('upload_video') }}" class="btn btn-light px-4 py-2 shadow-lg" style="border-radius: 25px; font-weight: 600; transition: all 0.3s ease;">
-                            <i class="fas fa-upload me-2 text-primary"></i>Upload Video
+                            <i class="fas fa-upload me-2 text-primary"></i><span data-i18n="home.uploadVideo">{{ translations.home.uploadVideo if translations.home else 'Upload Video' }}</span>
                         </a>
                         <a href="{{ url_for('videos') }}" class="btn btn-outline-light px-4 py-2 shadow" style="border-radius: 25px; font-weight: 600; transition: all 0.3s ease; border: 2px solid white;">
-                            <i class="fas fa-play me-2"></i>Watch Videos
+                            <i class="fas fa-play me-2"></i><span data-i18n="home.watchVideos">{{ translations.home.watchVideos if translations.home else 'Watch Videos' }}</span>
                         </a>
                     </div>
                     {% endif %}
@@ -46,8 +83,8 @@
                                     <i class="fas fa-shield-alt fa-lg text-warning"></i>
                                 </div>
                                 <div>
-                                    <h6 class="mb-1 fw-bold" style="font-size: 0.9rem;">Secure Platform</h6>
-                                    <small class="opacity-75" style="font-size: 0.8rem;">Professional & Safe</small>
+                                    <h6 class="mb-1 fw-bold" style="font-size: 0.9rem;" data-i18n="home.securePlatform">{{ translations.home.securePlatform if translations.home else 'Secure Platform' }}</h6>
+                                    <small class="opacity-75" style="font-size: 0.8rem;" data-i18n="home.professionalSafe">{{ translations.home.professionalSafe if translations.home else 'Professional & Safe' }}</small>
                                 </div>
                             </div>
                         </div>
@@ -57,8 +94,8 @@
                                     <i class="fas fa-users fa-lg" style="color: #dc3545;"></i>
                                 </div>
                                 <div>
-                                    <h6 class="mb-1 fw-bold" style="font-size: 0.9rem;">Global Community</h6>
-                                    <small class="opacity-75" style="font-size: 0.8rem;">Worldwide Creators</small>
+                                    <h6 class="mb-1 fw-bold" style="font-size: 0.9rem;" data-i18n="home.globalCommunity">{{ translations.home.globalCommunity if translations.home else 'Global Community' }}</h6>
+                                    <small class="opacity-75" style="font-size: 0.8rem;" data-i18n="home.worldwideCreators">{{ translations.home.worldwideCreators if translations.home else 'Worldwide Creators' }}</small>
                                 </div>
                             </div>
                         </div>
@@ -68,8 +105,8 @@
                                     <i class="fas fa-star fa-lg text-warning"></i>
                                 </div>
                                 <div>
-                                    <h6 class="mb-1 fw-bold" style="font-size: 0.9rem;">Premium Quality</h6>
-                                    <small class="opacity-75" style="font-size: 0.8rem;">Top-tier Content</small>
+                                    <h6 class="mb-1 fw-bold" style="font-size: 0.9rem;" data-i18n="home.premiumQuality">{{ translations.home.premiumQuality if translations.home else 'Premium Quality' }}</h6>
+                                    <small class="opacity-75" style="font-size: 0.8rem;" data-i18n="home.topTierContent">{{ translations.home.topTierContent if translations.home else 'Top-tier Content' }}</small>
                                 </div>
                             </div>
                         </div>
@@ -82,28 +119,28 @@
                         <div class="stats-card" style="transition: all 0.5s ease; transform: scale(0.9); padding: 1rem;">
                             <i class="fas fa-users fa-2x text-primary mb-2"></i>
                             <h4 class="fw-bold text-white counter" data-target="{{ total_participants }}">0</h4>
-                            <p class="text-white opacity-75 mb-0 small">Active Participants</p>
+                            <p class="text-white opacity-75 mb-0 small" data-i18n="home.activeParticipants">{{ translations.home.activeParticipants if translations.home else 'Active Participants' }}</p>
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="stats-card" style="transition: all 0.5s ease; transform: scale(0.9); padding: 1rem;">
                             <i class="fas fa-video fa-2x text-success mb-2"></i>
                             <h4 class="fw-bold text-white counter" data-target="{{ total_videos }}">0</h4>
-                            <p class="text-white opacity-75 mb-0 small">Videos Uploaded</p>
+                            <p class="text-white opacity-75 mb-0 small" data-i18n="home.videosUploaded">{{ translations.home.videosUploaded if translations.home else 'Videos Uploaded' }}</p>
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="stats-card" style="transition: all 0.5s ease; transform: scale(0.9); padding: 1rem;">
                             <i class="fas fa-star fa-2x text-warning mb-2"></i>
                             <h4 class="fw-bold text-white">Live</h4>
-                            <p class="text-white opacity-75 mb-0 small">Voting System</p>
+                            <p class="text-white opacity-75 mb-0 small" data-i18n="home.liveVotingSystem">{{ translations.home.liveVotingSystem if translations.home else 'Live Voting System' }}</p>
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="stats-card" style="padding: 1rem;">
                             <i class="fas fa-medal fa-2x text-info mb-2"></i>
                             <h4 class="fw-bold text-white">$25</h4>
-                            <p class="text-white opacity-75 mb-0 small">Entry Fee</p>
+                            <p class="text-white opacity-75 mb-0 small" data-i18n="home.entryFee">{{ translations.home.entryFee if translations.home else 'Entry Fee' }}</p>
                         </div>
                     </div>
                 </div>
@@ -115,11 +152,48 @@
     <div style="background: linear-gradient(135deg, #0066cc 0%, #004499 50%, #003366 100%); height: 30px; margin-bottom: 0;"></div>
 </section>
 
+<!-- PHONE VOTING SECTION - Optimized Design -->
+<section class="py-4" style="background: linear-gradient(135deg, #0066cc 0%, #004499 100%); box-shadow: inset 0 2px 10px rgba(0,0,0,0.1);">
+    <div class="container">
+        <div class="row align-items-center justify-content-center g-4">
+            <div class="col-lg-10">
+                <div class="d-flex flex-column flex-md-row align-items-center justify-content-center gap-4 text-white">
+                    <!-- Left: Icon & Title -->
+                    <div class="d-flex align-items-center gap-3 text-center text-md-start flex-shrink-0">
+                        <div class="phone-icon-wrapper" style="background: rgba(255,255,255,0.15); border-radius: 50%; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 2px solid rgba(255,255,255,0.3);">
+                            <i class="fas fa-phone-alt" style="font-size: 1.5rem; color: #FFD700; animation: pulse 2s infinite;"></i>
+                        </div>
+                        <div>
+                            <h5 class="mb-1 fw-bold" style="font-size: 1.1rem;" data-i18n="home.voteByPhoneTitle">{{ translations.home.voteByPhoneTitle if translations.home else 'Vote by Phone - No Account Needed!' }}</h5>
+                            <p class="mb-0 text-white-50" style="font-size: 0.85rem;" data-i18n="home.voteByPhoneDesc">{{ translations.home.voteByPhoneDesc if translations.home else 'Call us directly to cast your vote. Quick & easy!' }}</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Center: Phone Number (Clickable) - Better Formatted -->
+                    <div class="phone-number-hero flex-shrink-0">
+                        <a href="tel:+2425537224" onclick="copyPhoneNumberAuto(event)" class="text-decoration-none d-block" style="background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%); padding: 0.75rem 1.5rem; border-radius: 10px; transition: all 0.3s ease; box-shadow: 0 3px 12px rgba(0,0,0,0.3); border: 2px solid rgba(255,255,255,0.5);">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="fas fa-phone" style="color: #0066cc; font-size: 1.3rem;"></i>
+                                <div class="text-center">
+                                    <div class="fw-bold" style="font-size: 1.15rem; letter-spacing: 0.5px; line-height: 1.3; background: linear-gradient(135deg, #0066cc, #004499); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">+242 55 37 22 4</div>
+                                    <small class="text-muted d-block" style="font-size: 0.7rem; margin-top: 2px;">
+                                        <i class="fas fa-copy me-1"></i><span data-i18n="home.tapToCallAndCopy">{{ translations.home.tapToCallAndCopy if translations.home else 'Tap & auto-copy' }}</span>
+                                    </small>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
 <section class="py-4 bg-light" style="margin-top: 0; padding-top: 2rem !important;">
     <div class="container">
         <div class="text-center mb-4">
-            <h2 class="fw-bold" style="font-size: 1.8rem;">How It Works</h2>
-            <p class="text-muted" style="font-size: 1rem;">Simple steps to join the competition</p>
+            <h2 class="fw-bold" style="font-size: 1.8rem;" data-i18n="home.howItWorks">{{ translations.home.howItWorks if translations.home else 'How It Works' }}</h2>
+            <p class="text-muted" style="font-size: 1rem;" data-i18n="home.simpleSteps">{{ translations.home.simpleSteps if translations.home else 'Simple steps to join the competition' }}</p>
         </div>
         <div class="row g-3" id="how-it-works-steps">
             <div class="col-md-3">
@@ -127,8 +201,8 @@
                     <div class="step-icon bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width: 50px; height: 50px;">
                         <i class="fas fa-user-plus"></i>
                     </div>
-                    <h6 class="step-title" style="font-size: 1rem;">1. Register</h6>
-                    <p class="text-muted step-description small">Create your account and pay the $25 entry fee</p>
+                    <h6 class="step-title" style="font-size: 1rem;" data-i18n="home.step1Title">{{ translations.home.step1Title if translations.home else '1. Register' }}</h6>
+                    <p class="text-muted step-description small" data-i18n="home.step1Desc">{{ translations.home.step1Desc if translations.home else 'Create your account and pay the $25 entry fee' }}</p>
                 </div>
             </div>
             <div class="col-md-3">
@@ -136,8 +210,8 @@
                     <div class="step-icon bg-success text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width: 50px; height: 50px;">
                         <i class="fas fa-upload"></i>
                     </div>
-                    <h6 class="step-title" style="font-size: 1rem;">2. Upload</h6>
-                    <p class="text-muted step-description small">Upload your best video content to compete</p>
+                    <h6 class="step-title" style="font-size: 1rem;" data-i18n="home.step2Title">{{ translations.home.step2Title if translations.home else '2. Upload' }}</h6>
+                    <p class="text-muted step-description small" data-i18n="home.step2Desc">{{ translations.home.step2Desc if translations.home else 'Upload your best video content to compete' }}</p>
                 </div>
             </div>
             <div class="col-md-3">
@@ -145,8 +219,8 @@
                     <div class="step-icon bg-warning text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width: 50px; height: 50px;">
                         <i class="fas fa-vote-yea"></i>
                     </div>
-                    <h6 class="step-title" style="font-size: 1rem;">3. Vote</h6>
-                    <p class="text-muted step-description small">Rate and comment on other participants' videos</p>
+                    <h6 class="step-title" style="font-size: 1rem;" data-i18n="home.step3Title">{{ translations.home.step3Title if translations.home else '3. Vote' }}</h6>
+                    <p class="text-muted step-description small" data-i18n="home.step3Desc">{{ translations.home.step3Desc if translations.home else "Rate and comment on other participants' videos" }}</p>
                 </div>
             </div>
             <div class="col-md-3">
@@ -154,8 +228,8 @@
                     <div class="step-icon bg-info text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width: 50px; height: 50px;">
                         <i class="fas fa-trophy"></i>
                     </div>
-                    <h6 class="step-title" style="font-size: 1rem;">4. Win</h6>
-                    <p class="text-muted step-description small">Climb the leaderboard and claim victory!</p>
+                    <h6 class="step-title" style="font-size: 1rem;" data-i18n="home.step4Title">{{ translations.home.step4Title if translations.home else '4. Win' }}</h6>
+                    <p class="text-muted step-description small" data-i18n="home.step4Desc">{{ translations.home.step4Desc if translations.home else 'Climb the leaderboard and claim victory!' }}</p>
                 </div>
             </div>
         </div>
@@ -170,16 +244,14 @@
         <div class="text-center mb-5 carousel-header" style="opacity: 0; transform: translateY(-30px);">
             <div class="d-inline-block position-relative">
                 <h2 class="fw-bold text-dark mb-3" style="font-size: 2.2rem; letter-spacing: -0.5px;">
-                    <span class="brand-section" style="background: linear-gradient(135deg, #0066cc, #004499); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">Top</span>
-                    <span class="brand-du text-dark" style="font-weight: 400; font-style: italic;">Rated</span>
-                    <span class="brand-web" style="background: linear-gradient(135deg, #dc3545, #c82333); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">Videos</span>
+                    <span class="brand-section" style="background: linear-gradient(135deg, #0066cc, #004499); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;" data-i18n="home.topRatedVideos">{{ translations.home.topRatedVideos if translations.home else 'Top Rated Videos' }}</span>
                 </h2>
                 <div class="position-absolute top-0 start-50 translate-middle-x" style="width: 60px; height: 3px; background: linear-gradient(135deg, #0066cc, #dc3545); border-radius: 2px; margin-top: -8px;"></div>
             </div>
-            <p class="text-muted mb-0" style="font-size: 1.1rem; font-weight: 300;">Discover the most acclaimed content in our competition</p>
+            <p class="text-muted mb-0" style="font-size: 1.1rem; font-weight: 300;" data-i18n="home.discoverAcclaimed">{{ translations.home.discoverAcclaimed if translations.home else 'Discover the most acclaimed content in our competition' }}</p>
             <div class="d-flex justify-content-center align-items-center mt-3">
                 <div class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill">
-                    <i class="fas fa-trophy me-2"></i>Premium Content
+                    <i class="fas fa-trophy me-2"></i><span data-i18n="home.premiumContentBadge">{{ translations.home.premiumContentBadge if translations.home else 'Premium Content' }}</span>
                 </div>
             </div>
         </div>
@@ -234,17 +306,17 @@
                                     {% if loop.index == 1 %}
                                     <span class="badge fw-bold px-3 py-2 rounded-pill" 
                                           style="background: linear-gradient(135deg, #ffd700, #ffc107); color: #000; font-size: 0.75rem; box-shadow: 0 4px 12px rgba(255,215,0,0.3);">
-                                        <i class="fas fa-crown me-1"></i>CHAMPION
+                                        <i class="fas fa-crown me-1"></i><span data-i18n="home.champion">{{ translations.home.champion if translations.home else 'CHAMPION' }}</span>
                                     </span>
                                     {% elif loop.index == 2 %}
                                     <span class="badge fw-bold px-3 py-2 rounded-pill" 
                                           style="background: linear-gradient(135deg, #e8e8e8, #c0c0c0); color: #000; font-size: 0.75rem; box-shadow: 0 4px 12px rgba(192,192,192,0.3);">
-                                        <i class="fas fa-medal me-1"></i>SILVER
+                                        <i class="fas fa-medal me-1"></i><span data-i18n="home.silver">{{ translations.home.silver if translations.home else 'SILVER' }}</span>
                                     </span>
                                     {% elif loop.index == 3 %}
                                     <span class="badge fw-bold px-3 py-2 rounded-pill" 
                                           style="background: linear-gradient(135deg, #cd7f32, #b8860b); color: #fff; font-size: 0.75rem; box-shadow: 0 4px 12px rgba(205,127,50,0.3);">
-                                        <i class="fas fa-award me-1"></i>BRONZE
+                                        <i class="fas fa-award me-1"></i><span data-i18n="home.bronze">{{ translations.home.bronze if translations.home else 'BRONZE' }}</span>
                                     </span>
                                     {% else %}
                                     <span class="badge bg-primary fw-bold px-2 py-1 rounded-pill" style="font-size: 0.7rem;">
@@ -286,7 +358,7 @@
                                 <div class="flex-grow-1 min-w-0">
                                     <small class="text-muted fw-semibold d-block text-truncate">{{ video[5] }}</small>
                                     <small class="text-primary" style="font-size: 0.7rem;">
-                                        <i class="fas fa-check-circle me-1"></i>Verified
+                                        <i class="fas fa-check-circle me-1"></i><span data-i18n="home.verified">{{ translations.home.verified if translations.home else 'Verified' }}</span>
                                     </small>
                                 </div>
                             </div>
@@ -325,7 +397,7 @@
             <!-- Mobile Scroll Indicator -->
             <div class="d-flex justify-content-center mt-3 d-md-none">
                 <small class="text-muted">
-                    <i class="fas fa-hand-point-left me-1"></i>Swipe to explore more videos
+                    <i class="fas fa-hand-point-left me-1"></i><span data-i18n="home.swipeToExplore">{{ translations.home.swipeToExplore if translations.home else 'Swipe to explore more videos' }}</span>
                 </small>
             </div>
         </div>
@@ -334,7 +406,7 @@
         {% if session.user_id %}
         <div class="text-center mt-4 mb-3">
             <a href="{{ url_for('videos') }}" class="btn btn-outline-primary btn-lg px-5">
-                <i class="fas fa-video me-2"></i>View All Videos
+                <i class="fas fa-video me-2"></i><span data-i18n="home.viewAllVideos">{{ translations.home.viewAllVideos if translations.home else 'View All Videos' }}</span>
             </a>
         </div>
         {% endif %}
@@ -345,15 +417,15 @@
             <div class="mb-3">
                 <i class="fas fa-video fa-4x text-muted mb-3"></i>
             </div>
-            <h3 class="text-muted mb-3">No videos uploaded yet</h3>
-            <p class="text-muted mb-3">Be the first participant to upload a video and start the competition!</p>
+            <h3 class="text-muted mb-3" data-i18n="home.noVideosYet">{{ translations.home.noVideosYet if translations.home else 'No videos uploaded yet' }}</h3>
+            <p class="text-muted mb-3" data-i18n="home.beTheFirst">{{ translations.home.beTheFirst if translations.home else 'Be the first participant to upload a video and start the competition!' }}</p>
             {% if session.user_id %}
             <a href="{{ url_for('upload_video') }}" class="btn btn-primary btn-lg px-5">
-                <i class="fas fa-plus me-2"></i>Upload First Video
+                <i class="fas fa-plus me-2"></i><span data-i18n="home.uploadFirstVideo">{{ translations.home.uploadFirstVideo if translations.home else 'Upload First Video' }}</span>
             </a>
             {% else %}
             <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg px-5">
-                <i class="fas fa-user-plus me-2"></i>Join SectionduWeb
+                <i class="fas fa-user-plus me-2"></i><span data-i18n="home.joinSectionduWeb">{{ translations.home.joinSectionduWeb if translations.home else 'Join SectionduWeb' }}</span>
             </a>
             {% endif %}
         </div>
@@ -393,12 +465,22 @@ document.addEventListener('DOMContentLoaded', function() {
             }, 400);
         }
         
-        // Animate hero buttons
+        // Animate hero buttons or phone voting section
         if (heroButtons) {
             setTimeout(() => {
                 heroButtons.style.transition = 'all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
                 heroButtons.style.opacity = '1';
                 heroButtons.style.transform = 'translateY(0)';
+            }, 600);
+        }
+        
+        // Animate phone voting section (for non-logged in users)
+        const phoneVotingSection = document.querySelector('.phone-voting-section');
+        if (phoneVotingSection) {
+            setTimeout(() => {
+                phoneVotingSection.style.transition = 'all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                phoneVotingSection.style.opacity = '1';
+                phoneVotingSection.style.transform = 'translateY(0)';
             }, 600);
         }
         
@@ -2157,5 +2239,199 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
+
+// Phone Voting Functionality
+function copyPhoneNumber() {
+    const phoneNumber = "+2425537224";
+    
+    // Copy to clipboard
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(phoneNumber).then(() => {
+            showCopyNotification(t('home.phoneNumberCopied') || 'Phone number copied to clipboard!');
+        });
+    } else {
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = phoneNumber;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        showCopyNotification(t('home.phoneNumberCopied') || 'Phone number copied to clipboard!');
+    }
+    
+    // Add visual feedback to the clicked element
+    const phoneDisplay = document.querySelector('.phone-number-display');
+    if (phoneDisplay) {
+        phoneDisplay.style.transform = 'scale(0.96)';
+        phoneDisplay.style.background = 'rgba(40, 167, 69, 0.15)';
+        phoneDisplay.style.borderColor = 'rgba(40, 167, 69, 0.5)';
+        setTimeout(() => {
+            phoneDisplay.style.transform = 'scale(1)';
+            phoneDisplay.style.background = 'rgba(255,255,255,0.1)';
+            phoneDisplay.style.borderColor = 'rgba(255,255,255,0.3)';
+        }, 250);
+    }
+}
+
+// Auto-copy phone number when clicking to call
+function copyPhoneNumberAuto(event) {
+    const phoneNumber = "+2425537224";
+    
+    // Copy to clipboard automatically
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(phoneNumber).then(() => {
+            showCopyNotification(t('home.phoneNumberCopied') || 'Phone number copied! Redirecting to call...');
+        }).catch(() => {
+            // Silent fail on copy, but still allow the call
+        });
+    } else {
+        // Fallback for older browsers
+        try {
+            const textArea = document.createElement('textarea');
+            textArea.value = phoneNumber;
+            textArea.style.position = 'fixed';
+            textArea.style.opacity = '0';
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+            showCopyNotification(t('home.phoneNumberCopied') || 'Phone number copied! Redirecting to call...');
+        } catch (err) {
+            // Silent fail on copy, but still allow the call
+        }
+    }
+    
+    // Add visual feedback
+    const phoneHero = event.currentTarget;
+    if (phoneHero) {
+        phoneHero.style.transform = 'scale(0.95)';
+        phoneHero.style.boxShadow = '0 2px 10px rgba(102, 126, 234, 0.5)';
+        setTimeout(() => {
+            phoneHero.style.transform = 'scale(1)';
+            phoneHero.style.boxShadow = '0 4px 15px rgba(0,0,0,0.2)';
+        }, 200);
+    }
+    
+    // Allow the link to proceed to tel:
+    return true;
+}
+
+function showCopyNotification(message) {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.innerHTML = `
+        <i class="fas fa-check-circle me-2"></i>
+        ${message}
+    `;
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: linear-gradient(135deg, #28a745, #20c997);
+        color: white;
+        padding: 12px 20px;
+        border-radius: 25px;
+        font-weight: 600;
+        z-index: 10000;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        animation: slideInFromRight 0.5s ease-out;
+        font-size: 0.9rem;
+        max-width: 300px;
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Remove notification after 3 seconds
+    setTimeout(() => {
+        notification.style.animation = 'slideOutToRight 0.5s ease-out';
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 500);
+    }, 3000);
+}
+
+// Add notification animation CSS
+const phoneNotificationStyle = document.createElement('style');
+phoneNotificationStyle.textContent = `
+    @keyframes slideInFromRight {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+    
+    @keyframes slideOutToRight {
+        from {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        to {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+    }
+    
+    /* Phone Voting Animations */
+    @keyframes phoneRing {
+        0%, 100% { transform: rotate(0deg); }
+        25% { transform: rotate(-5deg); }
+        75% { transform: rotate(5deg); }
+    }
+    
+    @keyframes phonePulse {
+        0%, 100% { 
+            transform: scale(1); 
+            box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.7);
+        }
+        50% { 
+            transform: scale(1.05); 
+            box-shadow: 0 0 0 10px rgba(255, 215, 0, 0);
+        }
+    }
+    
+    @keyframes numberShine {
+        0% { background-position: -100% 0; }
+        100% { background-position: 100% 0; }
+    }
+    
+    .phone-icon {
+        animation: phoneRing 3s ease-in-out infinite;
+    }
+    
+    .phone-voting-card:hover .phone-number-display {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(255,255,255,0.1);
+        background: rgba(255,255,255,0.15);
+    }
+    
+    .phone-number {
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+        background-size: 200% 100%;
+        animation: numberShine 4s ease-in-out infinite;
+    }
+    
+    .phone-voting-section {
+        animation: slideInUp 0.8s ease-out 0.6s both;
+    }
+    
+    @keyframes slideInUp {
+        from {
+            transform: translateY(50px);
+            opacity: 0;
+        }
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+`;
+document.head.appendChild(phoneNotificationStyle);
 </script>
 {% endblock %}

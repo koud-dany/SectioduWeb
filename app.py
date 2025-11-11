@@ -1,8 +1,9 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, g
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 import sqlite3
 import os
+import json
 
 from datetime import datetime
 from functools import wraps
@@ -46,23 +47,70 @@ except Exception as e:
 app = Flask(__name__)
 app.config.from_object(Config)
 
+# Cache busting configuration
+app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
+
+@app.after_request
+def after_request(response):
+    """Add cache-busting headers for development"""
+    response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate, public, max-age=0'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '0'
+    return response
+
+# Language/Translation support
+SUPPORTED_LANGUAGES = ['en', 'fr']
+DEFAULT_LANGUAGE = 'en'
+
+def get_locale():
+    """Get the current language from session or browser"""
+    # Check if language is set in session
+    if 'language' in session:
+        return session['language']
+    # Check if language is in browser preferences
+    return request.accept_languages.best_match(SUPPORTED_LANGUAGES) or DEFAULT_LANGUAGE
+
+def load_translations(language):
+    """Load translations for the specified language"""
+    try:
+        translation_file = os.path.join('static', 'translations', f'{language}.json')
+        with open(translation_file, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except FileNotFoundError:
+        # Fallback to English if translation file not found
+        try:
+            translation_file = os.path.join('static', 'translations', 'en.json')
+            with open(translation_file, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except:
+            return {}
+
+@app.before_request
+def before_request():
+    """Set language and translations before each request"""
+    g.language = get_locale()
+    g.translations = load_translations(g.language)
+
 # Template context processor to make payment status available in all templates
 @app.context_processor
 def inject_user_status():
+    context = {
+        'current_user_is_paid': False,
+        'get_video_url': get_video_url,
+        'current_language': g.get('language', DEFAULT_LANGUAGE),
+        'translations': g.get('translations', {}),
+        'supported_languages': SUPPORTED_LANGUAGES
+    }
+    
     if 'user_id' in session:
         conn = sqlite3.connect('tournament.db')
         c = conn.cursor()
         c.execute('SELECT is_paid FROM users WHERE id = ?', (session['user_id'],))
         result = c.fetchone()
         conn.close()
-        return {
-            'current_user_is_paid': result[0] if result else False,
-            'get_video_url': get_video_url
-        }
-    return {
-        'current_user_is_paid': False,
-        'get_video_url': get_video_url
-    }
+        context['current_user_is_paid'] = result[0] if result else False
+    
+    return context
 
 # Ensure upload directory exists
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
@@ -226,7 +274,8 @@ def init_db():
         ('block_reason', 'TEXT'),
         ('blocked_until', 'TIMESTAMP DEFAULT NULL'),
         ('last_login', 'TIMESTAMP'),
-        ('login_count', 'INTEGER DEFAULT 0')
+        ('login_count', 'INTEGER DEFAULT 0'),
+        ('can_vote', 'BOOLEAN DEFAULT FALSE')
     ]
     
     for column_name, column_def in admin_columns:
@@ -234,6 +283,12 @@ def init_db():
             c.execute(f'ALTER TABLE users ADD COLUMN {column_name} {column_def}')
         except sqlite3.OperationalError:
             pass
+    
+    # Add video_id column to existing voting_fees table for per-video payments
+    try:
+        c.execute('ALTER TABLE voting_fees ADD COLUMN video_id INTEGER')
+    except sqlite3.OperationalError:
+        pass  # Column already exists
     
     # Add admin-related columns to existing videos table
     video_columns = [
@@ -336,6 +391,23 @@ def init_db():
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (user_id) REFERENCES users (id)
+    )''')
+    
+    # Voting fees table - Track $2 voting fee payments per video
+    c.execute('''CREATE TABLE IF NOT EXISTS voting_fees (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        video_id INTEGER NOT NULL,
+        transaction_id TEXT UNIQUE NOT NULL,
+        provider TEXT NOT NULL,
+        phone_number TEXT NOT NULL,
+        amount REAL NOT NULL,
+        currency TEXT NOT NULL,
+        status TEXT DEFAULT 'pending',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users (id),
+        FOREIGN KEY (video_id) REFERENCES videos (id)
     )''')
     
     # Create default admin user if not exists
@@ -602,11 +674,11 @@ def index():
     conn = sqlite3.connect('tournament.db')
     c = conn.cursor()
     
-    # Get top videos (only approved videos for regular users)
+    # Get top videos ranked by votes (NEW TOURNAMENT RANKING SYSTEM)
     c.execute('''SELECT v.id, v.title, v.filename, v.total_votes, v.average_rating, u.username 
                  FROM videos v JOIN users u ON v.user_id = u.id 
                  WHERE v.is_approved = 1 AND v.is_blocked = 0
-                 ORDER BY v.average_rating DESC, v.total_votes DESC LIMIT 5''')
+                 ORDER BY v.total_votes DESC, v.upload_date DESC LIMIT 5''')
     top_videos_raw = c.fetchall()
     
     # Convert to proper data types
@@ -717,6 +789,18 @@ def logout():
     session.clear()
     flash('You have been logged out')
     return redirect(url_for('index'))
+
+@app.route('/set_language/<language>')
+def set_language(language):
+    """Set the user's preferred language"""
+    if language in SUPPORTED_LANGUAGES:
+        session['language'] = language
+        flash(f'Language changed to {language.upper()}', 'success')
+    else:
+        flash('Language not supported', 'error')
+    
+    # Redirect back to the referring page or home
+    return redirect(request.referrer or url_for('index'))
 
 @app.route('/debug/user_status')
 @login_required
@@ -856,30 +940,23 @@ def dashboard():
 
 @app.route('/videos')
 def videos():
-    # Get sort parameter from URL (default: recent)
-    sort_by = request.args.get('sort', 'recent')
+    # Get sort parameter from URL (default: most_voted - NEW RANKING SYSTEM)
+    sort_by = request.args.get('sort', 'most_voted')
     print(f"=== VIDEOS DEBUG: Sort parameter = '{sort_by}' ===")
     
     conn = sqlite3.connect('tournament.db')
     c = conn.cursor()
     
-    # Determine sorting based on parameter
-    if sort_by == 'top_rated':
-        print("Using TOP RATED sorting")
-        # Sort by average rating first, then by votes, only show approved and unblocked videos with votes
-        c.execute('''SELECT v.id, v.title, v.filename, v.total_votes, v.average_rating, u.username, v.upload_date
-                     FROM videos v JOIN users u ON v.user_id = u.id 
-                     WHERE v.total_votes > 0 AND v.is_approved = 1 AND v.is_blocked = 0
-                     ORDER BY v.average_rating DESC, v.total_votes DESC''')
-    elif sort_by == 'most_voted':
-        print("Using MOST VOTED sorting")
-        # Sort by total votes, only show approved and unblocked videos
+    # Determine sorting based on parameter - VIDEOS NOW RANKED BY VOTES
+    if sort_by == 'most_voted':
+        print("Using MOST VOTED sorting (DEFAULT - TOURNAMENT RANKING)")
+        # Sort by total votes - THIS IS THE NEW TOURNAMENT RANKING
         c.execute('''SELECT v.id, v.title, v.filename, v.total_votes, v.average_rating, u.username, v.upload_date
                      FROM videos v JOIN users u ON v.user_id = u.id 
                      WHERE v.is_approved = 1 AND v.is_blocked = 0
-                     ORDER BY v.total_votes DESC, v.average_rating DESC''')
-    else:  # recent (default)
-        print("Using RECENT sorting (default)")
+                     ORDER BY v.total_votes DESC, v.upload_date DESC''')
+    elif sort_by == 'recent':
+        print("Using RECENT sorting")
         # Sort by upload date (newest first), only show approved and unblocked videos
         c.execute('''SELECT v.id, v.title, v.filename, v.total_votes, v.average_rating, u.username, v.upload_date
                      FROM videos v JOIN users u ON v.user_id = u.id 
@@ -1262,14 +1339,14 @@ def leaderboard():
     conn = sqlite3.connect('tournament.db')
     c = conn.cursor()
     
-    # Get user rankings based on average video ratings
+    # Get user rankings based on total votes (NEW TOURNAMENT RANKING)
     c.execute('''SELECT u.username, COUNT(v.id) as video_count, 
                         AVG(v.average_rating) as avg_rating,
                         SUM(v.total_votes) as total_votes
                  FROM users u 
                  LEFT JOIN videos v ON u.id = v.user_id 
                  GROUP BY u.id, u.username 
-                 ORDER BY avg_rating DESC, total_votes DESC''')
+                 ORDER BY total_votes DESC, video_count DESC''')
     leaderboard_data_raw = c.fetchall()
     
     # Convert to proper data types
@@ -1290,24 +1367,50 @@ def leaderboard():
 @login_required
 def vote():
     video_id = request.form['video_id']
-    rating = int(request.form['rating'])
     
     conn = sqlite3.connect('tournament.db')
     c = conn.cursor()
     
     try:
-        # Insert or update vote
-        c.execute('''INSERT OR REPLACE INTO votes (user_id, video_id, rating) 
-                    VALUES (?, ?, ?)''', (session['user_id'], video_id, rating))
+        # Check if user already voted on this video
+        c.execute('SELECT id FROM votes WHERE user_id = ? AND video_id = ?', (session['user_id'], video_id))
+        existing_vote = c.fetchone()
         
-        # Update video statistics
+        if existing_vote:
+            conn.close()
+            return jsonify({
+                'success': False, 
+                'message': 'You have already voted on this video.',
+                'already_voted': True
+            })
+        
+        # Check if user has paid the $2 voting fee for this specific video
+        c.execute('''SELECT id FROM voting_fees 
+                    WHERE user_id = ? AND video_id = ? AND status = 'successful' ''', 
+                 (session['user_id'], video_id))
+        payment = c.fetchone()
+        
+        if not payment:
+            conn.close()
+            return jsonify({
+                'success': False, 
+                'message': 'You need to pay $2 to vote on this video.',
+                'requires_voting_fee': True,
+                'redirect_url': f'/pay_voting_fee/{video_id}',
+                'video_id': video_id
+            })
+        
+        # Insert vote (simple vote, no rating - just counts as 1 vote)
+        c.execute('''INSERT INTO votes (user_id, video_id, rating) 
+                    VALUES (?, ?, ?)''', (session['user_id'], video_id, 5))  # Default rating for counting
+        
+        # Update video statistics - RANKED BY TOTAL VOTES
         c.execute('''UPDATE videos SET 
-                    total_votes = (SELECT COUNT(*) FROM votes WHERE video_id = ?),
-                    average_rating = (SELECT AVG(rating) FROM votes WHERE video_id = ?)
-                    WHERE id = ?''', (video_id, video_id, video_id))
+                    total_votes = (SELECT COUNT(*) FROM votes WHERE video_id = ?)
+                    WHERE id = ?''', (video_id, video_id))
         
         # Get updated stats for response
-        c.execute('''SELECT total_votes, average_rating FROM videos WHERE id = ?''', (video_id,))
+        c.execute('''SELECT total_votes FROM videos WHERE id = ?''', (video_id,))
         stats = c.fetchone()
         
         conn.commit()
@@ -1315,12 +1418,120 @@ def vote():
         return jsonify({
             'success': True, 
             'message': 'Vote submitted successfully!',
-            'total_votes': int(stats[0]) if stats[0] else 0,
-            'average_rating': float(stats[1]) if stats[1] else 0.0,
-            'user_rating': rating
+            'total_votes': int(stats[0]) if stats[0] else 0
         })
     except Exception as e:
         return jsonify({'success': False, 'message': 'Error submitting vote'})
+    finally:
+        conn.close()
+
+@app.route('/submit_rating', methods=['POST'])
+@login_required
+def submit_rating():
+    """Submit a star rating for a video (1-5 stars)"""
+    data = request.get_json()
+    video_id = data.get('video_id')
+    rating = data.get('rating')
+    
+    if not video_id or not rating or rating not in range(1, 6):
+        return jsonify({'success': False, 'message': 'Invalid rating data'})
+    
+    conn = sqlite3.connect('tournament.db')
+    c = conn.cursor()
+    
+    try:
+        # First, check if video exists and is accessible
+        c.execute('SELECT id FROM videos WHERE id = ? AND is_blocked = 0', (video_id,))
+        if not c.fetchone():
+            return jsonify({'success': False, 'message': 'Video not found or unavailable'})
+
+        # Then check if user already voted/rated this video
+        c.execute('SELECT id, rating FROM votes WHERE user_id = ? AND video_id = ?', 
+                 (session['user_id'], video_id))
+        existing_vote = c.fetchone()
+        
+        # Always allow rating updates or new ratings
+        if existing_vote:
+            vote_id = existing_vote[0]
+            old_rating = existing_vote[1]
+            # Update existing rating
+            c.execute('UPDATE votes SET rating = ? WHERE id = ?',
+                     (rating, vote_id))
+            print(f"Updated rating for vote {vote_id} from {old_rating} to {rating}")
+        else:
+            # Insert new rating
+            c.execute('INSERT INTO votes (user_id, video_id, rating) VALUES (?, ?, ?)', 
+                     (session['user_id'], video_id, rating))
+            print(f"Inserted new rating {rating} for video {video_id}")
+        
+        conn.commit()  # Commit the vote change first
+        
+        # Update video statistics - only update average rating, not vote count
+        c.execute('''UPDATE videos SET 
+                    average_rating = (SELECT AVG(CAST(rating AS FLOAT)) FROM votes WHERE video_id = ?)
+                    WHERE id = ?''', (video_id, video_id))
+        conn.commit()  # Commit the stats update
+        
+        # Get updated stats for response
+        c.execute('SELECT total_votes, average_rating FROM videos WHERE id = ?', (video_id,))
+        stats = c.fetchone()
+        print(f"Updated stats - votes: {stats[0]}, avg rating: {stats[1]}")
+        
+        message = 'Rating updated successfully!' if existing_vote else 'Rating submitted successfully!'
+        if existing_vote:
+            message = f'Rating updated from {old_rating} to {rating} stars!'
+            print(message)
+            
+        return jsonify({
+            'success': True, 
+            'message': message,
+            'new_average': float(stats[1]) if stats[1] else 0.0,  # stats[1] is average_rating
+            'total_votes': int(stats[0]) if stats[0] else 0,      # stats[0] is total_votes
+            'user_rating': rating,
+            'old_rating': old_rating if existing_vote else None,
+            'is_update': existing_vote is not None
+        })
+    except Exception as e:
+        print(f"Rating submission error: {e}")
+        conn.rollback()  # Rollback any changes if there was an error
+        return jsonify({
+            'success': False, 
+            'message': 'Error submitting rating. Please try again.',
+            'error': str(e)
+        })
+    finally:
+        conn.close()
+
+@app.route('/get_user_rating/<int:video_id>')
+@login_required
+def get_user_rating(video_id):
+    """Get the current user's rating for a video"""
+    conn = sqlite3.connect('tournament.db')
+    c = conn.cursor()
+    
+    try:
+        # Get user's current rating only
+        c.execute('''
+            SELECT rating FROM votes
+            WHERE user_id = ? AND video_id = ?
+        ''', (session['user_id'], video_id))
+        result = c.fetchone()
+        
+        # Check payment status separately for voting feature
+        c.execute('''
+            SELECT 1 FROM voting_fees 
+            WHERE user_id = ? AND video_id = ? AND status = 'successful'
+        ''', (session['user_id'], video_id))
+        has_paid = c.fetchone() is not None
+        
+        return jsonify({
+            'success': True,
+            'rating': result[0] if result else None,
+            'has_paid': has_paid  # Still include payment status for voting feature
+        })
+    except Exception as e:
+        print(f"Get rating error: {e}")
+        return jsonify({'success': False, 'message': 'Error retrieving rating'})
     finally:
         conn.close()
 
@@ -1495,7 +1706,7 @@ def dislike_comment():
         user_disliked = c.fetchone() is not None
         
         conn.commit()
-        conn.close();
+        conn.close()
         
         return jsonify({
             'success': True,
@@ -1521,7 +1732,7 @@ def get_replies(comment_id):
                      ORDER BY c.comment_date ASC''', (comment_id,))
         replies = c.fetchall()
         
-        conn.close();
+        conn.close()
         
         # Format replies for JSON response
         formatted_replies = []
@@ -1570,12 +1781,12 @@ def profile(username=None):
     
     # Get user's videos with stats
     c.execute('''SELECT v.id, v.title, v.description, v.filename, v.upload_date, 
-                        v.total_votes, v.average_rating, COUNT(c.id) as comment_count
-                 FROM videos v 
-                 LEFT JOIN comments c ON v.id = c.video_id 
-                 WHERE v.user_id = ? 
-                 GROUP BY v.id 
-                 ORDER BY v.upload_date DESC''', (user_id,))
+                v.total_votes, v.average_rating, COUNT(c.id) as comment_count
+                FROM videos v 
+                LEFT JOIN comments c ON v.id = c.video_id 
+                WHERE v.user_id = ? 
+                GROUP BY v.id 
+                ORDER BY v.upload_date DESC''', (user_id,))
     user_videos = c.fetchall()
     
     # Get total statistics
@@ -1596,7 +1807,7 @@ def profile(username=None):
                  LIMIT 5''', (user_id,))
     recent_comments = c.fetchall()
     
-    conn.close();
+    conn.close()
     
     return render_template('profile.html', 
                          profile_user=user,
@@ -1645,7 +1856,7 @@ def edit_profile():
                          (first_name, last_name, bio, location, website, session['user_id']))
             
             conn.commit()
-            conn.close();
+            conn.close()
             
             flash('Profile updated successfully!', 'success')
             return redirect(url_for('profile'))
@@ -1661,7 +1872,7 @@ def edit_profile():
     c.execute('''SELECT username, email, first_name, last_name, bio, location, 
                         website, avatar_filename FROM users WHERE id = ?''', (session['user_id'],))
     user = c.fetchone()
-    conn.close();
+    conn.close()
     
     return render_template('edit_profile.html', user=user)
 
@@ -1700,7 +1911,7 @@ def account_settings():
                 else:
                     flash('Current password is incorrect', 'error')
                 
-                conn.close();
+                conn.close()
             except Exception as e:
                 flash('Error changing password. Please try again.', 'error')
             
@@ -1739,6 +1950,132 @@ def upgrade():
     payment_method = app.config.get('PAYMENT_METHOD', 'mobile_money')
     
     return render_template('upgrade_mobile.html')
+
+@app.route('/pay_voting_fee/<int:video_id>')
+@login_required
+def pay_voting_fee(video_id):
+    """Page to pay $2 voting fee for a specific video"""
+    conn = sqlite3.connect('tournament.db')
+    c = conn.cursor()
+    
+    # Get video details
+    c.execute('SELECT id, title FROM videos WHERE id = ?', (video_id,))
+    video = c.fetchone()
+    
+    if not video:
+        flash('Video not found!', 'error')
+        return redirect(url_for('videos'))
+    
+    # Check if user already paid for this video
+    c.execute('''SELECT id FROM voting_fees 
+                WHERE user_id = ? AND video_id = ? AND status = 'successful' ''', 
+             (session['user_id'], video_id))
+    payment = c.fetchone()
+    
+    if payment:
+        flash('You have already paid to vote on this video!', 'info')
+        return redirect(url_for('video_detail', video_id=video_id))
+    
+    conn.close()
+    return render_template('pay_voting_fee.html', video=video)
+
+@app.route('/initiate_voting_fee_payment', methods=['POST'])
+@login_required
+def initiate_voting_fee_payment():
+    """Initiate mobile money payment for $2 voting fee per video"""
+    try:
+        from mobile_money_service import MobileMoneyService
+        from mobile_money_config import get_mobile_money_config
+        
+        # Get form data
+        data = request.get_json()
+        provider = data.get('provider')  # mtn_momo, orange_money, airtel_money
+        phone_number = data.get('phone_number')
+        video_id = data.get('video_id')
+        
+        if not provider or not phone_number or not video_id:
+            return jsonify({'success': False, 'error': 'Provider, phone number, and video ID required'}), 400
+        
+        # Validate phone number format
+        cleaned_phone = ''.join(filter(str.isdigit, phone_number))
+        if len(cleaned_phone) < 8:
+            return jsonify({'success': False, 'error': 'Invalid phone number format'}), 400
+        
+        # Check if video exists
+        conn = sqlite3.connect('tournament.db')
+        c = conn.cursor()
+        c.execute('SELECT id, title FROM videos WHERE id = ?', (video_id,))
+        video = c.fetchone()
+        
+        if not video:
+            conn.close()
+            return jsonify({'success': False, 'error': 'Video not found'}), 404
+        
+        # Check if user already paid for this video
+        c.execute('''SELECT id FROM voting_fees 
+                    WHERE user_id = ? AND video_id = ? AND status = 'successful' ''', 
+                 (session['user_id'], video_id))
+        existing_payment = c.fetchone()
+        
+        if existing_payment:
+            conn.close()
+            return jsonify({'success': False, 'error': 'You have already paid to vote on this video'}), 400
+        
+        # Initialize mobile money service
+        try:
+            config = get_mobile_money_config()
+        except ImportError:
+            config = {
+                'mtn_momo': {
+                    'api_user': app.config.get('MTN_MOMO_API_USER'),
+                    'api_key': app.config.get('MTN_MOMO_API_KEY'),
+                    'subscription_key': app.config.get('MTN_MOMO_SUBSCRIPTION_KEY'),
+                    'base_url': 'https://sandbox.momodeveloper.mtn.com'
+                },
+                'payment': {
+                    'amount': 2,  # $2 voting fee per video
+                    'currency': 'USD',
+                    'description': f'Voting Fee for Video: {video[1]}'
+                }
+            }
+        
+        mobile_service = MobileMoneyService(config)
+        
+        # Process payment
+        amount = 2  # $2 voting fee per video
+        currency = 'USD'
+        
+        print(f"Initiating {provider} voting fee payment for user {session['user_id']} on video {video_id}")
+        print(f"Amount: {amount} {currency}, Phone: {phone_number}")
+        
+        result = mobile_service.process_mobile_payment(provider, phone_number, amount, currency)
+        
+        if result['success']:
+            # Store payment record in database with video_id
+            c.execute('''INSERT INTO voting_fees 
+                        (user_id, video_id, transaction_id, provider, phone_number, amount, currency, status, created_at)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+                     (session['user_id'], video_id, result['transaction_id'], provider, phone_number,
+                      amount, currency, result['status'], datetime.now()))
+            
+            conn.commit()
+            conn.close()
+            
+            return jsonify({
+                'success': True,
+                'transaction_id': result['transaction_id'],
+                'message': f'Voting fee paid successfully! You can now vote on "{video[1]}".',
+                'status': result['status'],
+                'video_id': video_id,
+                'redirect_url': f'/video/{video_id}'
+            })
+        else:
+            conn.close()
+            return jsonify({'success': False, 'error': result['error']}), 400
+            
+    except Exception as e:
+        print(f"Voting fee payment error: {str(e)}")
+        return jsonify({'success': False, 'error': f'Server error: {str(e)}'}), 500
 
 @app.route('/initiate_mobile_payment', methods=['POST'])
 @login_required
@@ -2081,6 +2418,21 @@ def admin_dashboard():
     
     # Get platform statistics
     stats = {}
+    
+    # Tournament status
+    c.execute('SELECT is_open, last_updated, updated_by FROM tournament_settings WHERE id = 1')
+    tournament_data = c.fetchone()
+    if tournament_data:
+        stats['tournament_open'] = tournament_data[0]
+        stats['tournament_last_updated'] = tournament_data[1]
+        stats['tournament_updated_by'] = tournament_data[2]
+    else:
+        # Create default if doesn't exist
+        c.execute('INSERT INTO tournament_settings (id, is_open) VALUES (1, TRUE)')
+        conn.commit()
+        stats['tournament_open'] = True
+        stats['tournament_last_updated'] = None
+        stats['tournament_updated_by'] = None
     
     # User statistics
     c.execute('SELECT COUNT(*) FROM users')
@@ -2872,6 +3224,92 @@ def admin_settings():
     
     return render_template('admin/settings.html')
 
+@app.route('/admin/toggle-tournament', methods=['POST'])
+@admin_required('super')
+def admin_toggle_tournament():
+    """Toggle tournament open/close status - affects all participants"""
+    conn = None
+    try:
+        conn = sqlite3.connect('tournament.db')
+        c = conn.cursor()
+        
+        # Get current tournament status
+        c.execute('SELECT is_open FROM tournament_settings WHERE id = 1')
+        result = c.fetchone()
+        current_status = result[0] if result else True
+        new_status = not current_status
+        
+        # Initialize participant_count
+        participant_count = 0
+        
+        # Update tournament status
+        c.execute('''UPDATE tournament_settings 
+                    SET is_open = ?, last_updated = CURRENT_TIMESTAMP, updated_by = ?
+                    WHERE id = 1''', (new_status, session['user_id']))
+        
+        if new_status:
+            # Tournament OPENED
+            message = '🟢 Tournament OPENED! Users can now upgrade to participant status.'
+            action_desc = 'Opened tournament - users can now pay $35 to become participants'
+            
+        else:
+            # Tournament CLOSED - downgrade all current participants to regular users
+            c.execute('SELECT COUNT(*) FROM users WHERE is_paid = 1')
+            participant_count = c.fetchone()[0]
+            
+            if participant_count > 0:
+                # Mark them as was_participant (keep payment history)
+                c.execute('UPDATE users SET was_participant = TRUE WHERE is_paid = 1')
+                
+                # Downgrade to regular users
+                c.execute('UPDATE users SET is_paid = FALSE WHERE is_paid = 1')
+                
+                message = f'🔴 Tournament CLOSED! {participant_count} participants downgraded to regular users. They must pay again when tournament reopens.'
+                action_desc = f'Closed tournament - downgraded {participant_count} participants to regular users'
+            else:
+                message = '🔴 Tournament CLOSED! No participants to downgrade.'
+                action_desc = 'Closed tournament - no active participants'
+        
+        # Log admin action
+        c.execute('''INSERT INTO admin_logs (admin_id, action, target_type, target_id, details, timestamp)
+                    VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)''',
+                 (session['user_id'], 'toggle_tournament', 'tournament', 1, action_desc))
+        
+        # Insert into tournament history
+        try:
+            c.execute('''INSERT INTO tournament_history (status, changed_by, changed_at, participants_affected)
+                        VALUES (?, ?, CURRENT_TIMESTAMP, ?)''',
+                     ('open' if new_status else 'closed', session['user_id'], participant_count))
+        except sqlite3.OperationalError:
+            # tournament_history table might not have all columns, that's okay
+            pass
+        
+        conn.commit()
+        
+        # Return JSON for AJAX request
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({
+                'success': True,
+                'message': message,
+                'new_status': 'open' if new_status else 'closed'
+            })
+        
+        flash(message, 'success')
+        return redirect(url_for('admin_dashboard'))
+        
+    except Exception as e:
+        print(f"ERROR in admin_toggle_tournament: {str(e)}")  # Log to console
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({
+                'success': False,
+                'message': f'Error toggling tournament: {str(e)}'
+            }), 500
+        flash(f'Error toggling tournament: {str(e)}', 'danger')
+        return redirect(url_for('admin_dashboard'))
+    finally:
+        if conn:
+            conn.close()
+
 @app.route('/debug/payment_config')
 @login_required
 def debug_payment_config():
@@ -2931,6 +3369,11 @@ def debug_payment_config():
         config_info['mobile_money_config_file_keys'] = 'ImportError - file not available'
     
     return jsonify(config_info)
+
+@app.route('/test-tournament')
+def test_tournament():
+    """Test page to verify tournament panel rendering"""
+    return render_template('tournament_test.html')
 
 if __name__ == '__main__':
     init_db()

@@ -6,8 +6,8 @@
 <div class="container py-5">
     <div class="row">
         <div class="col-12">
-            <h2><i class="fas fa-medal"></i> Leaderboard</h2>
-            <p class="text-muted">See who's leading in the competition</p>
+            <h2><i class="fas fa-medal"></i> <span data-i18n="leaderboard.leaderboard">{{ translations.leaderboard.leaderboard if translations.leaderboard else 'Leaderboard' }}</span></h2>
+            <p class="text-muted" data-i18n="leaderboard.seeWhoLeading">{{ translations.leaderboard.seeWhoLeading if translations.leaderboard else 'See who\'s leading in the competition' }}</p>
         </div>
     </div>
     
@@ -18,13 +18,13 @@
                 <table class="table table-hover mb-0">
                     <thead class="table-dark">
                         <tr>
-                            <th>Rank</th>
-                            <th>Participant</th>
-                            <th>Videos</th>
-                            <th>Average Rating</th>
-                            <th>Total Votes</th>
+                            <th data-i18n="leaderboard.rank">{{ translations.leaderboard.rank if translations.leaderboard else 'Rank' }}</th>
+                            <th data-i18n="leaderboard.participant">{{ translations.leaderboard.participant if translations.leaderboard else 'Participant' }}</th>
+                            <th data-i18n="leaderboard.videos">{{ translations.leaderboard.videos if translations.leaderboard else 'Videos' }}</th>
+                            <th data-i18n="leaderboard.averageRating">{{ translations.leaderboard.averageRating if translations.leaderboard else 'Average Rating' }}</th>
+                            <th data-i18n="leaderboard.totalVotes">{{ translations.leaderboard.totalVotes if translations.leaderboard else 'Total Votes' }}</th>
                             {% if session.is_admin %}
-                            <th>Admin Actions</th>
+                            <th data-i18n="leaderboard.adminActions">{{ translations.leaderboard.adminActions if translations.leaderboard else 'Admin Actions' }}</th>
                             {% endif %}
                         </tr>
                     </thead>
@@ -61,7 +61,7 @@
                                     {{ "%.1f"|format(participant[2]) }}
                                 </div>
                                 {% else %}
-                                <span class="text-muted">No ratings yet</span>
+                                <span class="text-muted" data-i18n="leaderboard.noRatingsYet">{{ translations.leaderboard.noRatingsYet if translations.leaderboard else 'No ratings yet' }}</span>
                                 {% endif %}
                             </td>
                             <td>{{ participant[3] or 0 }}</td>
@@ -69,32 +69,32 @@
                             <td>
                                 <div class="dropdown">
                                     <button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                        <i class="fas fa-cog"></i> Actions
+                                        <i class="fas fa-cog"></i> <span data-i18n="leaderboard.actions">{{ translations.leaderboard.actions if translations.leaderboard else 'Actions' }}</span>
                                     </button>
                                     <ul class="dropdown-menu">
                                         <li><a class="dropdown-item" href="javascript:void(0)" onclick="viewUserProfile('{{ participant[0] }}')">
-                                            <i class="fas fa-user text-primary"></i> View Profile
+                                            <i class="fas fa-user text-primary"></i> <span data-i18n="leaderboard.viewProfile">{{ translations.leaderboard.viewProfile if translations.leaderboard else 'View Profile' }}</span>
                                         </a></li>
                                         <li><a class="dropdown-item" href="javascript:void(0)" onclick="viewUserVideos('{{ participant[0] }}')">
-                                            <i class="fas fa-video text-info"></i> View Videos
+                                            <i class="fas fa-video text-info"></i> <span data-i18n="leaderboard.viewVideos">{{ translations.leaderboard.viewVideos if translations.leaderboard else 'View Videos' }}</span>
                                         </a></li>
                                         <li><a class="dropdown-item" href="javascript:void(0)" onclick="viewUserAnalytics('{{ participant[0] }}')">
-                                            <i class="fas fa-chart-bar text-success"></i> View Analytics
+                                            <i class="fas fa-chart-bar text-success"></i> <span data-i18n="leaderboard.viewAnalytics">{{ translations.leaderboard.viewAnalytics if translations.leaderboard else 'View Analytics' }}</span>
                                         </a></li>
                                         <li><hr class="dropdown-divider"></li>
                                         <li><a class="dropdown-item" href="javascript:void(0)" onclick="sendUserMessage('{{ participant[0] }}')">
-                                            <i class="fas fa-envelope text-secondary"></i> Send Message
+                                            <i class="fas fa-envelope text-secondary"></i> <span data-i18n="leaderboard.sendMessage">{{ translations.leaderboard.sendMessage if translations.leaderboard else 'Send Message' }}</span>
                                         </a></li>
                                         <li><a class="dropdown-item" href="javascript:void(0)" onclick="sendUserWarning('{{ participant[0] }}')">
-                                            <i class="fas fa-exclamation-triangle text-warning"></i> Send Warning
+                                            <i class="fas fa-exclamation-triangle text-warning"></i> <span data-i18n="leaderboard.sendWarning">{{ translations.leaderboard.sendWarning if translations.leaderboard else 'Send Warning' }}</span>
                                         </a></li>
                                         <li><hr class="dropdown-divider"></li>
                                         <li><a class="dropdown-item" href="javascript:void(0)" onclick="blockUserFromLeaderboard('{{ participant[0] }}')">
-                                            <i class="fas fa-ban text-danger"></i> Block User
+                                            <i class="fas fa-ban text-danger"></i> <span data-i18n="leaderboard.blockUser">{{ translations.leaderboard.blockUser if translations.leaderboard else 'Block User' }}</span>
                                         </a></li>
                                         {% if session.admin_level == 'super' %}
                                         <li><a class="dropdown-item text-danger" href="javascript:void(0)" onclick="removeFromLeaderboard('{{ participant[0] }}')">
-                                            <i class="fas fa-user-times"></i> Remove from Leaderboard
+                                            <i class="fas fa-user-times"></i> <span data-i18n="leaderboard.removeFromLeaderboard">{{ translations.leaderboard.removeFromLeaderboard if translations.leaderboard else 'Remove from Leaderboard' }}</span>
                                         </a></li>
                                         {% endif %}
                                     </ul>
@@ -111,8 +111,8 @@
     {% else %}
     <div class="text-center py-5">
         <i class="fas fa-medal fa-5x text-muted mb-4"></i>
-        <h3 class="text-muted">No participants yet</h3>
-        <p class="text-muted">Be the first to join the competition!</p>
+        <h3 class="text-muted" data-i18n="leaderboard.noParticipantsYet">{{ translations.leaderboard.noParticipantsYet if translations.leaderboard else 'No participants yet' }}</h3>
+        <p class="text-muted" data-i18n="leaderboard.beFirstToJoin">{{ translations.leaderboard.beFirstToJoin if translations.leaderboard else 'Be the first to join the competition!' }}</p>
     </div>
     {% endif %}
 </div>

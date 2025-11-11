@@ -8,15 +8,15 @@
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <div>
-                    <h2><i class="fas fa-tachometer-alt"></i> My Dashboard</h2>
-                    <p class="text-muted">Welcome back, {{ session.username }}!</p>
+                    <h2><i class="fas fa-tachometer-alt"></i> <span data-i18n="dashboard.myDashboard">{{ translations.dashboard.myDashboard if translations.dashboard else 'My Dashboard' }}</span></h2>
+                    <p class="text-muted"><span data-i18n="dashboard.welcomeBack">{{ translations.dashboard.welcomeBack if translations.dashboard else 'Welcome back' }}</span>, {{ session.username }}!</p>
                 </div>
                 <div>
                     <a href="{{ url_for('profile') }}" class="btn btn-outline-primary rounded-pill me-2">
-                        <i class="fas fa-user me-1"></i>View Profile
+                        <i class="fas fa-user me-1"></i><span data-i18n="profile.viewProfile">{{ translations.profile.viewProfile if translations.profile else 'View Profile' }}</span>
                     </a>
                     <a href="{{ url_for('edit_profile') }}" class="btn btn-primary rounded-pill">
-                        <i class="fas fa-edit me-1"></i>Edit Profile
+                        <i class="fas fa-edit me-1"></i><span data-i18n="profile.editProfile">{{ translations.profile.editProfile if translations.profile else 'Edit Profile' }}</span>
                     </a>
                 </div>
             </div>
@@ -29,21 +29,21 @@
             <div class="stats-card text-center">
                 <i class="fas fa-video fa-3x text-primary mb-3"></i>
                 <h4>{{ user_videos|length }}</h4>
-                <p class="text-muted">My Videos</p>
+                <p class="text-muted" data-i18n="dashboard.myVideos">{{ translations.dashboard.myVideos if translations.dashboard else 'My Videos' }}</p>
             </div>
         </div>
         <div class="col-md-4">
             <div class="stats-card text-center">
                 <i class="fas fa-star fa-3x text-warning mb-3"></i>
                 <h4>{{ "%.1f"|format((user_videos|sum(attribute=4)/user_videos|length) if user_videos else 0) }}</h4>
-                <p class="text-muted">Average Rating</p>
+                <p class="text-muted" data-i18n="dashboard.averageRating">{{ translations.dashboard.averageRating if translations.dashboard else 'Average Rating' }}</p>
             </div>
         </div>
         <div class="col-md-4">
             <div class="stats-card text-center">
                 <i class="fas fa-thumbs-up fa-3x text-success mb-3"></i>
                 <h4>{{ user_videos|sum(attribute=3) if user_videos else 0 }}</h4>
-                <p class="text-muted">Total Votes</p>
+                <p class="text-muted" data-i18n="dashboard.totalVotes">{{ translations.dashboard.totalVotes if translations.dashboard else 'Total Votes' }}</p>
             </div>
         </div>
     </div>
@@ -52,9 +52,9 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5><i class="fas fa-video"></i> My Videos</h5>
+                    <h5><i class="fas fa-video"></i> <span data-i18n="dashboard.myVideos">{{ translations.dashboard.myVideos if translations.dashboard else 'My Videos' }}</span></h5>
                     <a href="{{ url_for('upload_video') }}" class="btn btn-primary">
-                        <i class="fas fa-plus"></i> Upload New Video
+                        <i class="fas fa-plus"></i> <span data-i18n="dashboard.uploadNewVideo">{{ translations.dashboard.uploadNewVideo if translations.dashboard else 'Upload New Video' }}</span>
                     </a>
                 </div>
                 <div class="card-body">
@@ -63,11 +63,11 @@
                         <table class="table table-hover">
                             <thead>
                                 <tr>
-                                    <th>Title</th>
-                                    <th>Upload Date</th>
-                                    <th>Votes</th>
-                                    <th>Rating</th>
-                                    <th>Actions</th>
+                                    <th data-i18n="dashboard.title">{{ translations.dashboard.title if translations.dashboard else 'Title' }}</th>
+                                    <th data-i18n="dashboard.uploadDate">{{ translations.dashboard.uploadDate if translations.dashboard else 'Upload Date' }}</th>
+                                    <th data-i18n="dashboard.votes">{{ translations.dashboard.votes if translations.dashboard else 'Votes' }}</th>
+                                    <th data-i18n="dashboard.rating">{{ translations.dashboard.rating if translations.dashboard else 'Rating' }}</th>
+                                    <th data-i18n="dashboard.actions">{{ translations.dashboard.actions if translations.dashboard else 'Actions' }}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -91,32 +91,32 @@
                                     <td>
                                         <div class="btn-group" role="group">
                                             <a href="{{ url_for('video_detail', video_id=video[0]) }}" class="btn btn-sm btn-outline-primary">
-                                                <i class="fas fa-eye"></i> View
+                                                <i class="fas fa-eye"></i> <span data-i18n="dashboard.view">{{ translations.dashboard.view if translations.dashboard else 'View' }}</span>
                                             </a>
                                             {% if session.is_admin %}
                                             <div class="dropdown">
                                                 <button class="btn btn-sm btn-outline-warning dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                                    <i class="fas fa-shield-alt"></i> Admin
+                                                    <i class="fas fa-shield-alt"></i> <span data-i18n="dashboard.admin">{{ translations.dashboard.admin if translations.dashboard else 'Admin' }}</span>
                                                 </button>
                                                 <ul class="dropdown-menu">
                                                     <li><a class="dropdown-item" href="javascript:void(0)" onclick="toggleVideoFeature('{{ video[0] }}', '{{ video[1] }}')">
-                                                        <i class="fas fa-star text-warning"></i> Toggle Feature
+                                                        <i class="fas fa-star text-warning"></i> <span data-i18n="dashboard.toggleFeature">{{ translations.dashboard.toggleFeature if translations.dashboard else 'Toggle Feature' }}</span>
                                                     </a></li>
                                                     <li><a class="dropdown-item" href="javascript:void(0)" onclick="toggleVideoPin('{{ video[0] }}', '{{ video[1] }}')">
-                                                        <i class="fas fa-thumbtack text-info"></i> Toggle Pin
+                                                        <i class="fas fa-thumbtack text-info"></i> <span data-i18n="dashboard.togglePin">{{ translations.dashboard.togglePin if translations.dashboard else 'Toggle Pin' }}</span>
                                                     </a></li>
                                                     <li><a class="dropdown-item" href="javascript:void(0)" onclick="toggleVideoVisibility('{{ video[0] }}', '{{ video[1] }}')">
-                                                        <i class="fas fa-eye-slash text-secondary"></i> Toggle Visibility
+                                                        <i class="fas fa-eye-slash text-secondary"></i> <span data-i18n="dashboard.toggleVisibility">{{ translations.dashboard.toggleVisibility if translations.dashboard else 'Toggle Visibility' }}</span>
                                                     </a></li>
                                                     <li><hr class="dropdown-divider"></li>
                                                     <li><a class="dropdown-item text-danger" href="javascript:void(0)" onclick="adminDeleteVideo('{{ video[0] }}', '{{ video[1] }}')">
-                                                        <i class="fas fa-trash"></i> Admin Delete
+                                                        <i class="fas fa-trash"></i> <span data-i18n="dashboard.adminDelete">{{ translations.dashboard.adminDelete if translations.dashboard else 'Admin Delete' }}</span>
                                                     </a></li>
                                                 </ul>
                                             </div>
                                             {% endif %}
                                             <button type="button" class="btn btn-sm btn-outline-danger" data-video-id="{{ video[0] }}" data-video-title="{{ video[1] }}" onclick="confirmDeleteVideo(this)">
-                                                <i class="fas fa-trash"></i> Delete
+                                                <i class="fas fa-trash"></i> <span data-i18n="dashboard.delete">{{ translations.dashboard.delete if translations.dashboard else 'Delete' }}</span>
                                             </button>
                                         </div>
                                     </td>
@@ -128,10 +128,10 @@
                     {% else %}
                     <div class="text-center py-5">
                         <i class="fas fa-video fa-5x text-muted mb-4"></i>
-                        <h4 class="text-muted">No videos uploaded yet</h4>
-                        <p class="text-muted">Upload your first video to start competing!</p>
+                        <h4 class="text-muted" data-i18n="dashboard.noVideosYet">{{ translations.dashboard.noVideosYet if translations.dashboard else 'No videos uploaded yet' }}</h4>
+                        <p class="text-muted" data-i18n="dashboard.uploadFirstVideo">{{ translations.dashboard.uploadFirstVideo if translations.dashboard else 'Upload your first video to start competing!' }}</p>
                         <a href="{{ url_for('upload_video') }}" class="btn btn-primary">
-                            <i class="fas fa-plus"></i> Upload Your First Video
+                            <i class="fas fa-plus"></i> <span data-i18n="dashboard.uploadYourFirstVideo">{{ translations.dashboard.uploadYourFirstVideo if translations.dashboard else 'Upload Your First Video' }}</span>
                         </a>
                     </div>
                     {% endif %}

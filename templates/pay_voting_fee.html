@@ -1,0 +1,880 @@
+{% extends "base.html" %}
+
+{% block title %}Pay Voting Fee - SectionduWeb{% endblock %}
+
+{% block content %}
+<!-- Force cache refresh -->
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<script>
+// Force reload cached page
+if (performance.navigation.type === performance.navigation.TYPE_BACK_FORWARD) {
+    location.reload(true);
+}
+</script>
+<style>
+/* Modern Payment Page Styling */
+.payment-container {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 0;
+}
+
+.payment-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    overflow: hidden;
+    max-width: 500px;
+    width: 100%;
+    animation: slideInUp 0.8s ease-out;
+}
+
+.payment-header {
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+    color: white;
+    padding: 2rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.payment-header::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+    animation: shimmer 3s infinite;
+}
+
+.voting-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    animation: bounce 2s infinite;
+}
+
+.payment-body {
+    padding: 2rem;
+}
+
+.video-info {
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    border-radius: 15px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    border-left: 4px solid #4f46e5;
+    animation: fadeInLeft 0.8s ease-out 0.2s both;
+}
+
+.price-display {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    border-radius: 15px;
+    padding: 1.5rem;
+    text-align: center;
+    margin-bottom: 2rem;
+    animation: fadeInRight 0.8s ease-out 0.4s both;
+}
+
+.price-amount {
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+.benefits-list {
+    list-style: none;
+    padding: 0;
+    margin-bottom: 2rem;
+}
+
+.benefits-list li {
+    padding: 0.75rem 0;
+    opacity: 0;
+    animation: fadeInUp 0.6s ease-out forwards;
+    display: flex;
+    align-items: center;
+}
+
+.benefits-list li:nth-child(1) { animation-delay: 0.6s; }
+.benefits-list li:nth-child(2) { animation-delay: 0.8s; }
+.benefits-list li:nth-child(3) { animation-delay: 1.0s; }
+
+.benefits-list li i {
+    color: #10b981;
+    margin-right: 1rem;
+    font-size: 1.2rem;
+    animation: pulse 2s infinite;
+}
+
+.payment-method-card {
+    border: 2px solid transparent;
+    border-radius: 15px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    opacity: 0;
+    animation: fadeInUp 0.6s ease-out forwards;
+}
+
+.payment-method-card:nth-child(1) { animation-delay: 1.2s; }
+.payment-method-card:nth-child(2) { animation-delay: 1.4s; }
+.payment-method-card:nth-child(3) { animation-delay: 1.6s; }
+
+.payment-method-card:hover {
+    border-color: #4f46e5;
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(79, 70, 229, 0.15);
+}
+
+.payment-method-card.active {
+    border-color: #4f46e5;
+    background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+}
+
+.provider-logo-container {
+    position: relative;
+}
+
+.provider-logo-img {
+    width: 60px;
+    height: 30px;
+    object-fit: contain;
+    border-radius: 5px;
+    animation: slideInLeft 0.6s ease-out;
+}
+
+.provider-logo-fallback {
+    animation: slideInLeft 0.6s ease-out;
+}
+
+.pay-button {
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+    border: none;
+    border-radius: 50px;
+    padding: 1rem 2rem;
+    color: white;
+    font-weight: 600;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+}
+
+.pay-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(79, 70, 229, 0.3);
+}
+
+.pay-button:active {
+    transform: translateY(0);
+}
+
+.pay-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s;
+}
+
+.pay-button:hover::before {
+    left: 100%;
+}
+
+/* Animations */
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes fadeInRight {
+    from {
+        opacity: 0;
+        transform: translateX(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes bounce {
+    0%, 20%, 50%, 80%, 100% {
+        transform: translateY(0);
+    }
+    40% {
+        transform: translateY(-10px);
+    }
+    60% {
+        transform: translateY(-5px);
+    }
+}
+
+@keyframes shimmer {
+    0% {
+        transform: translateX(-100%) translateY(-100%) rotate(45deg);
+    }
+    100% {
+        transform: translateX(100%) translateY(100%) rotate(45deg);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+}
+
+/* Modal Styling */
+.payment-modal .modal-content {
+    border-radius: 20px;
+    border: none;
+    overflow: hidden;
+}
+
+.payment-modal .modal-header {
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+    color: white;
+    border-bottom: none;
+}
+
+.payment-modal .modal-body {
+    padding: 2rem;
+}
+
+.phone-input {
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 1rem;
+    font-size: 1.1rem;
+    transition: all 0.3s ease;
+    width: 100%;
+}
+
+.phone-input:focus {
+    outline: none;
+    border-color: #4f46e5;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .payment-container {
+        padding: 1rem;
+    }
+    
+    .payment-body {
+        padding: 1.5rem;
+    }
+    
+    .price-amount {
+        font-size: 2rem;
+    }
+}
+</style>
+
+<div class="payment-container">
+    <div class="payment-card">
+        <div class="payment-header">
+            <div class="voting-icon">
+                <i class="fas fa-vote-yea"></i>
+            </div>
+            <h2 class="mb-0">Cast Your Vote</h2>
+            <p class="mb-0 opacity-75">Support Great Content</p>
+        </div>
+        
+        <div class="payment-body">
+            {% if video %}
+            <div class="video-info">
+                <h5 class="text-primary mb-2">
+                    <i class="fas fa-video me-2"></i>Video Selected
+                </h5>
+                <h6 class="fw-bold text-dark">{{ video[1] }}</h6>
+                <p class="text-muted mb-0">Your vote helps determine the tournament rankings</p>
+            </div>
+            {% endif %}
+            
+            <div class="price-display">
+                <div class="price-amount">$2</div>
+                <div>Voting Fee</div>
+                <small class="opacity-75">One-time payment per video</small>
+            </div>
+            
+            <ul class="benefits-list">
+                {% if video %}
+                <li>
+                    <i class="fas fa-check-circle"></i>
+                    <span>Vote on "{{ video[1] }}"</span>
+                </li>
+                <li>
+                    <i class="fas fa-trophy"></i>
+                    <span>Help determine video ranking</span>
+                </li>
+                <li>
+                    <i class="fas fa-heart"></i>
+                    <span>Support your favorite content</span>
+                </li>
+                {% else %}
+                <li>
+                    <i class="fas fa-check-circle"></i>
+                    <span>Vote on tournament videos</span>
+                </li>
+                <li>
+                    <i class="fas fa-trophy"></i>
+                    <span>Help determine rankings</span>
+                </li>
+                <li>
+                    <i class="fas fa-star"></i>
+                    <span>Pay per video basis</span>
+                </li>
+                {% endif %}
+            </ul>
+
+            <div class="payment-methods">
+                <h5 class="text-center mb-4">
+                    <i class="fas fa-mobile-alt me-2"></i>Choose Payment Method
+                </h5>
+                
+                <!-- MTN Mobile Money -->
+                <div class="payment-method-card" data-provider="mtn_momo" onclick="selectPaymentMethod(this, 'mtn_momo')">
+                    <div class="d-flex align-items-center">
+                        <div class="me-3 provider-logo-container">
+                            <img src="{{ url_for('static', filename='images/logos/mtn-logo.svg') }}" alt="MTN MoMo" class="provider-logo-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <div class="provider-logo-fallback d-flex align-items-center justify-content-center" style="background: #FFD700; color: #000; font-weight: bold; font-size: 12px; display: none; width: 60px; height: 30px; border-radius: 5px;">
+                                MTN
+                            </div>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1 fw-bold">MTN Mobile Money</h6>
+                            <small class="text-muted">Fast & Secure Payment</small>
+                        </div>
+                        <div>
+                            <i class="fas fa-chevron-right text-muted"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Orange Money -->
+                <div class="payment-method-card" data-provider="orange_money" onclick="selectPaymentMethod(this, 'orange_money')">
+                    <div class="d-flex align-items-center">
+                        <div class="me-3 provider-logo-container">
+                            <img src="{{ url_for('static', filename='images/logos/orange-logo.svg') }}" alt="Orange Money" class="provider-logo-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <div class="provider-logo-fallback d-flex align-items-center justify-content-center" style="background: #FF6600; color: white; font-weight: bold; font-size: 10px; display: none; width: 60px; height: 30px; border-radius: 5px;">
+                                Orange
+                            </div>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1 fw-bold">Orange Money</h6>
+                            <small class="text-muted">Quick Mobile Payment</small>
+                        </div>
+                        <div>
+                            <i class="fas fa-chevron-right text-muted"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Airtel Money -->
+                <div class="payment-method-card" data-provider="airtel_money" onclick="selectPaymentMethod(this, 'airtel_money')">
+                    <div class="d-flex align-items-center">
+                        <div class="me-3 provider-logo-container">
+                            <img src="{{ url_for('static', filename='images/logos/airtel-logo.svg') }}" alt="Airtel Money" class="provider-logo-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <div class="provider-logo-fallback d-flex align-items-center justify-content-center" style="background: #DC143C; color: white; font-weight: bold; font-size: 11px; display: none; width: 60px; height: 30px; border-radius: 5px;">
+                                Airtel
+                            </div>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1 fw-bold">Airtel Money</h6>
+                            <small class="text-muted">Reliable & Easy Payment</small>
+                        </div>
+                        <div>
+                            <i class="fas fa-chevron-right text-muted"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <button id="payButton" class="pay-button mt-4" onclick="proceedToPayment()" disabled>
+                    <i class="fas fa-lock me-2"></i>
+                    Select Payment Method
+                </button>
+                
+                <div class="security-badges text-center mt-4">
+                    <small class="text-muted d-block mb-2">
+                        <i class="fas fa-shield-alt me-1"></i>
+                        Secure Payment Processing
+                    </small>
+                    <div class="d-flex justify-content-center align-items-center gap-3">
+                        <span class="badge bg-success">
+                            <i class="fas fa-lock me-1"></i>SSL Encrypted
+                        </span>
+                        <span class="badge bg-primary">
+                            <i class="fas fa-mobile-alt me-1"></i>Mobile Money
+                        </span>
+                        <span class="badge bg-info">
+                            <i class="fas fa-clock me-1"></i>Instant
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer text-center">
+                    <small class="text-muted">
+                        <i class="fas fa-shield-alt"></i> Secure payment processing
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Enhanced Phone Number Modal -->
+<div class="modal fade payment-modal" id="phoneModal" tabindex="-1" aria-labelledby="phoneModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="phoneModalLabel">
+                    <i class="fas fa-mobile-alt me-2"></i>Enter Phone Number
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center mb-4">
+                    <div id="providerIcon" class="mb-3">
+                        <i class="fas fa-mobile-alt fa-3x text-primary"></i>
+                    </div>
+                    <p class="text-muted">Enter your mobile money number to complete the payment</p>
+                </div>
+                
+                <form id="paymentForm">
+                    <div class="mb-4">
+                        <label for="phoneNumber" class="form-label fw-bold">Phone Number</label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fas fa-phone"></i>
+                            </span>
+                            <input type="tel" class="phone-input" id="phoneNumber" name="phone_number" 
+                                   placeholder="e.g. +237 6XX XXX XXX" required>
+                        </div>
+                        <div class="form-text mt-2">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Enter the phone number linked to your mobile money account
+                        </div>
+                    </div>
+                    
+                    <div class="payment-summary p-3 rounded" style="background: #f8fafc;">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="fw-bold">Amount to pay:</span>
+                            <span class="h5 text-primary mb-0">$2.00</span>
+                        </div>
+                    </div>
+                    
+                    <input type="hidden" id="selectedProvider" name="provider">
+                </form>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-outline-secondary me-2" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>Cancel
+                </button>
+                <button type="button" class="btn btn-primary" onclick="processPayment()" id="processPaymentBtn">
+                    <i class="fas fa-credit-card me-2"></i>Pay $2 Now
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let selectedProvider = '';
+let selectedCard = null;
+
+// Configuration from server - Cache buster: {{ range(100000, 999999)|random }}
+const pageConfig = {
+    {% if video %}
+    videoId: {{ video[0] }},
+    videoTitle: {{ video[1]|tojson }}
+    {% else %}
+    videoId: null,
+    videoTitle: null
+    {% endif %}
+};
+
+// Force cache refresh
+console.log('Payment page loaded with cache buster: {{ range(100000, 999999)|random }}');
+
+// Enhanced payment method selection with animations
+function selectPaymentMethod(card, provider) {
+    // Remove active class from all cards
+    document.querySelectorAll('.payment-method-card').forEach(c => {
+        c.classList.remove('active');
+        c.style.transform = 'translateY(0)';
+    });
+    
+    // Add active class to selected card
+    card.classList.add('active');
+    selectedCard = card;
+    selectedProvider = provider;
+    
+    // Animate selected card
+    card.style.transform = 'translateY(-2px)';
+    
+    // Update pay button
+    const payButton = document.getElementById('payButton');
+    payButton.disabled = false;
+    payButton.innerHTML = '<i class="fas fa-mobile-alt me-2"></i>Proceed with Payment';
+    payButton.classList.add('btn-enabled');
+    
+    // Add ripple effect
+    createRippleEffect(card);
+}
+
+// Create ripple animation effect
+function createRippleEffect(element) {
+    const ripple = document.createElement('div');
+    ripple.style.cssText = `
+        position: absolute;
+        border-radius: 50%;
+        background: rgba(79, 70, 229, 0.3);
+        transform: scale(0);
+        animation: ripple 0.6s linear;
+        pointer-events: none;
+        left: 50%;
+        top: 50%;
+        width: 20px;
+        height: 20px;
+        margin-left: -10px;
+        margin-top: -10px;
+    `;
+    
+    element.style.position = 'relative';
+    element.appendChild(ripple);
+    
+    setTimeout(() => {
+        ripple.remove();
+    }, 600);
+}
+
+// Enhanced proceed to payment function
+function proceedToPayment() {
+    if (!selectedProvider) {
+        alert('Please select a payment method first');
+        return;
+    }
+    
+    // Provider names and icons
+    const providerData = {
+        'mtn_momo': {
+            name: 'MTN Mobile Money',
+            icon: 'fas fa-mobile-alt',
+            color: '#FFD700'
+        },
+        'orange_money': {
+            name: 'Orange Money',
+            icon: 'fas fa-mobile-alt',
+            color: '#FF6600'
+        },
+        'airtel_money': {
+            name: 'Airtel Money',
+            icon: 'fas fa-mobile-alt',
+            color: '#DC143C'
+        }
+    };
+    
+    const provider = providerData[selectedProvider];
+    
+    // Update modal content
+    document.getElementById('phoneModalLabel').innerHTML = 
+        `<i class="${provider.icon} me-2"></i>${provider.name}`;
+    
+    document.getElementById('providerIcon').innerHTML = 
+        `<i class="${provider.icon} fa-3x" style="color: ${provider.color}"></i>`;
+    
+    document.getElementById('selectedProvider').value = selectedProvider;
+    
+    // Show modal with animation
+    const modal = new bootstrap.Modal(document.getElementById('phoneModal'));
+    modal.show();
+    
+    // Focus on phone input after modal animation
+    setTimeout(() => {
+        document.getElementById('phoneNumber').focus();
+    }, 500);
+}
+
+// Enhanced process payment with better UI feedback
+function processPayment() {
+    const phoneNumber = document.getElementById('phoneNumber').value;
+    const payButton = document.getElementById('processPaymentBtn');
+    
+    // Validate phone number
+    if (!phoneNumber || phoneNumber.trim().length < 8) {
+        showErrorMessage('Please enter a valid phone number');
+        return;
+    }
+    
+    // Start loading animation
+    startPaymentProcessing(payButton);
+    
+    // Prepare payment data
+    const paymentData = {
+        provider: selectedProvider,
+        phone_number: phoneNumber.trim()
+    };
+    
+    // Add video ID if available
+    if (pageConfig.videoId) {
+        paymentData.video_id = pageConfig.videoId;
+    }
+    
+    // Make payment request with enhanced error handling
+    fetch('/initiate_voting_fee_payment', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(paymentData)
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            showSuccessAnimation();
+            
+            setTimeout(() => {
+                // Hide modal
+                bootstrap.Modal.getInstance(document.getElementById('phoneModal')).hide();
+                
+                // Show success notification
+                showSuccessNotification(data.message || 'Voting fee paid successfully!');
+                
+                // Redirect after delay
+                setTimeout(() => {
+                    if (pageConfig.videoId) {
+                        window.location.href = '/video/' + pageConfig.videoId;
+                    } else {
+                        window.location.href = '/videos';
+                    }
+                }, 2000);
+            }, 1500);
+            
+        } else {
+            stopPaymentProcessing(payButton);
+            showErrorMessage(data.error || 'Payment failed. Please try again.');
+        }
+    })
+    .catch(error => {
+        console.error('Payment error:', error);
+        stopPaymentProcessing(payButton);
+        showErrorMessage('Network error. Please check your connection and try again.');
+    });
+}
+
+// Enhanced UI feedback functions
+function startPaymentProcessing(button) {
+    button.disabled = true;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing Payment...';
+    button.style.background = 'linear-gradient(135deg, #6b7280 0%, #9ca3af 100%)';
+    
+    // Add pulse animation to modal
+    document.querySelector('.modal-content').style.animation = 'pulse 1.5s infinite';
+}
+
+function stopPaymentProcessing(button) {
+    button.disabled = false;
+    button.innerHTML = '<i class="fas fa-credit-card me-2"></i>Pay $2 Now';
+    button.style.background = 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)';
+    
+    // Remove pulse animation
+    document.querySelector('.modal-content').style.animation = '';
+}
+
+function showSuccessAnimation() {
+    const modal = document.querySelector('.modal-content');
+    modal.innerHTML = `
+        <div class="text-center p-5">
+            <div class="success-checkmark mb-4">
+                <i class="fas fa-check-circle fa-5x text-success"></i>
+            </div>
+            <h3 class="text-success mb-3">Payment Successful!</h3>
+            <p class="text-muted">Your voting fee has been processed successfully.</p>
+            <div class="spinner-border text-primary mt-3" role="status">
+                <span class="visually-hidden">Redirecting...</span>
+            </div>
+        </div>
+    `;
+    
+    // Add success animation
+    modal.style.animation = 'bounceIn 0.8s ease-out';
+}
+
+function showSuccessNotification(message) {
+    // Create toast notification
+    const toast = document.createElement('div');
+    toast.className = 'toast-notification success';
+    toast.innerHTML = `
+        <div class="d-flex align-items-center">
+            <i class="fas fa-check-circle me-3 text-success fa-2x"></i>
+            <div>
+                <strong>Success!</strong><br>
+                <small>${message}</small>
+            </div>
+        </div>
+    `;
+    
+    // Add styles
+    toast.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: white;
+        padding: 1.5rem;
+        border-radius: 10px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        border-left: 4px solid #10b981;
+        z-index: 9999;
+        animation: slideInRight 0.5s ease-out;
+        max-width: 400px;
+    `;
+    
+    document.body.appendChild(toast);
+    
+    // Auto remove after 5 seconds
+    setTimeout(() => {
+        toast.style.animation = 'slideOutRight 0.5s ease-in';
+        setTimeout(() => toast.remove(), 500);
+    }, 5000);
+}
+
+function showErrorMessage(message) {
+    // Enhanced error display
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'alert alert-danger alert-dismissible fade show mt-3';
+    errorDiv.innerHTML = `
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        <strong>Error:</strong> ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    const modalBody = document.querySelector('.modal-body');
+    const existingAlert = modalBody.querySelector('.alert');
+    if (existingAlert) {
+        existingAlert.remove();
+    }
+    
+    modalBody.appendChild(errorDiv);
+    
+    // Auto dismiss after 8 seconds
+    setTimeout(() => {
+        if (errorDiv.parentNode) {
+            errorDiv.remove();
+        }
+    }, 8000);
+}
+
+// Add CSS animations for new elements
+const additionalStyles = document.createElement('style');
+additionalStyles.textContent = `
+    @keyframes bounceIn {
+        0% { transform: scale(0.3); opacity: 0; }
+        50% { transform: scale(1.05); }
+        70% { transform: scale(0.9); }
+        100% { transform: scale(1); opacity: 1; }
+    }
+    
+    @keyframes slideInRight {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+    
+    @keyframes slideOutRight {
+        from { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(100%); opacity: 0; }
+    }
+    
+    .success-checkmark i {
+        animation: bounceIn 0.8s ease-out 0.5s both;
+    }
+    
+    .btn-enabled {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+    }
+    
+    .payment-method-card:hover {
+        cursor: pointer;
+    }
+`;
+document.head.appendChild(additionalStyles);
+
+// Initialize page animations
+document.addEventListener('DOMContentLoaded', function() {
+    // Add entrance animations to elements
+    const elements = document.querySelectorAll('.payment-method-card, .benefits-list li');
+    elements.forEach((el, index) => {
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(20px)';
+        setTimeout(() => {
+            el.style.transition = 'all 0.6s ease-out';
+            el.style.opacity = '1';
+            el.style.transform = 'translateY(0)';
+        }, index * 100 + 300);
+    });
+});
+</script>
+{% endblock %}

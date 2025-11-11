@@ -5,8 +5,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}SectionduWeb{% endblock %}</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Cache busting meta tags -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/css/bootstrap.min.css?v={{ range(1000, 9999)|random }}" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css?v={{ range(1000, 9999)|random }}" rel="stylesheet">
     <style>
         /* Ensure proper carousel structure */
         #topVideosCarousel {
@@ -914,6 +920,27 @@
         .stats-card:hover i {
             transform: scale(1.1) rotate(5deg);
         }
+        
+        /* Phone voting hero hover effects */
+        .phone-number-hero a:hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 8px 25px rgba(0, 102, 204, 0.5) !important;
+        }
+        
+        .phone-icon-wrapper {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.05);
+                opacity: 0.9;
+            }
+        }
     </style>
 </head>
 <body>
@@ -930,32 +957,48 @@
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
                         <a class="nav-link px-3 rounded-pill me-1" href="{{ url_for('index') }}">
-                            <i class="fas fa-home me-1"></i>Home
+                            <i class="fas fa-home me-1"></i><span data-i18n="nav.home">{{ translations.nav.home if translations.nav else 'Home' }}</span>
                         </a>
                     </li>
                     {% if session.user_id %}
                     <li class="nav-item">
                         <a class="nav-link px-3 rounded-pill me-1" href="{{ url_for('dashboard') }}">
-                            <i class="fas fa-tachometer-alt me-1"></i>Dashboard
+                            <i class="fas fa-tachometer-alt me-1"></i><span data-i18n="nav.dashboard">{{ translations.nav.dashboard if translations.nav else 'Dashboard' }}</span>
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link px-3 rounded-pill me-1" href="{{ url_for('videos') }}">
-                            <i class="fas fa-video me-1"></i>Videos
+                            <i class="fas fa-video me-1"></i><span data-i18n="nav.videos">{{ translations.nav.videos if translations.nav else 'Videos' }}</span>
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link px-3 rounded-pill me-1" href="{{ url_for('leaderboard') }}">
-                            <i class="fas fa-medal me-1"></i>Leaderboard
+                            <i class="fas fa-medal me-1"></i><span data-i18n="nav.leaderboard">{{ translations.nav.leaderboard if translations.nav else 'Leaderboard' }}</span>
                         </a>
                     </li>
                     {% endif %}
                 </ul>
                 <ul class="navbar-nav align-items-center">
+                    <!-- Language Switcher -->
+                    <li class="nav-item dropdown me-3">
+                        <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="languageDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="background: rgba(255,255,255,0.1); padding: 0.5rem 1rem; border-radius: 20px;">
+                            <i class="fas fa-globe me-2"></i>
+                            <span>{% if current_language == 'fr' %}Français{% else %}English{% endif %}</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-3" aria-labelledby="languageDropdown">
+                            <li><a class="dropdown-item py-2 {% if current_language == 'en' %}active{% endif %}" href="{{ url_for('set_language', language='en') }}">
+                                <i class="fas fa-flag-usa me-2"></i>English
+                            </a></li>
+                            <li><a class="dropdown-item py-2 {% if current_language == 'fr' %}active{% endif %}" href="{{ url_for('set_language', language='fr') }}">
+                                <i class="fas fa-flag me-2" style="color: #002395;"></i>Français
+                            </a></li>
+                        </ul>
+                    </li>
+                    
                     {% if session.user_id %}
                     <li class="nav-item me-3">
                         <a class="btn btn-success rounded-pill px-4" href="{{ url_for('upload_video') }}">
-                            <i class="fas fa-cloud-upload-alt me-2"></i>Upload Video
+                            <i class="fas fa-cloud-upload-alt me-2"></i><span data-i18n="nav.uploadVideo">{{ translations.nav.uploadVideo if translations.nav else 'Upload Video' }}</span>
                         </a>
                     </li>
                     <li class="nav-item dropdown">
@@ -972,21 +1015,21 @@
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-3">
                             <li><a class="dropdown-item py-2" href="{{ url_for('profile') }}">
-                                <i class="fas fa-user text-primary me-2"></i>My Profile
+                                <i class="fas fa-user text-primary me-2"></i><span data-i18n="nav.profile">{{ translations.nav.profile if translations.nav else 'My Profile' }}</span>
                             </a></li>
                             <li><a class="dropdown-item py-2" href="{{ url_for('edit_profile') }}">
-                                <i class="fas fa-edit text-success me-2"></i>Edit Profile
+                                <i class="fas fa-edit text-success me-2"></i><span data-i18n="nav.editProfile">{{ translations.nav.editProfile if translations.nav else 'Edit Profile' }}</span>
                             </a></li>
                             <li><a class="dropdown-item py-2" href="{{ url_for('dashboard') }}">
-                                <i class="fas fa-tachometer-alt text-warning me-2"></i>Dashboard
+                                <i class="fas fa-tachometer-alt text-warning me-2"></i><span data-i18n="nav.dashboard">{{ translations.nav.dashboard if translations.nav else 'Dashboard' }}</span>
                             </a></li>
                             <li><a class="dropdown-item py-2" href="{{ url_for('videos') }}">
-                                <i class="fas fa-video text-info me-2"></i>My Videos
+                                <i class="fas fa-video text-info me-2"></i><span data-i18n="nav.videos">{{ translations.nav.videos if translations.nav else 'My Videos' }}</span>
                             </a></li>
                             {% if session.is_admin %}
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item py-2" href="{{ url_for('admin_dashboard') }}">
-                                <i class="fas fa-crown text-warning me-2"></i>Admin Panel
+                                <i class="fas fa-crown text-warning me-2"></i><span data-i18n="nav.adminPanel">{{ translations.nav.adminPanel if translations.nav else 'Admin Panel' }}</span>
                             </a></li>
                             {% endif %}
                             
@@ -1006,19 +1049,19 @@
                             
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item py-2 text-danger" href="{{ url_for('logout') }}">
-                                <i class="fas fa-sign-out-alt me-2"></i>Logout
+                                <i class="fas fa-sign-out-alt me-2"></i><span data-i18n="nav.logout">{{ translations.nav.logout if translations.nav else 'Logout' }}</span>
                             </a></li>
                         </ul>
                     </li>
                     {% else %}
                     <li class="nav-item me-2">
                         <a class="btn btn-outline-light rounded-pill px-4" href="{{ url_for('login') }}">
-                            <i class="fas fa-sign-in-alt me-2"></i>Login
+                            <i class="fas fa-sign-in-alt me-2"></i><span data-i18n="nav.login">{{ translations.nav.login if translations.nav else 'Login' }}</span>
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="btn btn-warning rounded-pill px-4" href="{{ url_for('register') }}">
-                            <i class="fas fa-user-plus me-2"></i>Join Now
+                            <i class="fas fa-user-plus me-2"></i><span data-i18n="nav.register">{{ translations.nav.register if translations.nav else 'Join Now' }}</span>
                         </a>
                     </li>
                     {% endif %}
@@ -1097,6 +1140,52 @@
     </footer>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Make translations available globally for JavaScript
+        {% if translations %}
+        window.translations = {{ translations | tojson | safe }};
+        {% else %}
+        window.translations = {};
+        {% endif %}
+        
+        {% if current_language %}
+        window.currentLanguage = "{{ current_language }}";
+        {% else %}
+        window.currentLanguage = "en";
+        {% endif %}
+        
+        // Translation helper function
+        function t(key) {
+            const keys = key.split('.');
+            let value = window.translations;
+            
+            for (const k of keys) {
+                if (value && typeof value === 'object' && k in value) {
+                    value = value[k];
+                } else {
+                    return key; // Return key if translation not found
+                }
+            }
+            
+            return value || key;
+        }
+        
+        // Update all elements with data-i18n attribute
+        function updateTranslations() {
+            document.querySelectorAll('[data-i18n]').forEach(element => {
+                const key = element.getAttribute('data-i18n');
+                const translation = t(key);
+                if (translation !== key) {
+                    element.textContent = translation;
+                }
+            });
+        }
+        
+        // Run on page load
+        document.addEventListener('DOMContentLoaded', updateTranslations);
+    </script>
+    
     {% block scripts %}{% endblock %}
 </body>
 </html>

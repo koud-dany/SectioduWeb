@@ -50,5 +50,4 @@ def test_app():
     print("✅ All tests passed! Starting Flask app...")
 
 if __name__ == "__main__":
-    test_app()
     app.run(debug=True, host='127.0.0.1', port=5000)

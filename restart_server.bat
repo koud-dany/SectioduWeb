@@ -1,0 +1,6 @@
+@echo off
+echo 🛑 Stopping any existing Flask server...
+taskkill /F /IM python.exe /T > nul 2>&1
+echo.
+echo 🚀 Starting the Flask application...
+python run_app.py

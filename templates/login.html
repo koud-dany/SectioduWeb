@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Login - SectionduWeb{% endblock %}
+{% block title %}<span data-i18n="auth.login">{{ translations.auth.login if translations.auth else 'Login' }}</span> - SectionduWeb{% endblock %}
 
 {% block content %}
 <div class="container py-5">
@@ -8,25 +8,25 @@
         <div class="col-md-6 col-lg-4">
             <div class="card">
                 <div class="card-header bg-primary text-white text-center">
-                    <h4><i class="fas fa-sign-in-alt"></i> Login</h4>
+                    <h4><i class="fas fa-sign-in-alt"></i> <span data-i18n="auth.login">{{ translations.auth.login if translations.auth else 'Login' }}</span></h4>
                 </div>
                 <div class="card-body">
                     <form method="POST">
                         <div class="mb-3">
-                            <label for="username" class="form-label">Username</label>
-                            <input type="text" class="form-control" id="username" name="username" required>
+                            <label for="username" class="form-label" data-i18n="auth.username">{{ translations.auth.username if translations.auth else 'Username' }}</label>
+                            <input type="text" class="form-control" id="username" name="username" placeholder="{{ translations.auth.enterUsername if translations.auth else 'Enter your username' }}" required>
                         </div>
                         <div class="mb-3">
-                            <label for="password" class="form-label">Password</label>
-                            <input type="password" class="form-control" id="password" name="password" required>
+                            <label for="password" class="form-label" data-i18n="auth.password">{{ translations.auth.password if translations.auth else 'Password' }}</label>
+                            <input type="password" class="form-control" id="password" name="password" placeholder="{{ translations.auth.enterPassword if translations.auth else 'Enter your password' }}" required>
                         </div>
                         <button type="submit" class="btn btn-primary w-100">
-                            <i class="fas fa-sign-in-alt"></i> Login
+                            <i class="fas fa-sign-in-alt"></i> <span data-i18n="auth.login">{{ translations.auth.login if translations.auth else 'Login' }}</span>
                         </button>
                     </form>
                 </div>
                 <div class="card-footer text-center">
-                    <p class="mb-0">Don't have an account? <a href="{{ url_for('register') }}">Register here</a></p>
+                    <p class="mb-0"><span data-i18n="auth.dontHaveAccount">{{ translations.auth.dontHaveAccount if translations.auth else "Don't have an account?" }}</span> <a href="{{ url_for('register') }}" data-i18n="auth.registerHere">{{ translations.auth.registerHere if translations.auth else 'Register here' }}</a></p>
                 </div>
             </div>
         </div>
