@@ -1947,6 +1947,19 @@ def account_settings():
 @login_required
 def upgrade():
     """Upgrade/subscription page with mobile money payment"""
+    # Check if tournament is open
+    conn = sqlite3.connect('tournament.db')
+    c = conn.cursor()
+    c.execute('SELECT is_open FROM tournament_settings WHERE id = 1')
+    tournament_data = c.fetchone()
+    conn.close()
+    
+    tournament_open = tournament_data[0] if tournament_data else True
+    
+    if not tournament_open:
+        flash('⚠️ Tournament is currently CLOSED. You cannot upgrade to participant status at this time. Please check back later when the competition reopens.', 'warning')
+        return redirect(url_for('dashboard'))
+    
     payment_method = app.config.get('PAYMENT_METHOD', 'mobile_money')
     
     return render_template('upgrade_mobile.html')
@@ -2084,6 +2097,21 @@ def initiate_mobile_payment():
     try:
         from mobile_money_service import MobileMoneyService
         from mobile_money_config import get_mobile_money_config
+        
+        # Check if tournament is open before processing payment
+        conn_check = sqlite3.connect('tournament.db')
+        c_check = conn_check.cursor()
+        c_check.execute('SELECT is_open FROM tournament_settings WHERE id = 1')
+        tournament_data = c_check.fetchone()
+        conn_check.close()
+        
+        tournament_open = tournament_data[0] if tournament_data else True
+        
+        if not tournament_open:
+            return jsonify({
+                'success': False,
+                'error': 'Tournament is currently CLOSED. You cannot upgrade to participant status at this time. Please try again when the competition reopens.'
+            }), 403
         
         # Get form data
         data = request.get_json()
