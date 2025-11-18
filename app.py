@@ -12,6 +12,18 @@ from config import Config
 import urllib.parse
 import requests
 
+# Import S3 storage service
+try:
+    from s3_storage import s3_storage
+    S3_AVAILABLE = s3_storage.is_available()
+    if S3_AVAILABLE:
+        print("✅ Amazon S3 storage initialized successfully")
+    else:
+        print("⚠️  Amazon S3 credentials not configured")
+except ImportError as e:
+    S3_AVAILABLE = False
+    print(f"⚠️  Amazon S3 SDK not available: {e}")
+
 # Import Cloudinary with error handling
 try:
     import cloudinary
@@ -605,15 +617,21 @@ def paid_required(f):
 
 @app.context_processor
 def inject_user_avatar():
-    """Inject current user's avatar into all templates"""
+    """Inject current user's avatar and image URL helper into all templates"""
+    avatar_filename = None
+    
     if 'user_id' in session:
         conn = sqlite3.connect('tournament.db')
         c = conn.cursor()
         c.execute('SELECT avatar_filename FROM users WHERE id = ?', (session['user_id'],))
         result = c.fetchone()
         conn.close()
-        return {'current_user_avatar': result[0] if result and result[0] else None}
-    return {'current_user_avatar': None}
+        avatar_filename = result[0] if result and result[0] else None
+    
+    return {
+        'current_user_avatar': avatar_filename,
+        'get_image_url': get_image_url
+    }
 
 
 
@@ -665,7 +683,142 @@ def send_admin_email(recipient_email, subject, message):
     print(f"EMAIL: To {recipient_email}, Subject: {subject}, Message: {message}")
     return True
 
-def allowed_file(filename):
+def allowed_file(filename, file_type='all'):
+    """
+    Check if a file has an allowed extension
+    
+    Args:
+        filename: Name of the file to check
+        file_type: Type of file ('video', 'image', or 'all')
+    """
+    if not filename or '.' not in filename:
+        return False
+    
+    ext = filename.rsplit('.', 1)[1].lower()
+    
+    if file_type == 'video':
+        return ext in Config.ALLOWED_VIDEO_EXTENSIONS
+    elif file_type == 'image':
+        return ext in Config.ALLOWED_IMAGE_EXTENSIONS
+    else:
+        return ext in Config.ALLOWED_EXTENSIONS
+
+def upload_image_to_storage(file, folder, prefix, user_id=None):
+    """
+    Upload an image to cloud storage (S3 or Cloudinary) or local storage
+    
+    Args:
+        file: File object from request.files
+        folder: Folder name (e.g., 'avatars', 'thumbnails')
+        prefix: Prefix for the filename (e.g., 'avatar', 'thumbnail')
+        user_id: User ID for unique naming
+        
+    Returns:
+        dict: {'success': bool, 'url': str, 'filename': str, 'error': str}
+    """
+    if not file or not file.filename:
+        return {
+            'success': False,
+            'url': None,
+            'filename': None,
+            'error': 'No file provided'
+        }
+    
+    if not allowed_file(file.filename, 'image'):
+        return {
+            'success': False,
+            'url': None,
+            'filename': None,
+            'error': 'Invalid file type. Only images are allowed.'
+        }
+    
+    try:
+        # Secure the filename
+        original_filename = secure_filename(file.filename)
+        
+        # Create unique filename
+        if user_id:
+            filename = f"{prefix}_{user_id}_{original_filename}"
+        else:
+            filename = f"{prefix}_{original_filename}"
+        
+        # Try S3 upload first if available and cloud storage is enabled
+        if Config.USE_CLOUD_STORAGE and S3_AVAILABLE:
+            print(f"☁️ Uploading image to S3: {filename}")
+            
+            # Upload to S3
+            if folder == 'avatars':
+                result = s3_storage.upload_avatar(file, user_id or 'default', original_filename)
+            else:
+                # For other images like thumbnails
+                s3_key = f"{folder}/{filename}"
+                temp_path = f"temp_{filename}"
+                file.save(temp_path)
+                result = s3_storage.upload_file(temp_path, s3_key)
+                
+                # Clean up temp file
+                if os.path.exists(temp_path):
+                    os.remove(temp_path)
+                
+                if result['success']:
+                    result['filename'] = s3_key
+            
+            if result['success']:
+                print(f"✅ Image uploaded to S3 successfully")
+                return result
+            else:
+                print(f"⚠️ S3 upload failed, falling back to local storage: {result.get('error')}")
+        
+        # Fallback to local storage
+        local_dir = os.path.join('static', folder)
+        os.makedirs(local_dir, exist_ok=True)
+        
+        local_path = os.path.join(local_dir, filename)
+        file.save(local_path)
+        
+        print(f"💾 Image saved to local storage: {local_path}")
+        
+        return {
+            'success': True,
+            'url': url_for('static', filename=f'{folder}/{filename}'),
+            'filename': filename,
+            'error': None
+        }
+        
+    except Exception as e:
+        error_msg = f"Error uploading image: {str(e)}"
+        print(f"❌ {error_msg}")
+        return {
+            'success': False,
+            'url': None,
+            'filename': None,
+            'error': error_msg
+        }
+
+def get_image_url(filename, folder='avatars'):
+    """
+    Get the URL for an image, whether it's stored in S3 or locally
+    
+    Args:
+        filename: Name or S3 key of the file
+        folder: Folder name for local storage
+        
+    Returns:
+        str: URL of the image
+    """
+    if not filename:
+        return None
+    
+    # Check if it's an S3 key (contains '/')
+    if '/' in filename and S3_AVAILABLE:
+        return s3_storage.get_file_url(filename)
+    
+    # Check if it's a full URL already
+    if filename.startswith('http'):
+        return filename
+    
+    # Local storage URL
+    return url_for('static', filename=f'{folder}/{filename}')
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in Config.ALLOWED_EXTENSIONS
 
 # Routes
@@ -1829,18 +1982,28 @@ def edit_profile():
         location = request.form.get('location', '').strip()
         website = request.form.get('website', '').strip()
         
-        # Handle avatar upload
+        # Handle avatar upload with S3
         avatar_filename = None
+        avatar_url = None
+        
         if 'avatar' in request.files:
             avatar = request.files['avatar']
-            if avatar and avatar.filename and allowed_file(avatar.filename):
-                # Create avatars directory if it doesn't exist
-                avatar_dir = os.path.join('static', 'avatars')
-                os.makedirs(avatar_dir, exist_ok=True)
+            if avatar and avatar.filename:
+                # Upload to S3 or local storage
+                upload_result = upload_image_to_storage(
+                    avatar,
+                    'avatars',
+                    'avatar',
+                    session['user_id']
+                )
                 
-                avatar_filename = secure_filename(f"avatar_{session['user_id']}_{avatar.filename}")
-                avatar_path = os.path.join(avatar_dir, avatar_filename)
-                avatar.save(avatar_path)
+                if upload_result['success']:
+                    avatar_filename = upload_result['filename']
+                    avatar_url = upload_result['url']
+                    print(f"✅ Avatar uploaded: {avatar_url}")
+                else:
+                    flash(f"Error uploading avatar: {upload_result['error']}", 'error')
+                    return redirect(url_for('edit_profile'))
         
         try:
             conn = sqlite3.connect('tournament.db')
@@ -1863,6 +2026,7 @@ def edit_profile():
             
         except Exception as e:
             flash('Error updating profile. Please try again.', 'error')
+            print(f"❌ Profile update error: {str(e)}")
             return redirect(url_for('edit_profile'))
     
     # GET request - show edit form
