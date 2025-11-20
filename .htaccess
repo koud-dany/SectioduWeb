@@ -1,6 +1,8 @@
 # Enable Passenger
 PassengerEnabled On
-PassengerAppRoot /home/username/public_html/videovote
+# .htaccess for lasectionduweb.org - Hostinger File Manager Deployment
+
+PassengerAppRoot /home/YOUR_USERNAME/public_html/videovote
 
 # Python version (adjust based on Hostinger's available versions)
 PassengerPython /home/username/virtualenv/public_html/videovote/3.8/bin/python3
